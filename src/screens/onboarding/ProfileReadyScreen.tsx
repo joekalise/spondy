@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   useColorScheme,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
@@ -43,11 +44,17 @@ export function ProfileReadyScreen() {
     if (!user) return;
     setIsSaving(true);
     try {
-      await saveProfile({
-        user_id: user.id,
-        onboarding_complete: true,
-        welcome_message: welcomeMessage,
-      });
+      await Promise.all([
+        saveProfile({
+          user_id: user.id,
+          onboarding_complete: true,
+          welcome_message: welcomeMessage,
+        }),
+        AsyncStorage.setItem(
+          `@spondy_welcome_${user.id}`,
+          JSON.stringify({ insights, watch_summary: watchSummary })
+        ),
+      ]);
     } catch (err) {
       console.error('Failed to mark onboarding complete:', err);
     } finally {

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import {
   ActivityIndicator,
   Linking,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
 import Constants from 'expo-constants';
 
@@ -289,6 +290,20 @@ export default function ProfileScreen() {
 
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [reminderEnabled, setReminderEnabled] = useState(true);
+  const [welcomeInsights, setWelcomeInsights] = useState<string[]>([]);
+  const [watchSummary, setWatchSummary] = useState('');
+
+  useEffect(() => {
+    if (!user) return;
+    AsyncStorage.getItem(`@spondy_welcome_${user.id}`)
+      .then((raw) => {
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        setWelcomeInsights(parsed.insights ?? []);
+        setWatchSummary(parsed.watch_summary ?? '');
+      })
+      .catch(() => {});
+  }, [user]);
   const [aiContext, setAiContext] = useState(profile?.ai_context ?? '');
   const [isSavingAiContext, setIsSavingAiContext] = useState(false);
   const [showAddMed, setShowAddMed] = useState(false);
@@ -510,6 +525,47 @@ export default function ProfileScreen() {
             isDark={isDark}
           />
         </View>
+
+        {/* ── Your Spondy Profile (AI welcome content) ─────────────────────── */}
+        {(profile?.welcome_message || welcomeInsights.length > 0) && (
+          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            <Text style={[styles.cardTitle, { color: textPrimary }]}>
+              Your Spondy profile
+            </Text>
+
+            {profile?.welcome_message ? (
+              <View style={[styles.welcomeMsgBox, { backgroundColor: Colors.primary + '12', borderColor: Colors.primary + '30' }]}>
+                <Text style={[styles.welcomeMsgText, { color: textPrimary }]}>
+                  {profile.welcome_message}
+                </Text>
+              </View>
+            ) : null}
+
+            {welcomeInsights.length > 0 && (
+              <>
+                <Text style={[styles.welcomeInsightHeader, { color: textSecondary }]}>
+                  Things to watch
+                </Text>
+                {welcomeInsights.map((insight, idx) => (
+                  <View key={idx} style={[styles.welcomeInsightRow, { borderBottomColor: cardBorder }]}>
+                    <View style={styles.welcomeInsightDot} />
+                    <Text style={[styles.welcomeInsightText, { color: textPrimary }]}>
+                      {insight}
+                    </Text>
+                  </View>
+                ))}
+              </>
+            )}
+
+            {watchSummary ? (
+              <View style={[styles.watchSummaryBox, { backgroundColor: isDark ? '#0C4A6E' : Colors.secondaryLight }]}>
+                <Text style={[styles.watchSummaryText, { color: isDark ? '#BAE6FD' : '#0C4A6E' }]}>
+                  {watchSummary}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+        )}
 
         {/* ── Apple Health ─────────────────────────────────────────────────── */}
         {healthAvailable && (
@@ -1091,6 +1147,55 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: Spacing.sm,
   },
+  // Welcome content card
+  welcomeMsgBox: {
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    padding: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  welcomeMsgText: {
+    fontSize: FontSize.sm,
+    lineHeight: 20,
+  },
+  welcomeInsightHeader: {
+    fontSize: FontSize.xs,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: Spacing.xs,
+    marginTop: Spacing.xs,
+  },
+  welcomeInsightRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  welcomeInsightDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.primary,
+    marginTop: 7,
+    flexShrink: 0,
+  },
+  welcomeInsightText: {
+    fontSize: FontSize.sm,
+    lineHeight: 20,
+    flex: 1,
+  },
+  watchSummaryBox: {
+    borderRadius: BorderRadius.md,
+    padding: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  watchSummaryText: {
+    fontSize: FontSize.sm,
+    lineHeight: 20,
+  },
+
   // Health card
   healthMetricsRow: {
     flexDirection: 'row',

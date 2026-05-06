@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { getDailyLogs } from '@/services/database';
-import { DailyLog, Mood } from '@/types';
+import { getDailyLogs, getActiveFlare } from '@/services/database';
+import { DailyLog, Flare, Mood } from '@/types';
 
 function moodScore(mood: Mood | null): number {
   switch (mood) {
@@ -34,7 +34,17 @@ function medicationToPoints(taken: 'yes' | 'no' | 'partial' | undefined): number
   }
 }
 
-function computeSpondyScore(logs: DailyLog[]): number | null {
+function flarePenalty(flare: Flare | null): number {
+  if (!flare) return 0;
+  switch (flare.severity) {
+    case 'severe': return 35;
+    case 'moderate': return 25;
+    case 'mild': return 15;
+    default: return 15;
+  }
+}
+
+function computeSpondyScore(logs: DailyLog[], activeFlare: Flare | null): number | null {
   if (logs.length === 0) return null;
 
   const count = logs.length;
@@ -44,16 +54,19 @@ function computeSpondyScore(logs: DailyLog[]): number | null {
   const avgMoodPoints = logs.reduce((sum, l) => sum + moodToPoints(l.mood), 0) / count;
   const avgMedPoints = logs.reduce((sum, l) => sum + medicationToPoints(l.medications_taken), 0) / count;
 
-  const daysLogged = count;
-  const consistencyBonus = (daysLogged / 7) * 20;
+  const consistencyBonus = (count / 7) * 20;
 
   // Pain penalty: 0-10 maps to 0 to -30
   const painPenalty = (avgPain / 10) * 30;
   // Fatigue penalty: 0-10 maps to 0 to -20
   const fatiguePenalty = (avgFatigue / 10) * 20;
+  // Active flare always drags the score down regardless of logged symptoms
+  const activeFlarePenalty = flarePenalty(activeFlare);
 
   const base = 75;
-  const score = base - painPenalty - fatiguePenalty + consistencyBonus + avgMoodPoints + avgMedPoints;
+  const score =
+    base - painPenalty - fatiguePenalty - activeFlarePenalty +
+    consistencyBonus + avgMoodPoints + avgMedPoints;
 
   return Math.round(Math.min(100, Math.max(0, score)));
 }
@@ -76,9 +89,12 @@ export function useWeeklyData(): {
 
     setIsLoading(true);
     try {
-      const weekLogs = await getDailyLogs(user.id, 7);
+      const [weekLogs, activeFlare] = await Promise.all([
+        getDailyLogs(user.id, 7),
+        getActiveFlare(user.id),
+      ]);
       setLogs(weekLogs);
-      setSpondyScore(computeSpondyScore(weekLogs));
+      setSpondyScore(computeSpondyScore(weekLogs, activeFlare));
     } catch (err) {
       console.error('useWeeklyData load error:', err);
     } finally {
