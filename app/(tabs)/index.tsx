@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
-import { LineChart } from 'react-native-gifted-charts';
+import Svg, { Polyline, Circle } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
 import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -100,36 +100,39 @@ interface MiniChartProps {
 }
 
 function MiniChart({ data, label, color, isDark, maxValue = 10 }: MiniChartProps) {
-  const chartWidth = 90;
+  const W = 90;
+  const H = 60;
+  const pad = 4;
+
+  const points = data.length > 1
+    ? data.map((d, i) => {
+        const x = pad + (i / (data.length - 1)) * (W - pad * 2);
+        const y = H - pad - (Math.min(d.value, maxValue) / maxValue) * (H - pad * 2);
+        return `${x},${y}`;
+      }).join(' ')
+    : null;
 
   return (
     <View style={styles.miniChartContainer}>
       <Text style={[styles.miniChartLabel, isDark && styles.textSecDark]}>{label}</Text>
-      {data.length > 0 ? (
-        <LineChart
-          data={data}
-          width={chartWidth}
-          height={60}
-          color={color}
-          thickness={2}
-          dataPointsColor={color}
-          dataPointsRadius={3}
-          hideDataPoints={data.length > 5}
-          hideYAxisText
-          hideRules
-          hideAxesAndRules={false}
-          xAxisColor="transparent"
-          yAxisColor="transparent"
-          noOfSections={2}
-          maxValue={maxValue}
-          initialSpacing={4}
-          endSpacing={4}
-          curved
-          isAnimated
-          animationDuration={600}
-        />
+      {points ? (
+        <Svg width={W} height={H}>
+          <Polyline
+            points={points}
+            fill="none"
+            stroke={color}
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {data.length <= 5 && data.map((d, i) => {
+            const x = pad + (i / (data.length - 1)) * (W - pad * 2);
+            const y = H - pad - (Math.min(d.value, maxValue) / maxValue) * (H - pad * 2);
+            return <Circle key={i} cx={x} cy={y} r={3} fill={color} />;
+          })}
+        </Svg>
       ) : (
-        <View style={[styles.miniChartEmpty, { width: chartWidth, height: 60 }]}>
+        <View style={[styles.miniChartEmpty, { width: W, height: H }]}>
           <Text style={styles.miniChartEmptyDot}>···</Text>
         </View>
       )}
