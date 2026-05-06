@@ -1,0 +1,23 @@
+node_modules/
+.expo/
+dist/
+web-build/
+
+# Environment — never commit secrets
+.env
+.env.local
+.env.*.local
+
+# iOS / Android build artifacts
+ios/
+android/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
