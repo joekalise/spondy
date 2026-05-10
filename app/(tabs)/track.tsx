@@ -500,7 +500,7 @@ function DayLogForm({
           })}
         </View>
         <Text style={[styles.hint, isDark && styles.textSecDark]}>
-          These are known AS inflammation drivers — tracked for pattern analysis
+          Common inflammation triggers for AS, tracked for patterns
         </Text>
       </View>
 
@@ -974,7 +974,7 @@ export default function TrackScreen() {
               {todayDateLabel}
             </Text>
             <Text style={[styles.logHeaderSubtitle, isDark && styles.textSecDark]}>
-              {todayLogged ? 'Updated today' : 'Logging for today'}
+              {todayLogged ? 'Logged today' : 'Log for today'}
             </Text>
           </View>
           <ProfileButton />

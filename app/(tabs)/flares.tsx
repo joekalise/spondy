@@ -144,7 +144,7 @@ function EditFlareModal({ visible, flare, onClose, onSave, onDelete, isDark, loc
 
   const handleDelete = () => {
     if (!flare?.id) return;
-    Alert.alert('Delete flare', 'Remove this flare entry permanently?', [
+    Alert.alert('Delete flare', 'This will permanently remove this entry.', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete', style: 'destructive',
@@ -454,7 +454,7 @@ function EditUveitisModal({ visible, episode, onClose, onSave, onDelete, isDark 
 
   const handleDelete = () => {
     if (!episode?.id) return;
-    Alert.alert('Delete episode', 'Remove this uveitis episode permanently?', [
+    Alert.alert('Delete episode', 'This will permanently remove this episode.', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Delete', style: 'destructive', onPress: async () => {
         try { await onDelete(episode.id!); onClose(); }
@@ -657,7 +657,7 @@ function StartUveitisModal({ visible, onClose, onConfirm, isDark }: StartUveitis
           {/* Warning banner */}
           <View style={[styles.uveitisWarningBanner]}>
             <Text style={styles.uveitisWarningText}>
-              Seek urgent eye care — Uveitis can cause permanent vision loss if untreated. Contact your ophthalmologist or go to A&E today.
+              Seek urgent eye care. Uveitis can cause permanent vision loss if untreated. Contact your ophthalmologist or go to A&E today.
             </Text>
           </View>
 
@@ -1285,7 +1285,6 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     fontWeight: '700',
     color: Colors.textSecondary,
-    textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
   sectionActionLink: {

@@ -2,12 +2,23 @@ import React, { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'react-native';
+import * as Notifications from 'expo-notifications';
 
 import '@/i18n';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ProfileProvider, useProfile } from '@/contexts/ProfileContext';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { registerBackgroundHealthSync, triggerHealthSyncNow } from '@/services/backgroundHealthSync';
+import { requestNotificationPermissions } from '@/services/notifications';
+
+// Show notifications when app is in the foreground
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 function RootNavigator() {
   const { session, isLoading: authLoading } = useAuth();
@@ -29,6 +40,13 @@ function RootNavigator() {
       triggerHealthSyncNow(session.user.id).catch(() => {});
     }
   }, [session?.user?.id]);
+
+  // Request notification permissions once after sign-in
+  useEffect(() => {
+    if (session) {
+      requestNotificationPermissions().catch(() => {});
+    }
+  }, [session]);
 
   useEffect(() => {
     if (isLoading) return;

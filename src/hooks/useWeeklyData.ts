@@ -54,19 +54,20 @@ function computeSpondyScore(logs: DailyLog[], activeFlare: Flare | null): number
   const avgMoodPoints = logs.reduce((sum, l) => sum + moodToPoints(l.mood), 0) / count;
   const avgMedPoints = logs.reduce((sum, l) => sum + medicationToPoints(l.medications_taken), 0) / count;
 
-  const consistencyBonus = (count / 7) * 20;
+  // Consistency and meds are small bonuses, not score inflators
+  const consistencyBonus = (count / 7) * 8;
 
-  // Pain penalty: 0-10 maps to 0 to -30
-  const painPenalty = (avgPain / 10) * 30;
-  // Fatigue penalty: 0-10 maps to 0 to -20
-  const fatiguePenalty = (avgFatigue / 10) * 20;
-  // Active flare always drags the score down regardless of logged symptoms
+  // Pain is the dominant factor: 0-10 maps to 0 to -45
+  const painPenalty = (avgPain / 10) * 45;
+  // Fatigue: 0-10 maps to 0 to -30
+  const fatiguePenalty = (avgFatigue / 10) * 30;
+  // Active flare always drags the score down
   const activeFlarePenalty = flarePenalty(activeFlare);
 
   const base = 75;
   const score =
     base - painPenalty - fatiguePenalty - activeFlarePenalty +
-    consistencyBonus + avgMoodPoints + avgMedPoints;
+    consistencyBonus + avgMoodPoints * 0.5 + avgMedPoints * 0.5;
 
   return Math.round(Math.min(100, Math.max(0, score)));
 }

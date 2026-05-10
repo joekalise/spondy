@@ -42,7 +42,7 @@ export default {
   },
   onboarding: {
     title: "Let's get to know you",
-    subtitle: 'A few questions so Spondy can understand your journey with AS',
+    subtitle: 'A few questions to personalise your experience',
     age_range: {
       title: 'How old are you?',
       subtitle: 'This helps us understand your stage of life alongside AS',
@@ -54,7 +54,7 @@ export default {
     },
     diagnosis_years: {
       title: 'How long have you had your AS diagnosis?',
-      subtitle: "Whether you're newly diagnosed or a veteran, it matters",
+      subtitle: 'This helps us understand where you are with AS',
       under_1: 'Less than a year',
       '1_3': '1–3 years',
       '3_5': '3–5 years',
@@ -63,7 +63,7 @@ export default {
     },
     severity: {
       title: 'How would you describe your current disease activity?',
-      subtitle: "Be honest — there's no right answer here",
+      subtitle: "Be honest. There's no right answer.",
       mild: 'Mild — manageable most days',
       moderate: 'Moderate — affects my daily life',
       severe: 'Severe — significantly limits what I can do',
@@ -133,7 +133,7 @@ export default {
       title: 'When would you like your daily check-in reminder?',
       subtitle: "We'll send you a gentle nudge at this time each evening",
       placeholder: 'Choose a time',
-      hint: 'Enter time in 24-hour format (e.g. 20:00 for 8 PM)',
+      hint: 'Use 24-hour format (e.g. 20:00)',
     },
     build_profile: 'Build my profile',
     completing: {
@@ -143,7 +143,7 @@ export default {
   },
   profile_ready: {
     title: 'Your Spondy profile is ready',
-    subtitle: "Here's what we understand about your journey so far",
+    subtitle: "Here's what we know about you so far",
     insights_title: 'A few things worth knowing',
     watch_title: 'What Spondy will watch for you',
     enter_app: "Let's get started",
@@ -164,7 +164,7 @@ export default {
     spondy_score: 'Spondy Score',
     spondy_score_subtitle: 'Your overall wellness this week',
     recent_nudges: 'Recent nudges',
-    no_nudges: 'No nudges yet — keep tracking and patterns will emerge',
+    no_nudges: 'No nudges yet. Keep tracking and your patterns will emerge.',
     check_in_prompt: "You haven't logged today yet",
     check_in_cta: "Log today's check-in",
     streak: '{{count}} day streak',
@@ -195,7 +195,7 @@ export default {
     medications_yes: 'Yes, all taken',
     medications_no: 'No, skipped',
     medications_partial: 'Partially taken',
-    save_success: 'Check-in saved — great work!',
+    save_success: 'Saved.',
     already_logged: "You've already logged today",
     mood_great: 'Great',
     mood_good: 'Good',
@@ -203,9 +203,9 @@ export default {
     mood_low: 'Low',
     mood_very_low: 'Very low',
     save: 'Save check-in',
-    saved_success: 'Saved! Keep it up.',
+    saved_success: 'Saved.',
     already_logged_title: 'Logged today',
-    already_logged_subtitle: 'Great work — you can edit below if needed.',
+    already_logged_subtitle: 'You can edit below if needed.',
     edit_today: "Edit today's log",
   },
   flares: {
@@ -245,7 +245,7 @@ export default {
     activity_trend: 'Activity',
     no_data: 'Keep tracking to see your patterns emerge here',
     unlock_ai: 'Unlock AI-powered insights',
-    unlock_ai_subtitle: 'Get a personalised narrative analysis of your patterns',
+    unlock_ai_subtitle: 'Understand what has been driving your symptoms',
     ai_report_title: 'Your AI weekly insight',
     generating: 'Generating your personalised insight...',
     two_weeks: '2 weeks',
@@ -261,7 +261,7 @@ export default {
     days_suffix: ' days',
     no_flares_great: 'No flares logged — great news!',
     ai_insight_title: 'Your AI weekly insight',
-    ai_insight_teaser: 'Track for 2 weeks to unlock your personalised pattern analysis.',
+    ai_insight_teaser: 'Track for 2 weeks to unlock your personalised insight.',
     unlock_ai_cta: 'Start free trial',
     ai_insight_card_title: 'Your weekly insight',
     ai_insight_generating: 'Analysing your data...',
@@ -269,7 +269,7 @@ export default {
     ai_insight_error: 'Could not generate insight. Try again.',
     chat_cta: 'Chat with your data →',
     trial_prompt_title: "You've been tracking for 2 weeks!",
-    trial_prompt_body: 'Unlock your personalised pattern analysis — free for 14 days.',
+    trial_prompt_body: 'Unlock your personalised insight report, free for 14 days.',
     trial_prompt_cta: 'Start free trial',
   },
   profile: {
@@ -387,7 +387,7 @@ export default {
     trial: '14-day free trial',
     trial_prompt_title: "You've been tracking for 2 weeks",
     trial_prompt_subtitle:
-      'Unlock your personal pattern analysis — free for 14 days',
+      'Unlock your personalised insight report, free for 14 days',
     trial_cta: 'Start free trial',
     feature_ai_report: 'AI-powered weekly insight report',
     feature_ai_chat: 'Ask your data anything',
@@ -409,20 +409,20 @@ export default {
   },
   nudges: {
     sleep_disrupted:
-      'Your sleep has been disrupted recently — an early night tonight might help keep a flare at bay.',
+      'Your sleep has been disrupted recently. An early night might help.',
     low_activity:
-      "You've been less active than usual — even a short walk can help keep your joints moving.",
+      "You've been less active than usual. Even a short walk helps keep your joints moving.",
     hrv_dip:
-      'Your body might be under some extra stress — consider taking it easy today.',
+      'Your body looks stressed today. Take it easy.',
     pain_rising:
-      "You've mentioned more discomfort this week — how's your stress and sleep been?",
+      "Pain has been creeping up this week. How's your sleep and stress been?",
     multiple_signals:
-      'A few things are pointing in the same direction — your body might appreciate some extra rest and care today.',
+      'A few signals are pointing the same way. Take it easy today.',
   },
   ai_chat: {
     title: 'Ask Spondy',
     placeholder: 'Ask about your patterns...',
-    greeting: "Hi! I can see your tracking data — ask me anything about your patterns, what might be triggering your symptoms, or anything about your AS journey.",
+    greeting: "Hi. I can see your tracking data. Ask me anything about your patterns, what might be triggering your symptoms, or anything about living with AS.",
     locked_title: 'Available on Premium',
     locked_body: 'Upgrade to Spondy Premium to chat with your data.',
     upgrade_cta: 'Start free trial',
@@ -432,9 +432,9 @@ export default {
   errors: {
     network: 'Check your internet connection and try again',
     auth_failed: 'Sign in failed. Please try again.',
-    save_failed: 'Failed to save. Your data is safe — please try again.',
+    save_failed: 'Failed to save. Please try again.',
     load_failed: 'Failed to load data. Pull down to refresh.',
     ai_unavailable:
-      'AI features are temporarily unavailable — the rest of the app is working normally.',
+      'AI features are temporarily unavailable. Everything else is working fine.',
   },
 };

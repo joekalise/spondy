@@ -724,7 +724,7 @@ function LogInjectionModal({ visible, onClose, onSave, defaultMedicationName, is
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
         <View style={[styles.modalContainer, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <Text style={[styles.modalTitle, { color: textPrimary }]}>Log Injection</Text>
+          <Text style={[styles.modalTitle, { color: textPrimary }]}>Log injection</Text>
 
           <Text style={[styles.fieldLabel, { color: textSecondary }]}>Medication</Text>
           <TextInput
@@ -881,7 +881,7 @@ export default function ProfileScreen() {
   const inputBg = isDark ? Colors.backgroundDark : Colors.background;
 
   const handleSignOut = useCallback(() => {
-    Alert.alert(t('auth.sign_out'), 'Are you sure you want to sign out?', [
+    Alert.alert(t('auth.sign_out'), 'Sign out of Spondy?', [
       { text: t('common.cancel'), style: 'cancel' },
       {
         text: t('auth.sign_out'),
@@ -903,7 +903,7 @@ export default function ProfileScreen() {
   const handleDeleteAccount = useCallback(() => {
     Alert.alert(
       'Delete all data',
-      'This will permanently delete all your logs, flares, medications, and profile data. This cannot be undone.',
+      'This permanently deletes all your logs, flares, medications, and profile data. It cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -912,7 +912,7 @@ export default function ProfileScreen() {
           onPress: () => {
             Alert.alert(
               'Are you absolutely sure?',
-              'All your data will be deleted immediately and permanently.',
+              'All your data will be deleted and cannot be recovered.',
               [
                 { text: 'Cancel', style: 'cancel' },
                 {
@@ -966,7 +966,7 @@ export default function ProfileScreen() {
   const handleUpdateTime = useCallback(() => {
     Alert.prompt(
       t('profile.update_time'),
-      'Enter time in HH:MM format (e.g. 20:00)',
+      'Use 24-hour format (e.g. 20:00)',
       async (value) => {
         if (!value) return;
         try {
@@ -1555,7 +1555,7 @@ export default function ProfileScreen() {
                     <Text style={[styles.injectionLastDate, { color: textSecondary }]}>Last: {lastInj.injected_at}</Text>
                   </View>
                   <Text style={[styles.injectionDue, { color: dueColor, fontWeight: '700' }]}>
-                    {daysUntil <= 0 ? 'Due today' : daysUntil === 1 ? 'Due tomorrow' : `Due in ${daysUntil}d`}
+                    {daysUntil <= 0 ? 'Due today' : daysUntil === 1 ? 'Due tomorrow' : `Due in ${daysUntil} days`}
                   </Text>
                 </View>
               );
@@ -1601,7 +1601,7 @@ export default function ProfileScreen() {
           </Text>
           {/* From date — last rheumatology appointment */}
           <View style={styles.reportDateRow}>
-            <Text style={[styles.reportDateLabel, { color: textSecondary }]}>From (last appointment):</Text>
+            <Text style={[styles.reportDateLabel, { color: textSecondary }]}>From last appointment:</Text>
             {editingReportFromDate ? (
               <TextInput
                 style={[styles.reportDateInput, { color: textPrimary, borderColor: Colors.primary }]}
@@ -1728,8 +1728,8 @@ function SummaryChip({
         wide && styles.summaryChipWide,
       ]}
     >
-      <Text style={[styles.summaryChipLabel, { color: textSec }]}>{label}</Text>
-      <Text style={[styles.summaryChipValue, { color: textPri }]} numberOfLines={wide ? 2 : 1}>
+      <Text style={[styles.summaryChipLabel, { color: textPri }]}>{label}</Text>
+      <Text style={[styles.summaryChipValue, { color: textSec }]} numberOfLines={wide ? 2 : 1}>
         {value}
       </Text>
     </View>
@@ -1866,14 +1866,13 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   summaryChipLabel: {
-    fontSize: 10,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
+    fontSize: FontSize.xs,
+    fontWeight: '400',
   },
   summaryChipValue: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    marginTop: 1,
   },
 
   // Legacy summary row (unused but kept)
@@ -2204,8 +2203,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: Spacing.xs,
     marginTop: Spacing.sm,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   textInput: {
     borderWidth: 1,
@@ -2261,8 +2258,6 @@ const styles = StyleSheet.create({
   medSectionLabel: {
     fontSize: FontSize.xs,
     fontWeight: '700',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
     marginBottom: Spacing.sm,
   },
   medTreatmentRow: {

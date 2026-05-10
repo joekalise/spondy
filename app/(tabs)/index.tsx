@@ -443,8 +443,8 @@ function FlareRiskCard({
       </Text>
       <Text style={[styles.flareRiskBody, isDark && styles.textSecDark]}>
         {isWarning
-          ? 'Several patterns in your recent data suggest a flare may be building. Consider resting more and reviewing your medications.'
-          : 'A couple of signals suggest your body might be under stress. Keep a close eye on symptoms over the next day or two.'}
+          ? 'Several signals suggest a flare could be building. Rest up and check your medications.'
+          : 'A couple of signals worth watching. Keep an eye on how you feel over the next day or two.'}
       </Text>
       <View style={styles.flareRiskSignals}>
         {signals.map((s) => (
@@ -573,6 +573,7 @@ export default function HomeScreen() {
                 : nextBiologicDue.daysUntil === 1
                 ? 'Due tomorrow'
                 : `Due in ${nextBiologicDue.daysUntil} days`}
+
             </Text>
           </View>
         )}
@@ -1015,7 +1016,6 @@ const styles = StyleSheet.create({
   breakdownTitle: {
     fontSize: FontSize.xs,
     fontWeight: '700',
-    textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 4,
   },

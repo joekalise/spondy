@@ -352,8 +352,8 @@ function AIInsightCard({ logs, flares, profile, healthHistory, isDark }: AIInsig
       ) : (
         <Text style={[styles.teaserText, { color: textSecondary }]}>
           {logs.length === 0
-            ? 'Log a few check-ins and your personalised insight will appear here.'
-            : 'Generating your first insight…'}
+            ? 'Log a few days and your insight will appear here.'
+            : 'Generating your insight...'}
         </Text>
       )}
 
@@ -450,7 +450,7 @@ function ChatDataCard({ isDark, onPress }: { isDark: boolean; onPress: () => voi
         <Text style={[styles.chatRowArrow, { color: Colors.primary }]}>→</Text>
       </View>
       <Text style={[styles.chatCardSubtitle, { color: textSecondary }]}>
-        Ask anything about your patterns, trends, and symptoms
+        Ask about your patterns, trends, or symptoms
       </Text>
       <Text style={[styles.chatPrivacyNote, { color: textSecondary }]}>
         A summary of your data is sent to the AI. Your data is not used to train AI models.
@@ -586,7 +586,7 @@ function BasdaiModal({ visible, onClose, onSave, isDark }: BasdaiModalProps) {
             {isSaving ? (
               <ActivityIndicator color="#FFFFFF" size="small" />
             ) : (
-              <Text style={styles.basdaiSaveBtnText}>Save this assessment</Text>
+              <Text style={styles.basdaiSaveBtnText}>Save assessment</Text>
             )}
           </TouchableOpacity>
           <View style={{ height: Spacing.xl }} />
@@ -656,7 +656,7 @@ function BasdaiPromptCard({
           {showInfo && (
             <Text style={[styles.basdaiInfoText, { color: textSecondary, marginTop: Spacing.xs }]}>{BASDAI_INFO}</Text>
           )}
-          <Text style={[styles.basdaiCompactDate, { color: textSecondary }]}>Assessed {daysSince} days ago</Text>
+          <Text style={[styles.basdaiCompactDate, { color: textSecondary }]}>{daysSince} days ago</Text>
         </View>
         <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.basdaiRetakeBtn}>
           <Text style={[styles.basdaiRetakeBtnText, { color: Colors.primary }]}>Retake</Text>
@@ -677,7 +677,7 @@ function BasdaiPromptCard({
         <Text style={[styles.basdaiInfoText, { color: textSecondary }]}>{BASDAI_INFO}</Text>
       )}
       <Text style={[styles.basdaiPromptBody, { color: textSecondary }]}>
-        Your last BASDAI was {latestScore.score.toFixed(1)} ({interp.label}), {daysSince} days ago. Time for your monthly check.
+        Your last BASDAI was {latestScore.score.toFixed(1)} ({interp.label}), {daysSince} days ago. Time to reassess.
       </Text>
       <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.basdaiTakeBtn}>
         <Text style={styles.basdaiTakeBtnText}>Take assessment</Text>
@@ -843,11 +843,7 @@ export default function InsightsScreen() {
         )}
 
         {/* Section divider before period selector */}
-        <View style={styles.dataSectionDivider}>
-          <View style={[styles.dataDividerLine, { backgroundColor: isDark ? Colors.borderDark : Colors.border }]} />
-          <Text style={[styles.dataDividerLabel, { color: textSecondary }]}>DATA</Text>
-          <View style={[styles.dataDividerLine, { backgroundColor: isDark ? Colors.borderDark : Colors.border }]} />
-        </View>
+        <View style={[styles.dataSectionDivider, { backgroundColor: isDark ? Colors.borderDark : Colors.border }]} />
 
         {/* Period selector — only show when more than just 7d is available */}
         {totalLogCount >= 10 && (
@@ -1056,12 +1052,12 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: Spacing.lg,
     paddingBottom: Spacing.xxl,
+    gap: Spacing.md,
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.md,
   },
   title: {
     fontSize: FontSize.xxl,
@@ -1074,7 +1070,6 @@ const styles = StyleSheet.create({
   periodRow: {
     flexDirection: 'row',
     gap: Spacing.sm,
-    marginBottom: Spacing.md,
   },
   periodBtn: {
     paddingVertical: 4,
@@ -1089,19 +1084,9 @@ const styles = StyleSheet.create({
 
   // Section divider
   dataSectionDivider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
+    height: StyleSheet.hairlineWidth,
     marginBottom: Spacing.md,
     marginTop: Spacing.xs,
-  },
-  dataDividerLine: {
-    flex: 1,
-    height: 1,
-  },
-  dataDividerLabel: {
-    fontSize: FontSize.xs,
-    fontWeight: '700',
   },
 
   // AI card — warm tinted
@@ -1109,7 +1094,6 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
     borderWidth: 1.5,
     padding: Spacing.md,
-    marginBottom: Spacing.md,
   },
 
   // Generic card
@@ -1117,7 +1101,6 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
     padding: Spacing.md,
-    marginBottom: Spacing.md,
   },
   cardTitle: {
     fontSize: FontSize.md,
@@ -1207,7 +1190,6 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
     padding: Spacing.md,
-    marginBottom: Spacing.md,
     gap: Spacing.xs,
   },
   chatCardHeader: {
@@ -1475,7 +1457,6 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
     borderWidth: 1.5,
     padding: Spacing.md,
-    marginBottom: Spacing.md,
     gap: Spacing.sm,
   },
   basdaiPromptTitleRow: {
@@ -1516,7 +1497,6 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     borderWidth: 1,
     padding: Spacing.sm,
-    marginBottom: Spacing.md,
   },
   basdaiCompactLabel: {
     fontSize: FontSize.xs,
