@@ -37,7 +37,7 @@ export default function TabsLayout() {
         options={{
           title: t('tabs.home'),
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'home' : 'home-outline'} size={22} color={color} />
+            <Ionicons name={focused ? 'today' : 'today-outline'} size={22} color={color} />
           ),
         }}
       />
@@ -46,7 +46,7 @@ export default function TabsLayout() {
         options={{
           title: t('tabs.track'),
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'add-circle' : 'add-circle-outline'} size={24} color={color} />
+            <Ionicons name={focused ? 'pencil' : 'pencil-outline'} size={22} color={color} />
           ),
         }}
       />
@@ -72,9 +72,7 @@ export default function TabsLayout() {
         name="profile"
         options={{
           title: t('tabs.profile'),
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'person' : 'person-outline'} size={22} color={color} />
-          ),
+          href: null,
         }}
       />
     </Tabs>

@@ -3,6 +3,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getDailyLog, saveDailyLog as dbSaveLog, getStreak } from '@/services/database';
 import { DailyLog } from '@/types';
 
+function getLocalDateString(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export function useDailyLog(): {
   todayLog: DailyLog | null;
   todayLogged: boolean;
@@ -18,20 +26,21 @@ export function useDailyLog(): {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const todayDate = new Date().toISOString().split('T')[0];
-
   const load = useCallback(async () => {
     if (!user) {
       setIsLoading(false);
       return;
     }
 
+    // Always compute fresh so stale tabs don't use yesterday's date
+    const today = getLocalDateString();
+
     setIsLoading(true);
     setError(null);
 
     try {
       const [log, currentStreak] = await Promise.all([
-        getDailyLog(user.id, todayDate),
+        getDailyLog(user.id, today),
         getStreak(user.id),
       ]);
       setTodayLog(log);
@@ -42,7 +51,7 @@ export function useDailyLog(): {
     } finally {
       setIsLoading(false);
     }
-  }, [user, todayDate]);
+  }, [user]);
 
   useEffect(() => {
     load();
@@ -52,20 +61,21 @@ export function useDailyLog(): {
     async (logData: Omit<DailyLog, 'id' | 'user_id' | 'date'>) => {
       if (!user) throw new Error('No authenticated user');
 
+      const today = getLocalDateString();
+
       const fullLog: Omit<DailyLog, 'id'> = {
         ...logData,
         user_id: user.id,
-        date: todayDate,
+        date: today,
       };
 
       const saved = await dbSaveLog(fullLog);
       setTodayLog(saved);
 
-      // Recompute streak after saving
       const newStreak = await getStreak(user.id);
       setStreak(newStreak);
     },
-    [user, todayDate]
+    [user]
   );
 
   return {

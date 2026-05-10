@@ -7,7 +7,8 @@ const HEALTH_CONNECTED_KEY = '@spondy_health_connected';
 function getHK(): any | null {
   if (Platform.OS !== 'ios') return null;
   try {
-    return require('react-native-health').default;
+    const mod = require('react-native-health');
+    return mod.default ?? mod;
   } catch {
     return null;
   }
@@ -20,13 +21,7 @@ function p<T>(fn: (cb: (err: any, result: T) => void) => void): Promise<T> {
 }
 
 export async function isHealthKitAvailable(): Promise<boolean> {
-  const hk = getHK();
-  if (!hk) return false;
-  try {
-    return await p<boolean>((cb) => hk.isAvailable(cb));
-  } catch {
-    return false;
-  }
+  return getHK() !== null;
 }
 
 export async function isHealthConnected(): Promise<boolean> {
@@ -152,10 +147,8 @@ export async function fetchTodayHealthData(
       hk.getHeartRateVariabilitySamples({ ...opts, ascending: false, limit: 10 }, cb)
     );
     if (samples.length > 0) {
-      base.hrv =
-        Math.round(
-          (samples.reduce((sum, s) => sum + s.value, 0) / samples.length) * 10
-        ) / 10;
+      const avgSeconds = samples.reduce((sum, s) => sum + s.value, 0) / samples.length;
+      base.hrv = Math.round(avgSeconds * 1000 * 10) / 10; // convert s → ms
     }
   } catch {}
 

@@ -66,16 +66,14 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         updated_at: new Date().toISOString(),
       };
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('profiles')
-        .upsert(profileData, { onConflict: 'user_id' })
-        .select()
-        .single();
+        .upsert(profileData, { onConflict: 'user_id' });
 
       if (error) throw error;
-      setProfile(data as UserProfile);
+      await fetchProfile();
     },
-    [user]
+    [user, fetchProfile]
   );
 
   const refreshProfile = useCallback(async () => {

@@ -11,6 +11,9 @@ export async function initializeRevenueCat(userId?: string): Promise<void> {
       ? process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY!
       : process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY!;
 
+  // Skip initialisation if no key or test key on a real device build
+  if (!apiKey || (apiKey.startsWith('test_') && !__DEV__)) return;
+
   await Purchases.configure({ apiKey });
 
   if (userId) {

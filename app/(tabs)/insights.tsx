@@ -9,7 +9,9 @@ import {
   useColorScheme,
   LayoutChangeEvent,
   ActivityIndicator,
+  Modal,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Polyline, Line, Text as SvgText, Circle } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
@@ -19,9 +21,52 @@ import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { getDailyLogs, getFlares, getStreak } from '@/services/database';
-import { generateWeeklyInsight } from '@/services/aiInsights';
+import { generateWeeklyInsight, WeeklyInsight } from '@/services/aiInsights';
 import { useSubscription } from '@/hooks/useSubscription';
-import { DailyLog, Flare, Mood, UserProfile } from '@/types';
+import { useHealthHistory } from '@/hooks/useHealthHistory';
+import { useBasdai } from '@/hooks/useBasdai';
+import { DailyLog, Flare, Mood, UserProfile, HealthData, BasdaiScore } from '@/types';
+import { ProfileButton } from '@/components/common/ProfileButton';
+
+// ─── Insight cache helpers ────────────────────────────────────────────────────
+
+interface InsightCache {
+  insight: WeeklyInsight;
+  generatedAt: string; // ISO date string
+}
+
+const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+function insightCacheKey(userId: string): string {
+  return `@spondy_insight_cache_${userId}`;
+}
+
+async function loadInsightCache(userId: string): Promise<InsightCache | null> {
+  try {
+    const raw = await AsyncStorage.getItem(insightCacheKey(userId));
+    if (!raw) return null;
+    return JSON.parse(raw) as InsightCache;
+  } catch {
+    return null;
+  }
+}
+
+async function saveInsightCache(userId: string, insight: WeeklyInsight): Promise<void> {
+  const cache: InsightCache = { insight, generatedAt: new Date().toISOString() };
+  await AsyncStorage.setItem(insightCacheKey(userId), JSON.stringify(cache));
+}
+
+function cacheAgeLabel(generatedAt: string): string {
+  const ms = Date.now() - new Date(generatedAt).getTime();
+  const mins = Math.floor(ms / 60000);
+  const hours = Math.floor(ms / 3600000);
+  const days = Math.floor(ms / 86400000);
+  if (mins < 2) return 'just now';
+  if (hours < 1) return `${mins} min ago`;
+  if (days < 1) return `${hours}h ago`;
+  if (days === 1) return 'yesterday';
+  return `${days} days ago`;
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -155,36 +200,38 @@ interface AIInsightCardProps {
   logs: DailyLog[];
   flares: Flare[];
   profile: UserProfile | null;
+  healthHistory?: HealthData[];
   isDark: boolean;
 }
 
-function AIInsightCard({ logs, flares, profile, isDark }: AIInsightCardProps) {
+function AIInsightCard({ logs, flares, profile, healthHistory, isDark }: AIInsightCardProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const router = useRouter();
 
-  const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
-  const cardBorder = isDark ? Colors.borderDark : Colors.border;
+  // Warm tinted background for the AI card
+  const cardBg = isDark ? '#2D1A0E' : '#FFF7ED';
+  const cardBorder = Colors.primary + '40';
   const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
   const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
+  const dividerColor = isDark ? Colors.borderDark : Colors.border;
 
-  const [insight, setInsight] = useState<string | null>(null);
+  const [insight, setInsight] = useState<WeeklyInsight | null>(null);
+  const [generatedAt, setGeneratedAt] = useState<string | null>(null);
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const generate = useCallback(async () => {
+  const generate = useCallback(async (force = false) => {
     if (!user || isGenerating) return;
     setIsGenerating(true);
     setError(null);
+    setExpandedIdx(null);
     try {
-      // We need the profile — pull from context via hook not available here,
-      // so we build a minimal profile shape from what we know
-      // The profile is passed via the parent; here we call generateWeeklyInsight
-      // with placeholder profile since we don't have it — the parent should pass it
-      // For now, use logs/flares which are passed in
       const result = await generateWeeklyInsight({
         logs,
         flares,
+        healthHistory,
         profile: profile ?? {
           user_id: user.id,
           age_range: null,
@@ -202,17 +249,38 @@ function AIInsightCard({ logs, flares, profile, isDark }: AIInsightCardProps) {
         },
       });
       setInsight(result);
+      const now = new Date().toISOString();
+      setGeneratedAt(now);
+      await saveInsightCache(user.id, result);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : t('insights.ai_insight_error');
-      setError(msg);
+      setError(err instanceof Error ? err.message : t('insights.ai_insight_error'));
     } finally {
       setIsGenerating(false);
     }
-  }, [user, logs, flares, isGenerating, t]);
+  }, [user, logs, flares, healthHistory, profile, isGenerating, t]);
+
+  // Load from cache on mount; only generate if cache is missing or > 7 days old
+  useEffect(() => {
+    if (!user || logs.length === 0) return;
+    loadInsightCache(user.id).then((cache) => {
+      if (cache) {
+        const age = Date.now() - new Date(cache.generatedAt).getTime();
+        setInsight(cache.insight);
+        setGeneratedAt(cache.generatedAt);
+        if (age > CACHE_TTL_MS) {
+          generate();
+        }
+      } else {
+        generate();
+      }
+    });
+  // Only run when we first have logs; don't re-run on every render
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, logs.length > 0]);
 
   return (
-    <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-      {/* Card header */}
+    <View style={[styles.aiCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+      {/* Header */}
       <View style={styles.aiCardHeader}>
         <View style={styles.aiTitleRow}>
           <Text style={[styles.cardTitle, { color: textPrimary }]}>
@@ -223,7 +291,7 @@ function AIInsightCard({ logs, flares, profile, isDark }: AIInsightCardProps) {
           </View>
         </View>
         <TouchableOpacity
-          onPress={generate}
+          onPress={() => generate(true)}
           disabled={isGenerating}
           activeOpacity={0.8}
           style={[styles.refreshBtn, { borderColor: Colors.primary, opacity: isGenerating ? 0.5 : 1 }]}
@@ -231,6 +299,11 @@ function AIInsightCard({ logs, flares, profile, isDark }: AIInsightCardProps) {
           <Text style={styles.refreshBtnText}>{t('insights.ai_insight_refresh')}</Text>
         </TouchableOpacity>
       </View>
+      {generatedAt && !isGenerating && (
+        <Text style={[styles.insightTimestamp, { color: textSecondary }]}>
+          Updated {cacheAgeLabel(generatedAt)}
+        </Text>
+      )}
 
       {isGenerating ? (
         <View style={styles.generatingRow}>
@@ -242,31 +315,48 @@ function AIInsightCard({ logs, flares, profile, isDark }: AIInsightCardProps) {
       ) : error ? (
         <View>
           <Text style={[styles.errorText, { color: Colors.error }]}>{error}</Text>
-          <TouchableOpacity onPress={generate} activeOpacity={0.8} style={styles.retryBtn}>
+          <TouchableOpacity onPress={() => generate(true)} activeOpacity={0.8} style={styles.retryBtn}>
             <Text style={styles.retryBtnText}>{t('common.retry')}</Text>
           </TouchableOpacity>
         </View>
       ) : insight ? (
-        <Text style={[styles.insightText, { color: textPrimary }]}>{insight}</Text>
+        <>
+          {/* Summary */}
+          <Text style={[styles.insightSummary, { color: textPrimary }]}>{insight.summary}</Text>
+
+          {/* Expandable points */}
+          {insight.points.map((point, idx) => {
+            const isOpen = expandedIdx === idx;
+            return (
+              <TouchableOpacity
+                key={idx}
+                onPress={() => setExpandedIdx(isOpen ? null : idx)}
+                activeOpacity={0.8}
+                style={[styles.insightPointRow, { borderTopColor: dividerColor }]}
+              >
+                <Text style={[styles.insightPointTitle, { color: isOpen ? Colors.primary : textPrimary }]}>
+                  {point.title}
+                </Text>
+                <Text style={[styles.insightPointChevron, { color: textSecondary }]}>
+                  {isOpen ? '∧' : '∨'}
+                </Text>
+                {isOpen && (
+                  <Text style={[styles.insightPointDetail, { color: textSecondary }]}>
+                    {point.detail}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </>
       ) : (
-        <View>
-          <Text style={[styles.teaserText, { color: textSecondary }]}>
-            {t('insights.ai_insight_teaser')}
-          </Text>
-          <TouchableOpacity onPress={generate} activeOpacity={0.8} style={styles.ctaBtn}>
-            <Text style={styles.ctaBtnText}>{t('insights.ai_insight_refresh')}</Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={[styles.teaserText, { color: textSecondary }]}>
+          {logs.length === 0
+            ? 'Log a few check-ins and your personalised insight will appear here.'
+            : 'Generating your first insight…'}
+        </Text>
       )}
 
-      {/* Chat CTA */}
-      <TouchableOpacity
-        onPress={() => router.push('/ai-chat')}
-        activeOpacity={0.8}
-        style={styles.chatCtaBtn}
-      >
-        <Text style={styles.chatCtaText}>{t('insights.chat_cta')}</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -336,6 +426,266 @@ function flareDays(flare: Flare): number {
   return Math.max(1, diff);
 }
 
+// ─── ChatDataCard — compact list-item style ───────────────────────────────────
+
+function ChatDataCard({ isDark, onPress }: { isDark: boolean; onPress: () => void }) {
+  const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
+  const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
+  const cardBg = isDark ? '#2D1A0E' : '#FFF7ED';
+  const cardBorder = Colors.primary + '40';
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.85}
+      style={[styles.chatCard, { backgroundColor: cardBg, borderColor: cardBorder }]}
+    >
+      <View style={styles.chatCardHeader}>
+        <View style={styles.aiTitleRow}>
+          <Text style={[styles.cardTitle, { color: textPrimary }]}>Chat with your data</Text>
+          <View style={styles.premiumBadge}>
+            <Text style={styles.premiumBadgeText}>Premium</Text>
+          </View>
+        </View>
+        <Text style={[styles.chatRowArrow, { color: Colors.primary }]}>→</Text>
+      </View>
+      <Text style={[styles.chatCardSubtitle, { color: textSecondary }]}>
+        Ask anything about your patterns, trends, and symptoms
+      </Text>
+      <Text style={[styles.chatPrivacyNote, { color: textSecondary }]}>
+        A summary of your data is sent to the AI. Your data is not used to train AI models.
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
+// ─── BASDAI helpers ────────────────────────────────────────────────────────────
+
+function basdaiInterpretation(score: number): { label: string; color: string } {
+  if (score < 2) return { label: 'Low activity', color: Colors.success };
+  if (score < 4) return { label: 'Moderate', color: Colors.warning };
+  if (score < 6) return { label: 'High (biologic threshold)', color: Colors.error };
+  return { label: 'Very high', color: Colors.error };
+}
+
+// ─── BasdaiModal ──────────────────────────────────────────────────────────────
+
+const BASDAI_QUESTIONS = [
+  { key: 'q1', text: 'How would you describe the overall level of fatigue/tiredness?' },
+  { key: 'q2', text: 'How would you describe the overall level of AS neck, back or hip pain?' },
+  { key: 'q3', text: 'How would you describe the overall level of pain/swelling in joints other than neck, back or hips?' },
+  { key: 'q4', text: 'How would you describe the overall level of discomfort from tender areas (enthesitis)?' },
+  { key: 'q5', text: 'How would you describe the overall level of morning stiffness severity from the time you wake up?' },
+  { key: 'q6', text: 'How long does your morning stiffness last? (0=none, 10=2+ hours)' },
+] as const;
+
+interface BasdaiModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onSave: (answers: { q1: number; q2: number; q3: number; q4: number; q5: number; q6: number }) => Promise<void>;
+  isDark: boolean;
+}
+
+function BasdaiModal({ visible, onClose, onSave, isDark }: BasdaiModalProps) {
+  const [q1, setQ1] = useState(5);
+  const [q2, setQ2] = useState(5);
+  const [q3, setQ3] = useState(5);
+  const [q4, setQ4] = useState(5);
+  const [q5, setQ5] = useState(5);
+  const [q6, setQ6] = useState(5);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showResult, setShowResult] = useState(false);
+
+  const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
+  const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
+  const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
+  const border = isDark ? Colors.borderDark : Colors.border;
+
+  const values = { q1, q2, q3, q4, q5, q6 };
+  const computedScore = parseFloat(((q1 + q2 + q3 + q4 + (q5 + q6) / 2) / 5).toFixed(2));
+  const interp = basdaiInterpretation(computedScore);
+
+  const setters: Record<string, (v: number) => void> = { q1: setQ1, q2: setQ2, q3: setQ3, q4: setQ4, q5: setQ5, q6: setQ6 };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await onSave(values);
+      onClose();
+      setShowResult(false);
+    } catch {}
+    finally { setIsSaving(false); }
+  };
+
+  function QuestionStepper({ qKey, value, setValue }: { qKey: string; value: number; setValue: (v: number) => void }) {
+    const color = value <= 3 ? Colors.success : value <= 6 ? Colors.warning : Colors.error;
+    return (
+      <View style={{ gap: Spacing.xs }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
+          <TouchableOpacity
+            onPress={() => setValue(Math.max(0, value - 1))}
+            style={[styles.basdaiStepBtn, { borderColor: border, backgroundColor: isDark ? Colors.backgroundDark : Colors.background }]}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.basdaiStepBtnText, { color: textPrimary }]}>−</Text>
+          </TouchableOpacity>
+          <Text style={[styles.basdaiScore, { color, flex: 1, textAlign: 'center' }]}>{value}</Text>
+          <TouchableOpacity
+            onPress={() => setValue(Math.min(10, value + 1))}
+            style={[styles.basdaiStepBtn, { borderColor: border, backgroundColor: isDark ? Colors.backgroundDark : Colors.background }]}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.basdaiStepBtnText, { color: textPrimary }]}>+</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <Text style={[styles.basdaiHint, { color: textSecondary }]}>0 = None</Text>
+          <Text style={[styles.basdaiHint, { color: textSecondary }]}>10 = Severe</Text>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? Colors.backgroundDark : Colors.background }}>
+        <View style={[styles.basdaiHeader, { borderBottomColor: border }]}>
+          <TouchableOpacity onPress={onClose} style={{ width: 64 }}>
+            <Text style={[styles.basdaiCancelText, { color: textSecondary }]}>Cancel</Text>
+          </TouchableOpacity>
+          <Text style={[styles.basdaiTitle, { color: textPrimary }]}>BASDAI Assessment</Text>
+          <View style={{ width: 64 }} />
+        </View>
+        <ScrollView contentContainerStyle={{ padding: Spacing.lg, gap: Spacing.md }} showsVerticalScrollIndicator={false}>
+          {BASDAI_QUESTIONS.map((q, idx) => (
+            <View key={q.key} style={[styles.basdaiQuestion, { backgroundColor: cardBg, borderColor: border }]}>
+              <Text style={[styles.basdaiQuestionNum, { color: textSecondary }]}>Q{idx + 1}</Text>
+              <Text style={[styles.basdaiQuestionText, { color: textPrimary }]}>{q.text}</Text>
+              <QuestionStepper qKey={q.key} value={values[q.key as keyof typeof values]} setValue={setters[q.key]} />
+            </View>
+          ))}
+
+          {/* Score preview */}
+          <View style={[styles.basdaiScoreCard, { backgroundColor: cardBg, borderColor: interp.color + '50' }]}>
+            <Text style={[styles.basdaiScoreLabel, { color: textSecondary }]}>Your BASDAI score</Text>
+            <Text style={[styles.basdaiScoreLarge, { color: interp.color }]}>{computedScore.toFixed(1)}<Text style={{ fontSize: FontSize.sm }}>/10</Text></Text>
+            <Text style={[styles.basdaiInterpText, { color: interp.color }]}>{interp.label}</Text>
+            {computedScore >= 4 && (
+              <Text style={[styles.basdaiThresholdNote, { color: textSecondary }]}>
+                Score ≥4 is the clinical threshold for biologic therapy. Consider sharing this with your rheumatologist.
+              </Text>
+            )}
+          </View>
+
+          <TouchableOpacity
+            onPress={handleSave}
+            disabled={isSaving}
+            activeOpacity={0.8}
+            style={[styles.basdaiSaveBtn, { opacity: isSaving ? 0.6 : 1 }]}
+          >
+            {isSaving ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <Text style={styles.basdaiSaveBtnText}>Save this assessment</Text>
+            )}
+          </TouchableOpacity>
+          <View style={{ height: Spacing.xl }} />
+        </ScrollView>
+      </SafeAreaView>
+    </Modal>
+  );
+}
+
+// ─── BasdaiPromptCard ─────────────────────────────────────────────────────────
+
+const BASDAI_INFO = 'BASDAI (Bath Ankylosing Spondylitis Disease Activity Index) is the standard clinical tool for measuring AS disease activity. You score six questions on a 0–10 scale — fatigue, spinal pain, joint pain, enthesitis, morning stiffness severity, and duration. A score of 4 or above is the threshold at which biologic therapy is typically considered.';
+
+function BasdaiPromptCard({
+  latestScore,
+  daysSince,
+  onPress,
+  isDark,
+}: {
+  latestScore: BasdaiScore | null;
+  daysSince: number | null;
+  onPress: () => void;
+  isDark: boolean;
+}) {
+  const [showInfo, setShowInfo] = useState(false);
+  const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
+  const cardBorder = isDark ? Colors.borderDark : Colors.border;
+  const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
+  const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
+
+  if (!latestScore) {
+    return (
+      <View style={[styles.basdaiPromptCard, { backgroundColor: isDark ? '#2D1A0E' : '#FFF7ED', borderColor: Colors.primary + '40' }]}>
+        <View style={styles.basdaiPromptTitleRow}>
+          <Text style={[styles.basdaiPromptTitle, { color: textPrimary, flex: 1 }]}>Monthly clinical assessment</Text>
+          <TouchableOpacity onPress={() => setShowInfo(v => !v)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
+            <Text style={[styles.basdaiInfoIcon, { color: showInfo ? Colors.primary : textSecondary }]}>ⓘ</Text>
+          </TouchableOpacity>
+        </View>
+        {showInfo && (
+          <Text style={[styles.basdaiInfoText, { color: textSecondary }]}>{BASDAI_INFO}</Text>
+        )}
+        <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.basdaiTakeBtn}>
+          <Text style={styles.basdaiTakeBtnText}>Take assessment</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  const interp = basdaiInterpretation(latestScore.score);
+  const isDue = daysSince !== null && daysSince >= 30;
+
+  if (!isDue) {
+    return (
+      <View style={[styles.basdaiCompactRow, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs }}>
+            <Text style={[styles.basdaiCompactLabel, { color: textSecondary }]}>BASDAI</Text>
+            <TouchableOpacity onPress={() => setShowInfo(v => !v)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
+              <Text style={[styles.basdaiInfoIcon, { color: showInfo ? Colors.primary : textSecondary, fontSize: FontSize.xs }]}>ⓘ</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs }}>
+            <Text style={[styles.basdaiCompactScore, { color: interp.color }]}>{latestScore.score.toFixed(1)}</Text>
+            <Text style={[styles.basdaiCompactInterp, { color: interp.color }]}>{interp.label}</Text>
+          </View>
+          {showInfo && (
+            <Text style={[styles.basdaiInfoText, { color: textSecondary, marginTop: Spacing.xs }]}>{BASDAI_INFO}</Text>
+          )}
+          <Text style={[styles.basdaiCompactDate, { color: textSecondary }]}>Assessed {daysSince} days ago</Text>
+        </View>
+        <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.basdaiRetakeBtn}>
+          <Text style={[styles.basdaiRetakeBtnText, { color: Colors.primary }]}>Retake</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.basdaiPromptCard, { backgroundColor: isDark ? '#2D1A0E' : '#FFF7ED', borderColor: Colors.warning + '50' }]}>
+      <View style={styles.basdaiPromptTitleRow}>
+        <Text style={[styles.basdaiPromptTitle, { color: textPrimary, flex: 1 }]}>Monthly reassessment due</Text>
+        <TouchableOpacity onPress={() => setShowInfo(v => !v)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
+          <Text style={[styles.basdaiInfoIcon, { color: showInfo ? Colors.primary : textSecondary }]}>ⓘ</Text>
+        </TouchableOpacity>
+      </View>
+      {showInfo && (
+        <Text style={[styles.basdaiInfoText, { color: textSecondary }]}>{BASDAI_INFO}</Text>
+      )}
+      <Text style={[styles.basdaiPromptBody, { color: textSecondary }]}>
+        Your last BASDAI was {latestScore.score.toFixed(1)} ({interp.label}), {daysSince} days ago. Time for your monthly check.
+      </Text>
+      <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.basdaiTakeBtn}>
+        <Text style={styles.basdaiTakeBtnText}>Take assessment</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 // ─── Main screen ──────────────────────────────────────────────────────────────
 
 type Period = 7 | 30 | 90 | 180;
@@ -348,15 +698,19 @@ export default function InsightsScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { isSubscribed, isLoading: subLoading, purchase } = useSubscription();
+  const { history: healthHistory } = useHealthHistory(28);
+
+  const { latestScore: latestBasdaiScore, daysSinceLastScore: daysSinceLastBasdai, saveScore: saveBasdaiScore } = useBasdai();
+  const [showBasdai, setShowBasdai] = useState(false);
 
   const [period, setPeriod] = useState<Period>(30);
   const [logs, setLogs] = useState<DailyLog[]>([]);
   const [allLogs, setAllLogs] = useState<DailyLog[]>([]); // 28-day for AI
   const [flares, setFlares] = useState<Flare[]>([]);
   const [streak, setStreak] = useState(0);
+  const [totalLogCount, setTotalLogCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [chartWidth, setChartWidth] = useState(300);
-
   const load = useCallback(async () => {
     if (!user) {
       setIsLoading(false);
@@ -364,14 +718,16 @@ export default function InsightsScreen() {
     }
     setIsLoading(true);
     try {
-      const [periodLogs, logs30, allFlares, currentStreak] = await Promise.all([
+      const [periodLogs, logs30, allLogs180, allFlares, currentStreak] = await Promise.all([
         getDailyLogs(user.id, period),
         getDailyLogs(user.id, 30),
+        getDailyLogs(user.id, 180),
         getFlares(user.id),
         getStreak(user.id),
       ]);
       setLogs(periodLogs);
       setAllLogs(logs30);
+      setTotalLogCount(allLogs180.length);
 
       const since = new Date();
       since.setDate(since.getDate() - period);
@@ -388,6 +744,14 @@ export default function InsightsScreen() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // If selected period has no data, fall back to 7d
+  useEffect(() => {
+    const minLogs: Record<Period, number> = { 7: 1, 30: 10, 90: 30, 180: 60 };
+    if (totalLogCount < minLogs[period] && period !== 7) {
+      setPeriod(7);
+    }
+  }, [totalLogCount, period]);
 
   function onCardLayout(e: LayoutChangeEvent) {
     const w = e.nativeEvent.layout.width;
@@ -446,14 +810,25 @@ export default function InsightsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <Text style={[styles.title, { color: textPrimary }]}>
-          {t('insights.title')}
-        </Text>
+        <View style={styles.titleRow}>
+          <Text style={[styles.title, { color: textPrimary }]}>
+            {t('insights.title')}
+          </Text>
+          <ProfileButton />
+        </View>
+
+        {/* ── BASDAI section ── */}
+        <BasdaiPromptCard
+          latestScore={latestBasdaiScore}
+          daysSince={daysSinceLastBasdai}
+          onPress={() => setShowBasdai(true)}
+          isDark={isDark}
+        />
 
         {/* ── AI Insight section — above period selector ── */}
         {!subLoading && (
           isSubscribed ? (
-            <AIInsightCard logs={allLogs} flares={flares} profile={profile} isDark={isDark} />
+            <AIInsightCard logs={allLogs} flares={flares} profile={profile} healthHistory={healthHistory} isDark={isDark} />
           ) : hasEnoughDataForTrialPrompt ? (
             <TrialPromptCard
               isDark={isDark}
@@ -462,35 +837,51 @@ export default function InsightsScreen() {
           ) : null
         )}
 
-        {/* Period selector */}
-        <View style={styles.periodRow}>
-          {([7, 30, 90, 180] as Period[]).map((p) => {
-            const label = p === 7 ? '7d' : p === 30 ? '1m' : p === 90 ? '3m' : '6m';
-            return (
-              <TouchableOpacity
-                key={p}
-                onPress={() => setPeriod(p)}
-                activeOpacity={0.8}
-                style={[
-                  styles.periodBtn,
-                  {
-                    backgroundColor: period === p ? Colors.primary : cardBg,
-                    borderColor: period === p ? Colors.primary : cardBorder,
-                  },
-                ]}
-              >
-                <Text
+        {/* Chat with your data — compact row directly under weekly insight */}
+        {!subLoading && isSubscribed && (
+          <ChatDataCard isDark={isDark} onPress={() => router.push('/ai-chat')} />
+        )}
+
+        {/* Section divider before period selector */}
+        <View style={styles.dataSectionDivider}>
+          <View style={[styles.dataDividerLine, { backgroundColor: isDark ? Colors.borderDark : Colors.border }]} />
+          <Text style={[styles.dataDividerLabel, { color: textSecondary }]}>DATA</Text>
+          <View style={[styles.dataDividerLine, { backgroundColor: isDark ? Colors.borderDark : Colors.border }]} />
+        </View>
+
+        {/* Period selector — only show when more than just 7d is available */}
+        {totalLogCount >= 10 && (
+          <View style={styles.periodRow}>
+            {([7, 30, 90, 180] as Period[]).map((p) => {
+              const minLogs: Record<Period, number> = { 7: 1, 30: 10, 90: 30, 180: 60 };
+              if (totalLogCount < minLogs[p] && p !== 7) return null;
+              const label = p === 7 ? '7d' : p === 30 ? '1m' : p === 90 ? '3m' : '6m';
+              return (
+                <TouchableOpacity
+                  key={p}
+                  onPress={() => setPeriod(p)}
+                  activeOpacity={0.8}
                   style={[
-                    styles.periodBtnText,
-                    { color: period === p ? '#FFFFFF' : textSecondary },
+                    styles.periodBtn,
+                    {
+                      backgroundColor: period === p ? Colors.primary : cardBg,
+                      borderColor: period === p ? Colors.primary : cardBorder,
+                    },
                   ]}
                 >
-                  {label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+                  <Text
+                    style={[
+                      styles.periodBtnText,
+                      { color: period === p ? '#FFFFFF' : textSecondary },
+                    ]}
+                  >
+                    {label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
 
         {isLoading ? (
           <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
@@ -559,63 +950,8 @@ export default function InsightsScreen() {
                   maxVal={5}
                   width={Math.max(10, chartWidth - Spacing.md * 2)}
                 />
-                <View style={styles.moodYLabels}>
-                  <Text style={[styles.moodYLabel, { color: textSecondary }]}>very low</Text>
-                  <Text style={[styles.moodYLabel, { color: textSecondary }]}>great</Text>
-                </View>
               </View>
             )}
-
-            {/* Flare history */}
-            <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-              <Text style={[styles.cardTitle, { color: textPrimary }]}>
-                {t('flares.flare_history')}
-              </Text>
-              {flares.length === 0 ? (
-                <Text style={[styles.emptyText, { color: textSecondary }]}>
-                  {t('insights.no_flares_great')}
-                </Text>
-              ) : (
-                flares.map((flare) => (
-                  <View
-                    key={flare.id}
-                    style={[
-                      styles.flareRow,
-                      { borderBottomColor: cardBorder },
-                    ]}
-                  >
-                    <View style={styles.flareInfo}>
-                      <Text style={[styles.flareDate, { color: textPrimary }]}>
-                        {formatDate(flare.start_date)}
-                        {flare.end_date
-                          ? ` → ${formatDate(flare.end_date)}`
-                          : ` (${t('flares.ongoing')})`}
-                      </Text>
-                      <Text style={[styles.flareDays, { color: textSecondary }]}>
-                        {flareDays(flare)}{t('insights.days_suffix')}
-                      </Text>
-                    </View>
-                    <View
-                      style={[
-                        styles.severityBadge,
-                        {
-                          backgroundColor:
-                            flare.severity === 'severe'
-                              ? Colors.error
-                              : flare.severity === 'moderate'
-                              ? Colors.warning
-                              : Colors.success,
-                        },
-                      ]}
-                    >
-                      <Text style={styles.severityText}>
-                        {flare.severity}
-                      </Text>
-                    </View>
-                  </View>
-                ))
-              )}
-            </View>
 
             {/* Patterns card */}
             <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
@@ -676,19 +1012,14 @@ export default function InsightsScreen() {
           </View>
         )}
 
-        {/* Chat button for subscribers */}
-        {!subLoading && isSubscribed && (
-          <TouchableOpacity
-            onPress={() => router.push('/ai-chat')}
-            activeOpacity={0.8}
-            style={[styles.chatNavBtn, { backgroundColor: cardBg, borderColor: cardBorder }]}
-          >
-            <Text style={[styles.chatNavText, { color: Colors.primary }]}>
-              {t('insights.chat_cta')}
-            </Text>
-          </TouchableOpacity>
-        )}
       </ScrollView>
+
+      <BasdaiModal
+        visible={showBasdai}
+        onClose={() => setShowBasdai(false)}
+        onSave={saveBasdaiScore}
+        isDark={isDark}
+      />
     </SafeAreaView>
   );
 }
@@ -726,26 +1057,62 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     paddingBottom: Spacing.xxl,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.md,
+  },
   title: {
     fontSize: FontSize.xxl,
     fontWeight: '800',
-    marginBottom: Spacing.md,
+    flex: 1,
+    marginRight: Spacing.sm,
   },
+
+  // Period selector — smaller pills
   periodRow: {
     flexDirection: 'row',
     gap: Spacing.sm,
     marginBottom: Spacing.md,
   },
   periodBtn: {
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.md,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
     borderRadius: BorderRadius.full,
     borderWidth: 1.5,
   },
   periodBtnText: {
-    fontSize: FontSize.sm,
+    fontSize: FontSize.xs,
     fontWeight: '600',
   },
+
+  // Section divider
+  dataSectionDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+    marginTop: Spacing.xs,
+  },
+  dataDividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dataDividerLabel: {
+    fontSize: FontSize.xs,
+    fontWeight: '700',
+  },
+
+  // AI card — warm tinted
+  aiCard: {
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1.5,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+
+  // Generic card
   card: {
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
@@ -834,6 +1201,35 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     fontWeight: '700',
   },
+
+  // Chat card — full card matching aiCard style
+  chatCard: {
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    gap: Spacing.xs,
+  },
+  chatCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  chatCardSubtitle: {
+    fontSize: FontSize.sm,
+    lineHeight: 20,
+  },
+  chatPrivacyNote: {
+    fontSize: FontSize.xs,
+    marginTop: Spacing.xs,
+    opacity: 0.7,
+    lineHeight: 16,
+  },
+  chatRowArrow: {
+    fontSize: FontSize.lg,
+    fontWeight: '700',
+  },
+
   // AI card styles
   aiCardHeader: {
     flexDirection: 'row',
@@ -900,6 +1296,46 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     lineHeight: 22,
   },
+  insightTimestamp: {
+    fontSize: FontSize.xs,
+    marginBottom: Spacing.xs,
+  },
+  insightSummary: {
+    fontSize: FontSize.sm,
+    lineHeight: 22,
+    marginBottom: Spacing.xs,
+  },
+  insightPointRow: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingVertical: Spacing.sm,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  insightPointTitle: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    flex: 1,
+  },
+  insightPointChevron: {
+    fontSize: FontSize.xs,
+    fontWeight: '700',
+  },
+  insightPointDetail: {
+    width: '100%',
+    fontSize: FontSize.sm,
+    lineHeight: 20,
+    marginTop: Spacing.xs,
+  },
+  showMoreBtn: {
+    paddingTop: Spacing.sm,
+    alignItems: 'center',
+  },
+  showMoreText: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+  },
   teaserText: {
     fontSize: FontSize.sm,
     lineHeight: 20,
@@ -917,14 +1353,14 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     fontWeight: '700',
   },
-  chatCtaBtn: {
-    marginTop: Spacing.md,
-    alignItems: 'center',
-  },
-  chatCtaText: {
-    fontSize: FontSize.sm,
-    color: Colors.primary,
+  infoIconBtn: {
+    fontSize: FontSize.lg,
     fontWeight: '700',
+  },
+  chatInfoText: {
+    fontSize: FontSize.sm,
+    lineHeight: 20,
+    marginBottom: Spacing.sm,
   },
   chatNavBtn: {
     borderRadius: BorderRadius.lg,
@@ -942,5 +1378,168 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.sm,
     marginBottom: Spacing.sm,
+  },
+
+  // BASDAI modal
+  basdaiHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+  },
+  basdaiTitle: {
+    fontSize: FontSize.md,
+    fontWeight: '700',
+  },
+  basdaiCancelText: {
+    fontSize: FontSize.md,
+  },
+  basdaiQuestion: {
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    padding: Spacing.md,
+    gap: Spacing.sm,
+  },
+  basdaiQuestionNum: {
+    fontSize: FontSize.xs,
+    fontWeight: '700',
+  },
+  basdaiQuestionText: {
+    fontSize: FontSize.sm,
+    lineHeight: 20,
+    fontWeight: '500',
+  },
+  basdaiStepBtn: {
+    width: 52,
+    height: 52,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  basdaiStepBtnText: {
+    fontSize: 24,
+    fontWeight: '300',
+    lineHeight: 30,
+  },
+  basdaiScore: {
+    fontSize: 36,
+    fontWeight: '900',
+    lineHeight: 42,
+  },
+  basdaiHint: {
+    fontSize: FontSize.xs,
+  },
+  basdaiScoreCard: {
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1.5,
+    padding: Spacing.md,
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  basdaiScoreLabel: {
+    fontSize: FontSize.xs,
+    fontWeight: '600',
+  },
+  basdaiScoreLarge: {
+    fontSize: 48,
+    fontWeight: '900',
+    lineHeight: 56,
+  },
+  basdaiInterpText: {
+    fontSize: FontSize.md,
+    fontWeight: '700',
+  },
+  basdaiThresholdNote: {
+    fontSize: FontSize.xs,
+    lineHeight: 18,
+    textAlign: 'center',
+    marginTop: Spacing.xs,
+  },
+  basdaiSaveBtn: {
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.md,
+    alignItems: 'center',
+  },
+  basdaiSaveBtnText: {
+    color: '#FFFFFF',
+    fontSize: FontSize.md,
+    fontWeight: '700',
+  },
+
+  // BASDAI prompt card
+  basdaiPromptCard: {
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1.5,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    gap: Spacing.sm,
+  },
+  basdaiPromptTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  basdaiPromptTitle: {
+    fontSize: FontSize.md,
+    fontWeight: '700',
+  },
+  basdaiInfoIcon: {
+    fontSize: FontSize.md,
+  },
+  basdaiInfoText: {
+    fontSize: FontSize.xs,
+    lineHeight: 18,
+  },
+  basdaiPromptBody: {
+    fontSize: FontSize.sm,
+    lineHeight: 20,
+  },
+  basdaiTakeBtn: {
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.sm,
+    alignItems: 'center',
+    marginTop: Spacing.xs,
+  },
+  basdaiTakeBtnText: {
+    color: '#FFFFFF',
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+  },
+  basdaiCompactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    padding: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  basdaiCompactLabel: {
+    fontSize: FontSize.xs,
+    fontWeight: '700',
+  },
+  basdaiCompactScore: {
+    fontSize: FontSize.xl,
+    fontWeight: '900',
+  },
+  basdaiCompactInterp: {
+    fontSize: FontSize.xs,
+    fontWeight: '600',
+  },
+  basdaiCompactDate: {
+    fontSize: FontSize.xs,
+    marginTop: 2,
+  },
+  basdaiRetakeBtn: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+  },
+  basdaiRetakeBtnText: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
   },
 });

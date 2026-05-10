@@ -11,13 +11,19 @@
       "resizeMode": "contain",
       "backgroundColor": "#F97316"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.spondy.app",
       "infoPlist": {
         "NSHealthShareUsageDescription": "Spondy reads your health data to identify patterns that may relate to your AS symptoms.",
-        "NSHealthUpdateUsageDescription": "Spondy may write workout and symptom data to Apple Health."
+        "NSHealthUpdateUsageDescription": "Spondy may write workout and symptom data to Apple Health.",
+        "UIBackgroundModes": [
+          "fetch",
+          "processing"
+        ]
       }
     },
     "android": {
@@ -32,7 +38,9 @@
         "android.permission.health.READ_HEART_RATE",
         "android.permission.health.READ_HEART_RATE_VARIABILITY",
         "android.permission.health.READ_ACTIVE_CALORIES_BURNED",
-        "android.permission.health.READ_EXERCISE"
+        "android.permission.health.READ_EXERCISE",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.WAKE_LOCK"
       ]
     },
     "plugins": [
@@ -48,7 +56,9 @@
       [
         "expo-apple-authentication"
       ],
-      "react-native-health"
+      "react-native-health",
+      "expo-background-fetch",
+      "expo-task-manager"
     ],
     "scheme": "spondy",
     "extra": {
@@ -56,8 +66,9 @@
         "origin": false
       },
       "eas": {
-        "projectId": "spondy-app"
+        "projectId": "d0cda471-dc65-4d6c-b28c-d6e9dde174e6"
       }
-    }
+    },
+    "owner": "jbrockbanks-organization"
   }
 }

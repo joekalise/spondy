@@ -7,6 +7,7 @@ import '@/i18n';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ProfileProvider, useProfile } from '@/contexts/ProfileContext';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { registerBackgroundHealthSync, triggerHealthSyncNow } from '@/services/backgroundHealthSync';
 
 function RootNavigator() {
   const { session, isLoading: authLoading } = useAuth();
@@ -16,6 +17,18 @@ function RootNavigator() {
   const colorScheme = useColorScheme();
 
   const isLoading = authLoading || profileLoading;
+
+  // Register background health sync once on mount
+  useEffect(() => {
+    registerBackgroundHealthSync();
+  }, []);
+
+  // Trigger a foreground sync whenever the user signs in
+  useEffect(() => {
+    if (session?.user?.id) {
+      triggerHealthSyncNow(session.user.id).catch(() => {});
+    }
+  }, [session?.user?.id]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -35,8 +48,9 @@ function RootNavigator() {
         router.replace('/(onboarding)');
       }
     } else {
-      // Fully set up — go to tabs
-      if (!inTabsGroup) {
+      // Fully set up — go to tabs (allow modal routes like ai-chat)
+      const inModalRoute = segments[0] === 'ai-chat';
+      if (!inTabsGroup && !inModalRoute) {
         router.replace('/(tabs)');
       }
     }

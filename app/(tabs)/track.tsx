@@ -1,4 +1,5 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { useFocusEffect } from 'expo-router';
 import {
   View,
   Text,
@@ -9,56 +10,193 @@ import {
   TouchableOpacity,
   useColorScheme,
   Alert,
+  Modal,
+  Switch,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Colors } from '@/constants/colors';
 import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
 import { useDailyLog } from '@/hooks/useDailyLog';
 import { useHealthData } from '@/hooks/useHealthData';
+import { useMedicationTracking } from '@/hooks/useMedicationTracking';
+import { useAuth } from '@/contexts/AuthContext';
+import { getDailyLog, getDailyLogs, saveDailyLog as dbSaveLog } from '@/services/database';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { Button } from '@/components/common/Button';
-import { Mood, MorningStiffness } from '@/types';
+import { ProfileButton } from '@/components/common/ProfileButton';
+import { DailyLog, Mood, MorningStiffness, DietQuality, DietTrigger } from '@/types';
 
-// ─── Number Selector (0-10) ──────────────────────────────────────────────────
+// ─── Date helpers ─────────────────────────────────────────────────────────────
 
-interface NumberSelectorProps {
+function localDateString(offsetDays = 0): string {
+  const d = new Date();
+  d.setDate(d.getDate() - offsetDays);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function dateLabelShort(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+function dateLabelFull(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function moodEmoji(mood: Mood | null): string {
+  switch (mood) {
+    case 'great': return '😊';
+    case 'good': return '🙂';
+    case 'okay': return '😐';
+    case 'low': return '😔';
+    case 'very_low': return '😞';
+    default: return '—';
+  }
+}
+
+function dietQualityEmoji(quality: DietQuality): string {
+  switch (quality) {
+    case 'clean': return '🥗';
+    case 'mostly_clean': return '🥙';
+    case 'mixed': return '🍽️';
+    case 'poor': return '🍕';
+  }
+}
+
+// ─── Score Picker (replaces NumberSelector) ───────────────────────────────────
+
+interface ScorePickerProps {
   value: number;
   onChange: (n: number) => void;
   isDark: boolean;
 }
 
-function NumberSelector({ value, onChange, isDark }: NumberSelectorProps) {
+function scorePickerColor(v: number): string {
+  if (v <= 3) return Colors.success;
+  if (v <= 6) return Colors.warning;
+  return Colors.error;
+}
+
+function ScorePicker({ value, onChange, isDark }: ScorePickerProps) {
+  const color = scorePickerColor(value);
+  const QUICK_PICKS = [0, 3, 5, 7, 10];
+
   return (
-    <View style={styles.numberRow}>
-      {Array.from({ length: 11 }, (_, i) => i).map((n) => {
-        const selected = n === value;
-        return (
-          <TouchableOpacity
-            key={n}
-            onPress={() => onChange(n)}
-            style={[
-              styles.numberCircle,
-              isDark && styles.numberCircleDark,
-              selected && styles.numberCircleSelected,
-            ]}
-            activeOpacity={0.7}
-          >
-            <Text
+    <View style={pickerStyles.wrapper}>
+      {/* Main stepper row */}
+      <View style={pickerStyles.stepperRow}>
+        <TouchableOpacity
+          onPress={() => onChange(Math.max(0, value - 1))}
+          style={[pickerStyles.stepBtn, isDark && pickerStyles.stepBtnDark]}
+          activeOpacity={0.7}
+        >
+          <Text style={[pickerStyles.stepBtnText, isDark && { color: Colors.textPrimaryDark }]}>−</Text>
+        </TouchableOpacity>
+
+        <View style={pickerStyles.scoreDisplay}>
+          <Text style={[pickerStyles.scoreNumber, { color }]}>{value}</Text>
+          <Text style={[pickerStyles.scoreSlash, isDark && { color: Colors.textSecondaryDark }]}>/10</Text>
+        </View>
+
+        <TouchableOpacity
+          onPress={() => onChange(Math.min(10, value + 1))}
+          style={[pickerStyles.stepBtn, isDark && pickerStyles.stepBtnDark]}
+          activeOpacity={0.7}
+        >
+          <Text style={[pickerStyles.stepBtnText, isDark && { color: Colors.textPrimaryDark }]}>+</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Quick-tap pills */}
+      <View style={pickerStyles.quickRow}>
+        {QUICK_PICKS.map((n) => {
+          const c = scorePickerColor(n);
+          const selected = n === value;
+          return (
+            <TouchableOpacity
+              key={n}
+              onPress={() => onChange(n)}
               style={[
-                styles.numberCircleText,
-                isDark && styles.numberCircleTextDark,
-                selected && styles.numberCircleTextSelected,
+                pickerStyles.quickPill,
+                { borderColor: c + '80', backgroundColor: selected ? c : c + '18' },
               ]}
+              activeOpacity={0.7}
             >
-              {n}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
+              <Text style={[pickerStyles.quickPillText, { color: selected ? '#FFF' : c }]}>{n}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </View>
   );
 }
+
+const pickerStyles = StyleSheet.create({
+  wrapper: {
+    gap: Spacing.sm,
+  },
+  stepperRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  stepBtn: {
+    flex: 1,
+    height: 56,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    backgroundColor: Colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepBtnDark: {
+    borderColor: Colors.borderDark,
+    backgroundColor: Colors.backgroundDark,
+  },
+  stepBtnText: {
+    fontSize: 28,
+    fontWeight: '300',
+    color: Colors.textPrimary,
+    lineHeight: 34,
+  },
+  scoreDisplay: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    width: 88,
+  },
+  scoreNumber: {
+    fontSize: 48,
+    fontWeight: '900',
+    lineHeight: 54,
+  },
+  scoreSlash: {
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    fontWeight: '600',
+    paddingBottom: 6,
+    marginLeft: 2,
+  },
+  quickRow: {
+    flexDirection: 'row',
+    gap: Spacing.xs,
+    justifyContent: 'space-between',
+  },
+  quickPill: {
+    flex: 1,
+    paddingVertical: 5,
+    borderRadius: BorderRadius.full,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  quickPillText: {
+    fontSize: FontSize.xs,
+    fontWeight: '700',
+  },
+});
 
 // ─── Stiffness Chips ──────────────────────────────────────────────────────────
 
@@ -118,7 +256,36 @@ const MOOD_OPTIONS: { value: Mood; emoji: string; labelKey: string; color: strin
   { value: 'very_low', emoji: '😞', labelKey: 'tracker.mood_very_low', color: Colors.moodVeryLow },
 ];
 
-// ─── Today's Log Summary ──────────────────────────────────────────────────────
+// ─── Diet constants ───────────────────────────────────────────────────────────
+
+const DIET_QUALITY_OPTIONS: { value: DietQuality; label: string; color: string }[] = [
+  { value: 'clean', label: 'Clean', color: '#16A34A' },
+  { value: 'mostly_clean', label: 'Mostly good', color: '#65A30D' },
+  { value: 'mixed', label: 'Mixed', color: '#D97706' },
+  { value: 'poor', label: 'Poor', color: '#DC2626' },
+];
+
+const DIET_TRIGGER_OPTIONS: { value: DietTrigger; label: string }[] = [
+  { value: 'high_starch', label: 'Starch/wheat' },
+  { value: 'alcohol', label: 'Alcohol' },
+  { value: 'processed', label: 'Processed food' },
+  { value: 'high_sugar', label: 'High sugar' },
+  { value: 'dairy', label: 'Dairy' },
+  { value: 'red_meat', label: 'Red meat' },
+  { value: 'nightshades', label: 'Nightshades' },
+];
+
+const EXERCISE_TYPE_OPTIONS: { value: string; label: string }[] = [
+  { value: 'physio', label: 'Physio exercises' },
+  { value: 'swimming', label: 'Swimming' },
+  { value: 'walking', label: 'Walking' },
+  { value: 'yoga', label: 'Yoga / stretching' },
+  { value: 'cycling', label: 'Cycling' },
+  { value: 'gym', label: 'Gym' },
+  { value: 'other', label: 'Other' },
+];
+
+// ─── Log Summary ──────────────────────────────────────────────────────────────
 
 function LogSummary({
   painScore,
@@ -154,77 +321,635 @@ function LogSummary({
   );
 }
 
-// ─── Main Screen ──────────────────────────────────────────────────────────────
+// ─── Day Log Form (reused in both main screen and modal) ─────────────────────
 
-export default function TrackScreen() {
-  const { t } = useTranslation();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+interface DayLogFormProps {
+  painScore: number;
+  setPainScore: (n: number) => void;
+  fatigueScore: number;
+  setFatigueScore: (n: number) => void;
+  stiffness: MorningStiffness | null;
+  setStiffness: (v: MorningStiffness) => void;
+  mood: Mood | null;
+  setMood: (v: Mood) => void;
+  medsTaken: 'yes' | 'no' | 'partial';
+  setMedsTaken: (v: 'yes' | 'no' | 'partial') => void;
+  notes: string;
+  setNotes: (v: string) => void;
+  dietQuality: DietQuality | null;
+  setDietQuality: (v: DietQuality | null) => void;
+  dietTriggers: DietTrigger[];
+  setDietTriggers: (v: DietTrigger[]) => void;
+  exerciseDone: boolean;
+  setExerciseDone: (v: boolean) => void;
+  exerciseType: string | null;
+  setExerciseType: (v: string | null) => void;
+  exerciseMinutes: number | null;
+  setExerciseMinutes: (v: number | null) => void;
+  tracksMedication: boolean;
+  isDark: boolean;
+  t: (key: string, opts?: Record<string, unknown>) => string;
+  isSaving: boolean;
+  onSave: () => void;
+}
 
-  const { todayLog, todayLogged, streak, isLoading, error, saveLog, refresh } = useDailyLog();
-  const { isConnected: healthConnected, todayData: healthData } = useHealthData();
+function DayLogForm({
+  painScore, setPainScore,
+  fatigueScore, setFatigueScore,
+  stiffness, setStiffness,
+  mood, setMood,
+  medsTaken, setMedsTaken,
+  notes, setNotes,
+  dietQuality, setDietQuality,
+  dietTriggers, setDietTriggers,
+  exerciseDone, setExerciseDone,
+  exerciseType, setExerciseType,
+  exerciseMinutes, setExerciseMinutes,
+  tracksMedication,
+  isDark, t, isSaving, onSave,
+}: DayLogFormProps) {
+  const stiffnessOptions = STIFFNESS_OPTIONS.map((opt) => ({ value: opt.value, label: t(opt.labelKey) }));
+  const medOptions = [
+    { value: 'yes', label: t('tracker.medications_yes') },
+    { value: 'partial', label: t('tracker.medications_partial') },
+    { value: 'no', label: t('tracker.medications_no') },
+  ];
 
-  const [editing, setEditing] = useState(false);
-  const [painScore, setPainScore] = useState(todayLog?.pain_score ?? 0);
-  const [fatigueScore, setFatigueScore] = useState(todayLog?.fatigue_score ?? 0);
-  const [stiffness, setStiffness] = useState<MorningStiffness | null>(todayLog?.stiffness_duration ?? null);
-  const [mood, setMood] = useState<Mood | null>(todayLog?.mood ?? null);
-  const [medsTaken, setMedsTaken] = useState<'yes' | 'no' | 'partial'>(todayLog?.medications_taken ?? 'yes');
-  const [notes, setNotes] = useState(todayLog?.notes ?? '');
+  return (
+    <>
+      {/* Symptoms card — pain + fatigue merged into ONE section */}
+      <View style={[styles.section, isDark && styles.sectionDark]}>
+        <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>Symptoms today</Text>
+
+        {/* Pain subsection */}
+        <View style={styles.symptomSubSection}>
+          <View style={styles.symptomSubHeader}>
+            <Text style={[styles.symptomSubLabel, isDark && styles.textSecDark]}>{t('tracker.pain_score')}</Text>
+          </View>
+          <ScorePicker value={painScore} onChange={setPainScore} isDark={isDark} />
+          <Text style={[styles.hint, isDark && styles.textSecDark]}>{t('tracker.pain_score_hint')}</Text>
+        </View>
+
+        {/* Divider */}
+        <View style={[styles.symptomDivider, isDark && styles.symptomDividerDark]} />
+
+        {/* Fatigue subsection */}
+        <View style={styles.symptomSubSection}>
+          <View style={styles.symptomSubHeader}>
+            <Text style={[styles.symptomSubLabel, isDark && styles.textSecDark]}>{t('tracker.fatigue_score')}</Text>
+          </View>
+          <ScorePicker value={fatigueScore} onChange={setFatigueScore} isDark={isDark} />
+          <Text style={[styles.hint, isDark && styles.textSecDark]}>{t('tracker.fatigue_score_hint')}</Text>
+        </View>
+      </View>
+
+      <View style={[styles.section, isDark && styles.sectionDark]}>
+        <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>{t('tracker.stiffness_duration')}</Text>
+        <ChipRow options={stiffnessOptions} selected={stiffness} onSelect={(v) => setStiffness(v as MorningStiffness)} isDark={isDark} />
+      </View>
+
+      <View style={[styles.section, isDark && styles.sectionDark]}>
+        <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>{t('tracker.mood')}</Text>
+        <View style={styles.moodRow}>
+          {MOOD_OPTIONS.map((opt) => {
+            const selected = mood === opt.value;
+            return (
+              <TouchableOpacity
+                key={opt.value}
+                onPress={() => setMood(opt.value)}
+                style={[
+                  styles.moodButton,
+                  isDark && styles.moodButtonDark,
+                  selected && { borderColor: opt.color, backgroundColor: opt.color + '22' },
+                ]}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.moodEmoji}>{opt.emoji}</Text>
+                <Text style={[styles.moodLabel, isDark && styles.textSecDark, selected && { color: opt.color, fontWeight: '700' }]}>
+                  {t(opt.labelKey)}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      {tracksMedication && (
+        <View style={[styles.section, isDark && styles.sectionDark]}>
+          <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>{t('tracker.medications_taken')}</Text>
+          <ChipRow options={medOptions} selected={medsTaken} onSelect={(v) => setMedsTaken(v as 'yes' | 'no' | 'partial')} isDark={isDark} />
+        </View>
+      )}
+
+      {/* Nutrition */}
+      <View style={[styles.section, isDark && styles.sectionDark]}>
+        <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>Nutrition today</Text>
+        <View style={styles.dietQualityRow}>
+          {DIET_QUALITY_OPTIONS.map((opt) => {
+            const selected = dietQuality === opt.value;
+            return (
+              <TouchableOpacity
+                key={opt.value}
+                onPress={() => setDietQuality(selected ? null : opt.value)}
+                activeOpacity={0.7}
+                style={[
+                  styles.dietQualityChip,
+                  isDark && styles.chipDark,
+                  selected && { backgroundColor: opt.color, borderColor: opt.color },
+                ]}
+              >
+                <Text style={[
+                  styles.chipText,
+                  isDark && !selected && styles.chipTextDark,
+                  selected && styles.chipTextSelected,
+                ]}>
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        <Text style={[styles.sectionSubLabel, isDark && styles.textSecDark]}>Notable today</Text>
+        <View style={styles.chipRow}>
+          {DIET_TRIGGER_OPTIONS.map((opt) => {
+            const selected = dietTriggers.includes(opt.value);
+            return (
+              <TouchableOpacity
+                key={opt.value}
+                onPress={() => setDietTriggers(
+                  selected
+                    ? dietTriggers.filter((t) => t !== opt.value)
+                    : [...dietTriggers, opt.value]
+                )}
+                activeOpacity={0.7}
+                style={[
+                  styles.chip,
+                  isDark && styles.chipDark,
+                  selected && { backgroundColor: '#DC262620', borderColor: '#DC2626' },
+                ]}
+              >
+                <Text style={[
+                  styles.chipText,
+                  isDark && !selected && styles.chipTextDark,
+                  selected && { color: '#DC2626', fontWeight: '700' },
+                ]}>
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        <Text style={[styles.hint, isDark && styles.textSecDark]}>
+          These are known AS inflammation drivers — tracked for pattern analysis
+        </Text>
+      </View>
+
+      {/* Exercise */}
+      <View style={[styles.section, isDark && styles.sectionDark]}>
+        <View style={styles.exerciseHeaderRow}>
+          <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>Exercise today</Text>
+          <Switch
+            value={exerciseDone}
+            onValueChange={setExerciseDone}
+            trackColor={{ true: Colors.success, false: isDark ? Colors.borderDark : Colors.border }}
+            thumbColor="#FFFFFF"
+          />
+        </View>
+        {exerciseDone && (
+          <>
+            <View style={styles.chipRow}>
+              {EXERCISE_TYPE_OPTIONS.map((opt) => {
+                const selected = exerciseType === opt.value;
+                return (
+                  <TouchableOpacity
+                    key={opt.value}
+                    onPress={() => setExerciseType(selected ? null : opt.value)}
+                    activeOpacity={0.7}
+                    style={[styles.chip, isDark && styles.chipDark, selected && styles.chipSelected]}
+                  >
+                    <Text style={[styles.chipText, isDark && !selected && styles.chipTextDark, selected && styles.chipTextSelected]}>
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <View style={styles.exerciseMinutesRow}>
+              <Text style={[styles.sectionSubLabel, isDark && styles.textSecDark, { marginTop: 0 }]}>Duration (minutes)</Text>
+              <View style={styles.minutesBtns}>
+                {[15, 30, 45, 60, 90].map((m) => {
+                  const sel = exerciseMinutes === m;
+                  return (
+                    <TouchableOpacity
+                      key={m}
+                      onPress={() => setExerciseMinutes(sel ? null : m)}
+                      style={[styles.minutesPill, { backgroundColor: sel ? Colors.success : 'transparent', borderColor: Colors.success + '60' }]}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.minutesPillText, { color: sel ? '#FFF' : Colors.success }]}>{m}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          </>
+        )}
+      </View>
+
+      {/* Notes — last thing before save */}
+      <View style={[styles.section, isDark && styles.sectionDark]}>
+        <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>{t('tracker.notes')}</Text>
+        <TextInput
+          style={[styles.notesInput, isDark && styles.notesInputDark]}
+          placeholder={t('tracker.notes_placeholder')}
+          placeholderTextColor={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
+          value={notes}
+          onChangeText={(v) => setNotes(v.slice(0, 500))}
+          multiline
+          numberOfLines={4}
+          textAlignVertical="top"
+        />
+      </View>
+
+      <Button label={t('tracker.save')} onPress={onSave} isLoading={isSaving} style={styles.saveButton} />
+    </>
+  );
+}
+
+// ─── Day Log Modal ────────────────────────────────────────────────────────────
+
+interface DayLogModalProps {
+  date: string;
+  initialLog: DailyLog | null;
+  userId: string;
+  tracksMedication: boolean;
+  isDark: boolean;
+  t: (key: string, opts?: Record<string, unknown>) => string;
+  onSaved: (log: DailyLog) => void;
+  onClose: () => void;
+}
+
+function DayLogModal({ date, initialLog, userId, tracksMedication, isDark, t, onSaved, onClose }: DayLogModalProps) {
+  const [painScore, setPainScore] = useState(initialLog?.pain_score ?? 0);
+  const [fatigueScore, setFatigueScore] = useState(initialLog?.fatigue_score ?? 0);
+  const [stiffness, setStiffness] = useState<MorningStiffness | null>(initialLog?.stiffness_duration ?? null);
+  const [mood, setMood] = useState<Mood | null>(initialLog?.mood ?? null);
+  const [medsTaken, setMedsTaken] = useState<'yes' | 'no' | 'partial'>(initialLog?.medications_taken ?? 'yes');
+  const [notes, setNotes] = useState(initialLog?.notes ?? '');
+  const [dietQuality, setDietQuality] = useState<DietQuality | null>(initialLog?.diet_quality ?? null);
+  const [dietTriggers, setDietTriggers] = useState<DietTrigger[]>(initialLog?.diet_triggers ?? []);
+  const [exerciseDone, setExerciseDone] = useState(initialLog?.exercise_done ?? false);
+  const [exerciseType, setExerciseType] = useState<string | null>(initialLog?.exercise_type ?? null);
+  const [exerciseMinutes, setExerciseMinutes] = useState<number | null>(initialLog?.exercise_minutes ?? null);
   const [isSaving, setIsSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
 
-  const showForm = !todayLogged || editing;
-
-  // Sync form with loaded log when it arrives
-  React.useEffect(() => {
-    if (todayLog) {
-      setPainScore(todayLog.pain_score);
-      setFatigueScore(todayLog.fatigue_score);
-      setStiffness(todayLog.stiffness_duration);
-      setMood(todayLog.mood);
-      setMedsTaken(todayLog.medications_taken);
-      setNotes(todayLog.notes);
-    }
-  }, [todayLog]);
-
-  const handleSave = useCallback(async () => {
+  const handleSave = async () => {
     setIsSaving(true);
-    setSaved(false);
     try {
-      await saveLog({
+      const saved = await dbSaveLog({
+        user_id: userId,
+        date,
         pain_score: painScore,
         fatigue_score: fatigueScore,
         stiffness_duration: stiffness,
         mood,
         medications_taken: medsTaken,
         notes,
+        diet_quality: dietQuality,
+        diet_triggers: dietTriggers,
+        exercise_done: exerciseDone,
+        exercise_type: exerciseType,
+        exercise_minutes: exerciseMinutes,
       });
-      setEditing(false);
-      setSaved(true);
-    } catch (err) {
+      if (saved) onSaved(saved);
+      onClose();
+    } catch {
       Alert.alert(t('errors.save_failed'));
     } finally {
       setIsSaving(false);
     }
-  }, [saveLog, painScore, fatigueScore, stiffness, mood, medsTaken, notes, t]);
+  };
 
-  const todayLabel = new Date().toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
+  return (
+    <Modal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <SafeAreaView style={[styles.modalScreen, isDark && styles.screenDark]}>
+        <View style={[styles.modalHeader, isDark && styles.modalHeaderDark]}>
+          <TouchableOpacity onPress={onClose} style={styles.modalCancel}>
+            <Text style={[styles.modalCancelText, isDark && styles.textSecDark]}>Cancel</Text>
+          </TouchableOpacity>
+          <Text style={[styles.modalTitle, isDark && styles.textPrimaryDark]}>
+            {dateLabelFull(date)}
+          </Text>
+          <View style={styles.modalCancel} />
+        </View>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[styles.scrollContent, { paddingTop: Spacing.md }]}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <DayLogForm
+            painScore={painScore} setPainScore={setPainScore}
+            fatigueScore={fatigueScore} setFatigueScore={setFatigueScore}
+            stiffness={stiffness} setStiffness={setStiffness}
+            mood={mood} setMood={setMood}
+            medsTaken={medsTaken} setMedsTaken={setMedsTaken}
+            notes={notes} setNotes={setNotes}
+            dietQuality={dietQuality} setDietQuality={setDietQuality}
+            dietTriggers={dietTriggers} setDietTriggers={setDietTriggers}
+            exerciseDone={exerciseDone} setExerciseDone={setExerciseDone}
+            exerciseType={exerciseType} setExerciseType={setExerciseType}
+            exerciseMinutes={exerciseMinutes} setExerciseMinutes={setExerciseMinutes}
+            tracksMedication={tracksMedication}
+            isDark={isDark} t={t}
+            isSaving={isSaving} onSave={handleSave}
+          />
+          <View style={styles.bottomPad} />
+        </ScrollView>
+      </SafeAreaView>
+    </Modal>
+  );
+}
 
-  const stiffnessOptions = STIFFNESS_OPTIONS.map((opt) => ({
-    value: opt.value,
-    label: t(opt.labelKey),
-  }));
+// ─── Date Picker Modal ────────────────────────────────────────────────────────
 
-  const medOptions = [
-    { value: 'yes', label: t('tracker.medications_yes') },
-    { value: 'partial', label: t('tracker.medications_partial') },
-    { value: 'no', label: t('tracker.medications_no') },
+interface DatePickerModalProps {
+  isDark: boolean;
+  maxDate: string;
+  onSelect: (date: string) => void;
+  onClose: () => void;
+}
+
+function DatePickerModal({ isDark, maxDate, onSelect, onClose }: DatePickerModalProps) {
+  const today = new Date();
+  const [year, setYear] = useState(today.getFullYear());
+  const [month, setMonth] = useState(today.getMonth());
+
+  const maxD = new Date(maxDate + 'T12:00:00');
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const monthName = new Date(year, month, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+
+  const prevMonth = () => {
+    if (month === 0) { setYear(y => y - 1); setMonth(11); }
+    else setMonth(m => m - 1);
+  };
+  const nextMonth = () => {
+    const next = new Date(year, month + 1, 1);
+    if (next <= new Date(maxDate + 'T12:00:00')) {
+      if (month === 11) { setYear(y => y + 1); setMonth(0); }
+      else setMonth(m => m + 1);
+    }
+  };
+
+  const cells: (number | null)[] = [
+    ...Array(firstDay === 0 ? 6 : firstDay - 1).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
   ];
+
+  const handleDay = (day: number) => {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const d = new Date(dateStr + 'T12:00:00');
+    if (d <= maxD) {
+      onSelect(dateStr);
+      onClose();
+    }
+  };
+
+  const isFuture = (day: number) => {
+    const d = new Date(year, month, day);
+    return d > maxD;
+  };
+
+  return (
+    <Modal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <SafeAreaView style={[styles.modalScreen, isDark && styles.screenDark]}>
+        <View style={[styles.modalHeader, isDark && styles.modalHeaderDark]}>
+          <TouchableOpacity onPress={onClose} style={styles.modalCancel}>
+            <Text style={[styles.modalCancelText, isDark && styles.textSecDark]}>Cancel</Text>
+          </TouchableOpacity>
+          <Text style={[styles.modalTitle, isDark && styles.textPrimaryDark]}>Browse entries</Text>
+          <View style={styles.modalCancel} />
+        </View>
+
+        <View style={styles.calendarContainer}>
+          <View style={styles.calendarNav}>
+            <TouchableOpacity onPress={prevMonth} style={styles.calNavBtn}>
+              <Text style={[styles.calNavText, isDark && styles.textPrimaryDark]}>‹</Text>
+            </TouchableOpacity>
+            <Text style={[styles.calMonthLabel, isDark && styles.textPrimaryDark]}>{monthName}</Text>
+            <TouchableOpacity onPress={nextMonth} style={styles.calNavBtn}>
+              <Text style={[styles.calNavText, isDark && styles.textPrimaryDark]}>›</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.calDayHeaders}>
+            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
+              <Text key={i} style={[styles.calDayHeader, isDark && styles.textSecDark]}>{d}</Text>
+            ))}
+          </View>
+
+          <View style={styles.calGrid}>
+            {cells.map((day, i) => {
+              if (day === null) return <View key={`empty-${i}`} style={styles.calCell} />;
+              const disabled = isFuture(day);
+              return (
+                <TouchableOpacity
+                  key={i}
+                  style={[styles.calCell, styles.calDay, isDark && styles.calDayDark, disabled && styles.calDayDisabled]}
+                  onPress={() => !disabled && handleDay(day)}
+                  activeOpacity={disabled ? 1 : 0.7}
+                >
+                  <Text style={[styles.calDayText, isDark && !disabled && styles.textPrimaryDark, disabled && styles.calDayTextDisabled]}>
+                    {day}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      </SafeAreaView>
+    </Modal>
+  );
+}
+
+// ─── Recent Logs Card ─────────────────────────────────────────────────────────
+
+interface RecentLogsCardProps {
+  logs: DailyLog[];
+  today: string;
+  isDark: boolean;
+  hasOlderLogs: boolean;
+  onEdit: (date: string, log: DailyLog) => void;
+  onBrowseOlder: () => void;
+}
+
+function RecentLogsCard({ logs, isDark, hasOlderLogs, onEdit, onBrowseOlder }: RecentLogsCardProps) {
+  const sorted = [...logs].sort((a, b) => b.date.localeCompare(a.date));
+
+  return (
+    <View style={[styles.recentCard, isDark && styles.recentCardDark]}>
+      <Text style={[styles.recentCardTitle, isDark && styles.textPrimaryDark]}>Recent check-ins</Text>
+
+      {sorted.map((log) => (
+        <TouchableOpacity
+          key={log.date}
+          style={[styles.recentRow, isDark && styles.recentRowDark]}
+          onPress={() => onEdit(log.date, log)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.recentRowLeft}>
+            <Text style={[styles.recentDate, isDark && styles.textPrimaryDark]}>{dateLabelShort(log.date)}</Text>
+            <Text style={[styles.recentStats, isDark && styles.textSecDark]}>
+              Pain {log.pain_score}/10 · Fatigue {log.fatigue_score}/10 · {moodEmoji(log.mood)}
+              {log.diet_quality ? ` · ${dietQualityEmoji(log.diet_quality)}` : ''}
+            </Text>
+          </View>
+          <Text style={[styles.recentChevron, isDark && styles.textSecDark]}>›</Text>
+        </TouchableOpacity>
+      ))}
+
+      {hasOlderLogs && (
+        <TouchableOpacity style={styles.browseOlderBtn} onPress={onBrowseOlder} activeOpacity={0.7}>
+          <Text style={styles.browseOlderText}>Browse older entries</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
+// ─── Main Screen ──────────────────────────────────────────────────────────────
+
+export default function TrackScreen() {
+  const { t } = useTranslation();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const { user } = useAuth();
+
+  const todayStr = localDateString(0);
+
+  const { todayLog, todayLogged, streak, isLoading, error, saveLog, refresh } = useDailyLog();
+  const { isConnected: healthConnected, todayData: healthData } = useHealthData();
+  const { tracks: tracksMedication } = useMedicationTracking();
+
+  useFocusEffect(useCallback(() => { refresh(); }, [refresh]));
+
+  // Recent logs (last 7 days, excluding today) + whether older entries exist
+  const [recentLogs, setRecentLogs] = useState<DailyLog[]>([]);
+  const [hasOlderLogs, setHasOlderLogs] = useState(false);
+  const loadRecentLogs = useCallback(async () => {
+    if (!user) return;
+    try {
+      const logs = await getDailyLogs(user.id, 100);
+      const cutoff = localDateString(7);
+      setRecentLogs(logs.filter((l) => l.date !== todayStr && l.date >= cutoff));
+      setHasOlderLogs(logs.some((l) => l.date < cutoff));
+    } catch {}
+  }, [user, todayStr]);
+
+  useFocusEffect(useCallback(() => { loadRecentLogs(); }, [loadRecentLogs]));
+
+  // Modal state
+  const [modalDate, setModalDate] = useState<string | null>(null);
+  const [modalLog, setModalLog] = useState<DailyLog | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [loadingModal, setLoadingModal] = useState(false);
+
+  const openEntryForDate = useCallback(async (date: string, knownLog?: DailyLog | null) => {
+    if (!user) return;
+    if (knownLog !== undefined) {
+      setModalLog(knownLog);
+      setModalDate(date);
+      return;
+    }
+    setLoadingModal(true);
+    try {
+      const log = await getDailyLog(user.id, date);
+      setModalLog(log);
+      setModalDate(date);
+    } catch {
+      setModalLog(null);
+      setModalDate(date);
+    } finally {
+      setLoadingModal(false);
+    }
+  }, [user]);
+
+  // Today's form state
+  const [editing, setEditing] = useState(false);
+  const [painScore, setPainScore] = useState(0);
+  const [fatigueScore, setFatigueScore] = useState(0);
+  const [stiffness, setStiffness] = useState<MorningStiffness | null>(null);
+  const [mood, setMood] = useState<Mood | null>(null);
+  const [medsTaken, setMedsTaken] = useState<'yes' | 'no' | 'partial'>('yes');
+  const [notes, setNotes] = useState('');
+  const [dietQuality, setDietQuality] = useState<DietQuality | null>(null);
+  const [dietTriggers, setDietTriggers] = useState<DietTrigger[]>([]);
+  const [exerciseDone, setExerciseDone] = useState(false);
+  const [exerciseType, setExerciseType] = useState<string | null>(null);
+  const [exerciseMinutes, setExerciseMinutes] = useState<number | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  // Sync form when today's log loads
+  useEffect(() => {
+    if (todayLog) {
+      setPainScore(todayLog.pain_score);
+      setFatigueScore(todayLog.fatigue_score);
+      setStiffness(todayLog.stiffness_duration);
+      setMood(todayLog.mood);
+      setMedsTaken(todayLog.medications_taken ?? 'yes');
+      setNotes(todayLog.notes ?? '');
+      setDietQuality(todayLog.diet_quality ?? null);
+      setDietTriggers(todayLog.diet_triggers ?? []);
+      setExerciseDone(todayLog.exercise_done ?? false);
+      setExerciseType(todayLog.exercise_type ?? null);
+      setExerciseMinutes(todayLog.exercise_minutes ?? null);
+    } else {
+      setPainScore(0);
+      setFatigueScore(0);
+      setStiffness(null);
+      setMood(null);
+      setMedsTaken('yes');
+      setNotes('');
+      setDietQuality(null);
+      setDietTriggers([]);
+      setExerciseDone(false);
+      setExerciseType(null);
+      setExerciseMinutes(null);
+    }
+    setEditing(false);
+    setSaved(false);
+  }, [todayLog]);
+
+  const handleSaveToday = useCallback(async () => {
+    if (!user) return;
+    setIsSaving(true);
+    setSaved(false);
+    try {
+      await saveLog({ pain_score: painScore, fatigue_score: fatigueScore, stiffness_duration: stiffness, mood, medications_taken: medsTaken, notes, diet_quality: dietQuality, diet_triggers: dietTriggers, exercise_done: exerciseDone, exercise_type: exerciseType, exercise_minutes: exerciseMinutes });
+      setEditing(false);
+      setSaved(true);
+    } catch {
+      Alert.alert(t('errors.save_failed'));
+    } finally {
+      setIsSaving(false);
+    }
+  }, [user, saveLog, painScore, fatigueScore, stiffness, mood, medsTaken, notes, dietQuality, dietTriggers, exerciseDone, exerciseType, exerciseMinutes, t]);
+
+  const showForm = !todayLogged || editing;
+
+  // Yesterday context
+  const yesterdayStr = localDateString(1);
+  const yesterdayLog = recentLogs.find((l) => l.date === yesterdayStr) ?? null;
+
+  // Today's date label
+  const todayDateLabel = new Date().toLocaleDateString('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
 
   if (isLoading) {
     return (
@@ -242,48 +967,23 @@ export default function TrackScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={[styles.title, isDark && styles.textPrimaryDark]}>
-            {t('tracker.title')}
-          </Text>
-          <Text style={[styles.dateLabel, isDark && styles.textSecDark]}>
-            {todayLabel}
-          </Text>
+        {/* Log header */}
+        <View style={styles.logHeaderRow}>
+          <View style={styles.logHeader}>
+            <Text style={[styles.logHeaderDate, isDark && styles.textPrimaryDark]}>
+              {todayDateLabel}
+            </Text>
+            <Text style={[styles.logHeaderSubtitle, isDark && styles.textSecDark]}>
+              {todayLogged ? 'Updated today' : 'Logging for today'}
+            </Text>
+          </View>
+          <ProfileButton />
         </View>
 
-        {/* Health context strip */}
-        {healthConnected && healthData && (
-          <View style={[styles.healthStrip, isDark && styles.healthStripDark]}>
-            <Text style={[styles.healthStripLabel, isDark && styles.textSecDark]}>
-              {t('health.today_context')}
-            </Text>
-            <View style={styles.healthStripStats}>
-              {healthData.steps !== null && (
-                <Text style={[styles.healthStat, isDark && styles.textSecDark]}>
-                  👟 {healthData.steps.toLocaleString()} {t('health.steps_unit')}
-                </Text>
-              )}
-              {healthData.sleep_duration !== null && (
-                <Text style={[styles.healthStat, isDark && styles.textSecDark]}>
-                  💤 {healthData.sleep_duration}{t('health.sleep_unit')}
-                </Text>
-              )}
-              {healthData.hrv !== null && (
-                <Text style={[styles.healthStat, isDark && styles.textSecDark]}>
-                  💓 {healthData.hrv} {t('health.hrv_unit')}
-                </Text>
-              )}
-            </View>
-          </View>
-        )}
+        {error && <ErrorMessage message={error} onRetry={refresh} retryLabel={t('common.retry')} />}
 
-        {error && (
-          <ErrorMessage message={error} onRetry={refresh} retryLabel={t('common.retry')} />
-        )}
-
-        {/* Already logged banner */}
-        {todayLogged && !editing && (
+        {/* Logged today banner — summary lives on Today tab, this is just confirmation + edit */}
+        {todayLogged && todayLog && !editing && (
           <View style={[styles.loggedCard, isDark && styles.loggedCardDark]}>
             <View style={styles.loggedCardHeader}>
               <Text style={styles.loggedTick}>✓</Text>
@@ -301,158 +1001,79 @@ export default function TrackScreen() {
                 </View>
               )}
             </View>
-
-            {todayLog && (
-              <LogSummary
-                painScore={todayLog.pain_score}
-                fatigueScore={todayLog.fatigue_score}
-                mood={todayLog.mood}
-                isDark={isDark}
-                t={t}
-              />
-            )}
-
-            <Button
-              label={t('tracker.edit_today')}
-              onPress={() => setEditing(true)}
-              variant="outline"
-              style={styles.editButton}
-            />
+            <Button label={t('tracker.edit_today')} onPress={() => setEditing(true)} variant="outline" style={styles.editButton} />
           </View>
         )}
 
-        {/* Success message after save in edit mode */}
         {saved && !editing && (
           <View style={[styles.successCard, isDark && styles.successCardDark]}>
             <Text style={styles.successText}>{t('tracker.saved_success')}</Text>
           </View>
         )}
 
-        {/* Check-in form */}
+        {/* Today's form */}
         {showForm && (
-          <>
-            {/* Pain level */}
-            <View style={[styles.section, isDark && styles.sectionDark]}>
-              <View style={styles.sectionHeader}>
-                <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>
-                  {t('tracker.pain_score')}
-                </Text>
-                <Text style={styles.sectionValue}>
-                  {t('tracker.pain_score_value', { score: painScore })}
-                </Text>
-              </View>
-              <NumberSelector value={painScore} onChange={setPainScore} isDark={isDark} />
-              <Text style={[styles.hint, isDark && styles.textSecDark]}>
-                {t('tracker.pain_score_hint')}
-              </Text>
-            </View>
+          <DayLogForm
+            painScore={painScore} setPainScore={setPainScore}
+            fatigueScore={fatigueScore} setFatigueScore={setFatigueScore}
+            stiffness={stiffness} setStiffness={setStiffness}
+            mood={mood} setMood={setMood}
+            medsTaken={medsTaken} setMedsTaken={setMedsTaken}
+            notes={notes} setNotes={setNotes}
+            dietQuality={dietQuality} setDietQuality={setDietQuality}
+            dietTriggers={dietTriggers} setDietTriggers={setDietTriggers}
+            exerciseDone={exerciseDone} setExerciseDone={setExerciseDone}
+            exerciseType={exerciseType} setExerciseType={setExerciseType}
+            exerciseMinutes={exerciseMinutes} setExerciseMinutes={setExerciseMinutes}
+            tracksMedication={tracksMedication}
+            isDark={isDark} t={t}
+            isSaving={isSaving} onSave={handleSaveToday}
+          />
+        )}
 
-            {/* Fatigue level */}
-            <View style={[styles.section, isDark && styles.sectionDark]}>
-              <View style={styles.sectionHeader}>
-                <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>
-                  {t('tracker.fatigue_score')}
-                </Text>
-                <Text style={styles.sectionValue}>
-                  {t('tracker.pain_score_value', { score: fatigueScore })}
-                </Text>
-              </View>
-              <NumberSelector value={fatigueScore} onChange={setFatigueScore} isDark={isDark} />
-              <Text style={[styles.hint, isDark && styles.textSecDark]}>
-                {t('tracker.fatigue_score_hint')}
-              </Text>
-            </View>
-
-            {/* Morning stiffness */}
-            <View style={[styles.section, isDark && styles.sectionDark]}>
-              <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>
-                {t('tracker.stiffness_duration')}
-              </Text>
-              <ChipRow
-                options={stiffnessOptions}
-                selected={stiffness}
-                onSelect={(v) => setStiffness(v as MorningStiffness)}
-                isDark={isDark}
-              />
-            </View>
-
-            {/* Mood */}
-            <View style={[styles.section, isDark && styles.sectionDark]}>
-              <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>
-                {t('tracker.mood')}
-              </Text>
-              <View style={styles.moodRow}>
-                {MOOD_OPTIONS.map((opt) => {
-                  const selected = mood === opt.value;
-                  return (
-                    <TouchableOpacity
-                      key={opt.value}
-                      onPress={() => setMood(opt.value)}
-                      style={[
-                        styles.moodButton,
-                        isDark && styles.moodButtonDark,
-                        selected && { borderColor: opt.color, backgroundColor: opt.color + '22' },
-                      ]}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.moodEmoji}>{opt.emoji}</Text>
-                      <Text
-                        style={[
-                          styles.moodLabel,
-                          isDark && styles.textSecDark,
-                          selected && { color: opt.color, fontWeight: '700' },
-                        ]}
-                      >
-                        {t(opt.labelKey)}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-
-            {/* Medications taken */}
-            <View style={[styles.section, isDark && styles.sectionDark]}>
-              <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>
-                {t('tracker.medications_taken')}
-              </Text>
-              <ChipRow
-                options={medOptions}
-                selected={medsTaken}
-                onSelect={(v) => setMedsTaken(v as 'yes' | 'no' | 'partial')}
-                isDark={isDark}
-              />
-            </View>
-
-            {/* Notes */}
-            <View style={[styles.section, isDark && styles.sectionDark]}>
-              <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>
-                {t('tracker.notes')}
-              </Text>
-              <TextInput
-                style={[styles.notesInput, isDark && styles.notesInputDark]}
-                placeholder={t('tracker.notes_placeholder')}
-                placeholderTextColor={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
-                value={notes}
-                onChangeText={(v) => setNotes(v.slice(0, 500))}
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
-              />
-            </View>
-
-            {/* Save button */}
-            <Button
-              label={t('tracker.save')}
-              onPress={handleSave}
-              isLoading={isSaving}
-              style={styles.saveButton}
-            />
-          </>
+        {/* Recent 7-day history — only shown if there are logged days */}
+        {recentLogs.length > 0 && (
+          <RecentLogsCard
+            logs={recentLogs}
+            today={todayStr}
+            isDark={isDark}
+            hasOlderLogs={hasOlderLogs}
+            onEdit={(date, log) => openEntryForDate(date, log)}
+            onBrowseOlder={() => setShowDatePicker(true)}
+          />
         )}
 
         <View style={styles.bottomPad} />
       </ScrollView>
+
+      {/* Edit modal for past entries */}
+      {modalDate && user && (
+        <DayLogModal
+          date={modalDate}
+          initialLog={modalLog}
+          userId={user.id}
+          tracksMedication={tracksMedication}
+          isDark={isDark}
+          t={t}
+          onSaved={(saved) => {
+            setRecentLogs((prev) => {
+              const filtered = prev.filter((l) => l.date !== saved.date);
+              return [...filtered, saved].sort((a, b) => b.date.localeCompare(a.date));
+            });
+          }}
+          onClose={() => { setModalDate(null); setModalLog(null); }}
+        />
+      )}
+
+      {/* Date picker for older entries */}
+      {showDatePicker && (
+        <DatePickerModal
+          isDark={isDark}
+          maxDate={localDateString(8)}
+          onSelect={(date) => openEntryForDate(date, undefined)}
+          onClose={() => setShowDatePicker(false)}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -472,6 +1093,7 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     gap: Spacing.md,
   },
+
   // Health strip
   healthStrip: {
     backgroundColor: Colors.surface,
@@ -489,8 +1111,6 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     fontWeight: '600',
     color: Colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   healthStripStats: {
     flexDirection: 'row',
@@ -502,18 +1122,31 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
 
-  header: {
-    marginBottom: Spacing.xs,
+  logHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
   },
-  title: {
-    fontSize: FontSize.xxl,
+  logHeader: {
+    paddingBottom: Spacing.xs,
+    gap: 2,
+    flex: 1,
+    marginRight: Spacing.sm,
+  },
+  logHeaderDate: {
+    fontSize: FontSize.xl,
     fontWeight: '800',
     color: Colors.textPrimary,
   },
-  dateLabel: {
+  logHeaderSubtitle: {
     fontSize: FontSize.sm,
     color: Colors.textSecondary,
-    marginTop: Spacing.xs,
+    fontWeight: '500',
+  },
+  logHeaderYesterday: {
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+    marginTop: 2,
   },
   textPrimaryDark: {
     color: Colors.textPrimaryDark,
@@ -522,7 +1155,7 @@ const styles = StyleSheet.create({
     color: Colors.textSecondaryDark,
   },
 
-  // Already logged card
+  // Logged card
   loggedCard: {
     backgroundColor: Colors.surface,
     borderRadius: BorderRadius.lg,
@@ -630,61 +1263,36 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surfaceDark,
     borderColor: Colors.borderDark,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
   sectionLabel: {
     fontSize: FontSize.md,
     fontWeight: '700',
     color: Colors.textPrimary,
-  },
-  sectionValue: {
-    fontSize: FontSize.md,
-    fontWeight: '700',
-    color: Colors.primary,
   },
   hint: {
     fontSize: FontSize.xs,
     color: Colors.textSecondary,
   },
 
-  // Number selector
-  numberRow: {
+  // Symptom sub-sections (inside the merged card)
+  symptomSubSection: {
+    gap: Spacing.sm,
+  },
+  symptomSubHeader: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 4,
-    marginTop: Spacing.xs,
-  },
-  numberCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.background,
   },
-  numberCircleDark: {
-    borderColor: Colors.borderDark,
-    backgroundColor: Colors.backgroundDark,
-  },
-  numberCircleSelected: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  numberCircleText: {
-    fontSize: FontSize.xs,
+  symptomSubLabel: {
+    fontSize: FontSize.sm,
     fontWeight: '600',
-    color: Colors.textPrimary,
+    color: Colors.textSecondary,
   },
-  numberCircleTextDark: {
-    color: Colors.textPrimaryDark,
+  symptomDivider: {
+    height: 1,
+    backgroundColor: Colors.border,
+    marginVertical: Spacing.xs,
   },
-  numberCircleTextSelected: {
-    color: '#FFFFFF',
+  symptomDividerDark: {
+    backgroundColor: Colors.borderDark,
   },
 
   // Chips
@@ -773,7 +1381,210 @@ const styles = StyleSheet.create({
   saveButton: {
     marginTop: Spacing.xs,
   },
+  exerciseHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  exerciseMinutesRow: {
+    gap: Spacing.xs,
+  },
+  minutesBtns: {
+    flexDirection: 'row',
+    gap: Spacing.xs,
+  },
+  minutesPill: {
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    borderWidth: 1.5,
+    minWidth: 44,
+    alignItems: 'center',
+  },
+  minutesPillText: {
+    fontSize: FontSize.xs,
+    fontWeight: '700',
+  },
+  dietQualityRow: {
+    flexDirection: 'row',
+    gap: Spacing.xs,
+    marginTop: Spacing.xs,
+  },
+  dietQualityChip: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    backgroundColor: Colors.background,
+  },
+  sectionSubLabel: {
+    fontSize: FontSize.xs,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+    marginTop: Spacing.sm,
+  },
   bottomPad: {
     height: Spacing.xl,
+  },
+
+  // Recent logs card
+  recentCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    overflow: 'hidden',
+  },
+  recentCardDark: {
+    backgroundColor: Colors.surfaceDark,
+    borderColor: Colors.borderDark,
+  },
+  recentCardTitle: {
+    fontSize: FontSize.md,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.sm,
+  },
+  recentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  recentRowDark: {
+    borderTopColor: Colors.borderDark,
+  },
+  recentRowLeft: {
+    flex: 1,
+    gap: 2,
+  },
+  recentDate: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  recentStats: {
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+  },
+  recentEmpty: {
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+    fontStyle: 'italic',
+  },
+  recentChevron: {
+    fontSize: 20,
+    color: Colors.textSecondary,
+    fontWeight: '300',
+  },
+  browseOlderBtn: {
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    paddingVertical: Spacing.md,
+    alignItems: 'center',
+  },
+  browseOlderText: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    color: Colors.primary,
+  },
+
+  // Modal
+  modalScreen: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  modalHeaderDark: {
+    borderBottomColor: Colors.borderDark,
+  },
+  modalCancel: {
+    width: 64,
+  },
+  modalCancelText: {
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+  },
+  modalTitle: {
+    fontSize: FontSize.md,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    textAlign: 'center',
+  },
+
+  // Calendar
+  calendarContainer: {
+    padding: Spacing.md,
+  },
+  calendarNav: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.md,
+  },
+  calNavBtn: {
+    padding: Spacing.sm,
+  },
+  calNavText: {
+    fontSize: 28,
+    fontWeight: '300',
+    color: Colors.textPrimary,
+    lineHeight: 28,
+  },
+  calMonthLabel: {
+    fontSize: FontSize.lg,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  calDayHeaders: {
+    flexDirection: 'row',
+    marginBottom: Spacing.xs,
+  },
+  calDayHeader: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: FontSize.xs,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+    paddingVertical: Spacing.xs,
+  },
+  calGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  calCell: {
+    width: `${100 / 7}%`,
+    aspectRatio: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  calDay: {
+    borderRadius: BorderRadius.sm,
+  },
+  calDayDark: {},
+  calDayDisabled: {
+    opacity: 0.25,
+  },
+  calDayText: {
+    fontSize: FontSize.md,
+    fontWeight: '500',
+    color: Colors.textPrimary,
+  },
+  calDayTextDisabled: {
+    color: Colors.textSecondary,
   },
 });

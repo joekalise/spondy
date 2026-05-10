@@ -9,6 +9,7 @@ import {
   useColorScheme,
   KeyboardAvoidingView,
   Platform,
+  TouchableOpacity,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
@@ -66,6 +67,9 @@ export function OnboardingScreen() {
   const [data, setData] = useState<OnboardingData>(defaultOnboardingData);
   const [isCompleting, setIsCompleting] = useState(false);
   const [completingMessage, setCompletingMessage] = useState('');
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewStep, setPreviewStep] = useState(0);
+  const PREVIEW_TOTAL = 3;
 
   const canProceed = useCallback((): boolean => {
     switch (currentStep) {
@@ -159,13 +163,29 @@ export function OnboardingScreen() {
     if (currentStep < TOTAL_STEPS) {
       setCurrentStep(s => s + 1);
     } else {
-      handleComplete();
+      // Show feature previews before completing
+      setShowPreview(true);
+      setPreviewStep(0);
     }
   };
 
   const handleBack = () => {
-    if (currentStep > 1) {
+    if (showPreview) {
+      if (previewStep > 0) {
+        setPreviewStep(s => s - 1);
+      } else {
+        setShowPreview(false);
+      }
+    } else if (currentStep > 1) {
       setCurrentStep(s => s - 1);
+    }
+  };
+
+  const handlePreviewNext = () => {
+    if (previewStep < PREVIEW_TOTAL - 1) {
+      setPreviewStep(s => s + 1);
+    } else {
+      handleComplete();
     }
   };
 
@@ -358,6 +378,8 @@ export function OnboardingScreen() {
                 'uveitis',
                 'psoriasis',
                 'ibd',
+                'enthesitis',
+                'peripheral_joint',
                 'fatigue',
                 'brain_fog',
                 'anxiety_depression',
@@ -458,6 +480,121 @@ export function OnboardingScreen() {
   };
 
   const isLastStep = currentStep === TOTAL_STEPS;
+  const isLastPreview = previewStep === PREVIEW_TOTAL - 1;
+
+  const PREVIEW_SLIDES = [
+    {
+      title: 'See how you\'re really doing',
+      subtitle: 'Spondy calculates a weekly wellness score from your pain, fatigue, mood, and medication data — all in one number.',
+      mockContent: (
+        <View style={[styles.mockCard, isDark && styles.mockCardDark]}>
+          <Text style={[styles.mockCardTitle, isDark && styles.mockCardTitleDark]}>Spondy Score</Text>
+          <View style={styles.mockScoreRow}>
+            <View style={[styles.mockScoreCircle, { borderColor: Colors.success }]}>
+              <Text style={[styles.mockScoreNum, { color: Colors.success }]}>74</Text>
+              <Text style={[styles.mockScoreOut, { color: Colors.success }]}>/100</Text>
+            </View>
+            <View style={styles.mockScoreRight}>
+              <Text style={[styles.mockScoreLabel, { color: Colors.success }]}>Managing well</Text>
+              <Text style={[styles.mockScoreHint, isDark && styles.mockTextSec]}>Based on 6 days this week</Text>
+              <View style={styles.mockFactorRow}>
+                <Text style={[styles.mockFactor, isDark && styles.mockTextSec]}>Logging streak</Text>
+                <Text style={[styles.mockFactorVal, { color: Colors.success }]}>+17</Text>
+              </View>
+              <View style={styles.mockFactorRow}>
+                <Text style={[styles.mockFactor, isDark && styles.mockTextSec]}>Pain</Text>
+                <Text style={[styles.mockFactorVal, { color: Colors.error }]}>−12</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      ),
+    },
+    {
+      title: 'Know before a flare hits',
+      subtitle: 'Spondy watches your daily data for early warning patterns — pain trends, stiffness, fatigue — and alerts you before a flare develops.',
+      mockContent: (
+        <View style={[styles.mockWarningCard, isDark && styles.mockWarningCardDark]}>
+          <Text style={styles.mockWarningTitle}>👀 Symptoms to watch</Text>
+          <Text style={[styles.mockWarningBody, isDark && styles.mockTextSec]}>
+            A couple of signals suggest your body might be under stress. Keep a close eye on symptoms over the next day or two.
+          </Text>
+          <View style={styles.mockChipsRow}>
+            <View style={styles.mockChip}>
+              <Text style={styles.mockChipText}>↑ Pain trending up</Text>
+            </View>
+            <View style={styles.mockChip}>
+              <Text style={styles.mockChipText}>⏱ Long morning stiffness</Text>
+            </View>
+          </View>
+        </View>
+      ),
+    },
+    {
+      title: 'AI insights, just for you',
+      subtitle: 'Every week, your AI companion analyses your patterns and delivers personalised recommendations — based on your actual data, not generic advice.',
+      mockContent: (
+        <View style={[styles.mockCard, isDark && styles.mockCardDark]}>
+          <View style={styles.mockAIHeader}>
+            <Text style={[styles.mockCardTitle, isDark && styles.mockCardTitleDark]}>Weekly insight</Text>
+            <View style={styles.mockBadge}><Text style={styles.mockBadgeText}>Premium</Text></View>
+          </View>
+          <Text style={[styles.mockInsightSummary, isDark && styles.mockTextSec]}>
+            This week your pain was lower on days when you logged at least 7 hours sleep. Your medication adherence was strong — keep it up.
+          </Text>
+          {['Sleep & pain connection', 'Activity patterns', 'What to watch'].map((title) => (
+            <View key={title} style={[styles.mockInsightRow, isDark && styles.mockInsightRowDark]}>
+              <Text style={[styles.mockInsightTitle, isDark && styles.mockCardTitleDark]}>{title}</Text>
+              <Text style={[styles.mockChevron, isDark && styles.mockTextSec]}>∨</Text>
+            </View>
+          ))}
+        </View>
+      ),
+    },
+  ];
+
+  if (showPreview) {
+    const slide = PREVIEW_SLIDES[previewStep];
+    return (
+      <SafeAreaView style={[styles.screen, isDark && styles.screenDark]}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.keyboardAvoid}>
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+
+            {/* Progress dots */}
+            <View style={styles.previewDots}>
+              {PREVIEW_SLIDES.map((_, i) => (
+                <View
+                  key={i}
+                  style={[styles.previewDot, i === previewStep && styles.previewDotActive]}
+                />
+              ))}
+            </View>
+
+            <Text style={[styles.previewTitle, isDark && styles.textDark]}>{slide.title}</Text>
+            <Text style={[styles.previewSubtitle, isDark && styles.timeLabelDark]}>{slide.subtitle}</Text>
+
+            <View style={styles.previewMockContainer}>
+              {slide.mockContent}
+            </View>
+
+            <View style={styles.navRow}>
+              <TouchableOpacity onPress={handleBack} style={styles.previewBackBtn}>
+                <Text style={[styles.previewBackText, isDark && styles.timeLabelDark]}>
+                  {t('common.back')}
+                </Text>
+              </TouchableOpacity>
+              <Button
+                label={isLastPreview ? t('onboarding.build_profile') : t('common.next')}
+                onPress={handlePreviewNext}
+                fullWidth={false}
+                style={styles.nextButton}
+              />
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.screen, isDark && styles.screenDark]}>
@@ -593,5 +730,201 @@ const styles = StyleSheet.create({
   },
   timeHintDark: {
     color: Colors.textSecondaryDark,
+  },
+
+  // Preview slides
+  previewDots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    marginBottom: Spacing.lg,
+  },
+  previewDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.border,
+  },
+  previewDotActive: {
+    backgroundColor: Colors.primary,
+    width: 20,
+  },
+  previewTitle: {
+    fontSize: FontSize.xxl,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+    marginBottom: Spacing.sm,
+  },
+  previewSubtitle: {
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    lineHeight: 22,
+    marginBottom: Spacing.xl,
+  },
+  previewMockContainer: {
+    marginBottom: Spacing.xl,
+  },
+  previewBackBtn: {
+    minWidth: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.sm,
+  },
+  previewBackText: {
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    fontWeight: '600',
+  },
+
+  // Mock cards
+  mockCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.md,
+    gap: Spacing.sm,
+  },
+  mockCardDark: {
+    backgroundColor: Colors.surfaceDark,
+    borderColor: Colors.borderDark,
+  },
+  mockCardTitle: {
+    fontSize: FontSize.md,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  mockCardTitleDark: {
+    color: Colors.textPrimaryDark,
+  },
+  mockTextSec: {
+    color: Colors.textSecondaryDark,
+  },
+  mockScoreRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  mockScoreCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mockScoreNum: {
+    fontSize: FontSize.xl,
+    fontWeight: '900',
+    lineHeight: 28,
+  },
+  mockScoreOut: {
+    fontSize: FontSize.xs,
+    fontWeight: '600',
+    opacity: 0.7,
+  },
+  mockScoreRight: {
+    flex: 1,
+    gap: 3,
+  },
+  mockScoreLabel: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+  },
+  mockScoreHint: {
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+  },
+  mockFactorRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  mockFactor: {
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+  },
+  mockFactorVal: {
+    fontSize: FontSize.xs,
+    fontWeight: '700',
+  },
+  mockWarningCard: {
+    backgroundColor: Colors.warning + '12',
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.warning + '50',
+    padding: Spacing.md,
+    gap: Spacing.sm,
+  },
+  mockWarningCardDark: {
+    backgroundColor: '#3A2500',
+  },
+  mockWarningTitle: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    color: Colors.warning,
+  },
+  mockWarningBody: {
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    lineHeight: 20,
+  },
+  mockChipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.xs,
+  },
+  mockChip: {
+    borderWidth: 1,
+    borderColor: Colors.warning + '60',
+    borderRadius: BorderRadius.full,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+  },
+  mockChipText: {
+    fontSize: FontSize.xs,
+    fontWeight: '600',
+    color: Colors.warning,
+  },
+  mockAIHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  mockBadge: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.full,
+  },
+  mockBadgeText: {
+    fontSize: FontSize.xs,
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  mockInsightSummary: {
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    lineHeight: 20,
+  },
+  mockInsightRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: Colors.border,
+    paddingVertical: Spacing.sm,
+  },
+  mockInsightRowDark: {
+    borderTopColor: Colors.borderDark,
+  },
+  mockInsightTitle: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    flex: 1,
+  },
+  mockChevron: {
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
   },
 });

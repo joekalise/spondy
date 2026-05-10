@@ -18,9 +18,9 @@ function moodToPoints(mood: Mood | null): number {
   switch (mood) {
     case 'great': return 15;
     case 'good': return 10;
-    case 'okay': return 5;
-    case 'low': return 0;
-    case 'very_low': return -10;
+    case 'okay': return 0;
+    case 'low': return -5;
+    case 'very_low': return -15;
     default: return 0;
   }
 }
@@ -75,6 +75,7 @@ export function useWeeklyData(): {
   logs: DailyLog[];
   isLoading: boolean;
   spondyScore: number | null;
+  refresh: () => Promise<void>;
 } {
   const { user } = useAuth();
   const [logs, setLogs] = useState<DailyLog[]>([]);
@@ -106,5 +107,5 @@ export function useWeeklyData(): {
     load();
   }, [load]);
 
-  return { logs, isLoading, spondyScore };
+  return { logs, isLoading, spondyScore, refresh: load };
 }

@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { DailyLog, MedicationReminder } from '@/types';
 import { supabase } from '@/services/supabase';
@@ -120,6 +121,30 @@ export async function scheduleMedicationReminder(med: MedicationReminder): Promi
   }
 }
 
+// ─── Flare early warning notification ────────────────────────────────────────
+
+export async function sendFlareWarningIfNeeded(
+  userId: string,
+  level: 'watch' | 'warning'
+): Promise<void> {
+  const today = new Date().toISOString().split('T')[0];
+  const key = `@spondy_flare_alert_${userId}_${today}`;
+
+  const lastSent = await AsyncStorage.getItem(key);
+  // Don't downgrade or repeat at the same level today
+  if (lastSent === 'warning') return;
+  if (lastSent === 'watch' && level === 'watch') return;
+
+  const title = level === 'warning' ? '⚠️ Possible flare building' : '👀 Symptoms to watch';
+  const body =
+    level === 'warning'
+      ? 'Several patterns suggest a flare may be building. Consider resting and reviewing your medications.'
+      : 'A couple of signals suggest your body might be under stress. Keep a close eye on your symptoms.';
+
+  await sendNudge(title, body);
+  await AsyncStorage.setItem(key, level);
+}
+
 // ─── Nudge ────────────────────────────────────────────────────────────────────
 
 export async function sendNudge(title: string, body: string): Promise<void> {
@@ -188,6 +213,30 @@ export async function evaluateAndSendNudges(
       "It sounds like things have been tough lately. Being kind to yourself matters — even small gentle movement can help.";
     await sendNudge('Mood check', message);
     await saveNudgeToDb(userId, 'mood', message);
+    return;
+  }
+
+  // Rule 5: poor diet quality on 3 consecutive days
+  const poorDietDays = recent.filter(
+    (l) => l.diet_quality === 'poor' || l.diet_quality === 'mixed'
+  ).length;
+  if (poorDietDays >= 3) {
+    const message =
+      "Your diet has been more inflammatory this week — starchy, processed, or sugary foods can quietly drive AS symptoms. Even small changes can help.";
+    await sendNudge('Diet check', message);
+    await saveNudgeToDb(userId, 'diet', message);
+    return;
+  }
+
+  // Rule 6: alcohol logged 3+ of last 3 days
+  const alcoholDays = recent.filter(
+    (l) => (l.diet_triggers ?? []).includes('alcohol')
+  ).length;
+  if (alcoholDays >= 3) {
+    const message =
+      "You've logged alcohol several days running — it's a known inflammation driver for AS. Your body might appreciate a rest day or two.";
+    await sendNudge('Diet check', message);
+    await saveNudgeToDb(userId, 'diet_alcohol', message);
     return;
   }
 }

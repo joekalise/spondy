@@ -12,6 +12,7 @@ import * as AuthSession from 'expo-auth-session';
 import * as Crypto from 'expo-crypto';
 import * as WebBrowser from 'expo-web-browser';
 import { supabase } from '@/services/supabase';
+import { initializeRevenueCat } from '@/services/revenuecat';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -38,12 +39,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(s);
       setUser(s?.user ?? null);
       setIsLoading(false);
+      initializeRevenueCat(s?.user?.id).catch((err) =>
+        console.error('RevenueCat init error:', err)
+      );
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, s) => {
         setSession(s);
         setUser(s?.user ?? null);
+        if (s?.user) {
+          initializeRevenueCat(s.user.id).catch((err) =>
+            console.error('RevenueCat init error:', err)
+          );
+        }
       }
     );
 

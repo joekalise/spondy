@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { Button } from '@/components/common/Button';
+import { SpondyMark } from '@/components/common/SpondyMark';
 import { Colors } from '@/constants/colors';
 import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -71,9 +72,7 @@ export function ProfileReadyScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>S</Text>
-          </View>
+          <SpondyMark size={72} />
           <Text style={[styles.title, isDark && styles.titleDark]}>
             {t('profile_ready.title')}
           </Text>
@@ -157,20 +156,6 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     paddingVertical: Spacing.xl,
-  },
-  badge: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: Colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.md,
-  },
-  badgeText: {
-    fontSize: FontSize.xxxl,
-    color: '#FFFFFF',
-    fontWeight: '800',
   },
   title: {
     fontSize: FontSize.xxl,
