@@ -21,6 +21,10 @@
       "autoIncrement": true,
       "ios": {
         "image": "latest"
+      },
+      "env": {
+        "EXPO_PUBLIC_REVENUECAT_IOS_KEY": "appl_FDnYALlJtpZOVLglvgPEmWBxlHx",
+        "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "test_cmkTTrSkBGUWhtFodQGnqIwKCMo"
       }
     }
   },

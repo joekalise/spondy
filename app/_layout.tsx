@@ -10,6 +10,15 @@ import { ProfileProvider, useProfile } from '@/contexts/ProfileContext';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { registerBackgroundHealthSync, triggerHealthSyncNow } from '@/services/backgroundHealthSync';
 import { requestNotificationPermissions } from '@/services/notifications';
+import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  dsn: 'https://8abbabe2fad0e65279837042df5da6f6@o4511371993350144.ingest.de.sentry.io/4511371996758096',
+  enableLogs: true,
+  // Session replay disabled — health app with sensitive user data
+  replaysSessionSampleRate: 0,
+  replaysOnErrorSampleRate: 0,
+});
 
 // Show notifications when app is in the foreground
 Notifications.setNotificationHandler({
@@ -90,7 +99,7 @@ function RootNavigator() {
   );
 }
 
-export default function RootLayout() {
+export default Sentry.wrap(function RootLayout() {
   return (
     <AuthProvider>
       <ProfileProvider>
@@ -98,4 +107,4 @@ export default function RootLayout() {
       </ProfileProvider>
     </AuthProvider>
   );
-}
+});

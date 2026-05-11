@@ -10,6 +10,7 @@ import {
   LayoutChangeEvent,
   ActivityIndicator,
   Modal,
+  Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Polyline, Line, Text as SvgText, Circle } from 'react-native-svg';
@@ -27,6 +28,8 @@ import { useHealthHistory } from '@/hooks/useHealthHistory';
 import { useBasdai } from '@/hooks/useBasdai';
 import { DailyLog, Flare, Mood, UserProfile, HealthData, BasdaiScore } from '@/types';
 import { ProfileButton } from '@/components/common/ProfileButton';
+import { InfoButton } from '@/components/common/InfoButton';
+import { DragSlider } from '@/components/common/DragSlider';
 
 // ─── Insight cache helpers ────────────────────────────────────────────────────
 
@@ -349,6 +352,15 @@ function AIInsightCard({ logs, flares, profile, healthHistory, isDark }: AIInsig
             );
           })}
         </>
+      ) : profile?.welcome_message ? (
+        <View>
+          <Text style={[styles.welcomeMessageText, { color: textPrimary }]}>
+            {profile.welcome_message}
+          </Text>
+          <Text style={[styles.teaserText, { color: textSecondary, marginTop: Spacing.sm }]}>
+            Your personalised weekly insight will appear here once you have a few days of data.
+          </Text>
+        </View>
       ) : (
         <Text style={[styles.teaserText, { color: textSecondary }]}>
           {logs.length === 0
@@ -447,13 +459,17 @@ function ChatDataCard({ isDark, onPress }: { isDark: boolean; onPress: () => voi
             <Text style={styles.premiumBadgeText}>Premium</Text>
           </View>
         </View>
-        <Text style={[styles.chatRowArrow, { color: Colors.primary }]}>→</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <InfoButton
+            title="How it works"
+            message="A summary of your data is sent to the AI to generate responses. Your data is never used to train AI models."
+            color={textSecondary}
+          />
+          <Text style={[styles.chatRowArrow, { color: Colors.primary }]}>→</Text>
+        </View>
       </View>
       <Text style={[styles.chatCardSubtitle, { color: textSecondary }]}>
         Ask about your patterns, trends, or symptoms
-      </Text>
-      <Text style={[styles.chatPrivacyNote, { color: textSecondary }]}>
-        A summary of your data is sent to the AI. Your data is not used to train AI models.
       </Text>
     </TouchableOpacity>
   );
@@ -517,32 +533,15 @@ function BasdaiModal({ visible, onClose, onSave, isDark }: BasdaiModalProps) {
     finally { setIsSaving(false); }
   };
 
-  function QuestionStepper({ qKey, value, setValue }: { qKey: string; value: number; setValue: (v: number) => void }) {
-    const color = value <= 3 ? Colors.success : value <= 6 ? Colors.warning : Colors.error;
+  function QuestionSlider({ value, setValue }: { value: number; setValue: (v: number) => void }) {
     return (
-      <View style={{ gap: Spacing.xs }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
-          <TouchableOpacity
-            onPress={() => setValue(Math.max(0, value - 1))}
-            style={[styles.basdaiStepBtn, { borderColor: border, backgroundColor: isDark ? Colors.backgroundDark : Colors.background }]}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.basdaiStepBtnText, { color: textPrimary }]}>−</Text>
-          </TouchableOpacity>
-          <Text style={[styles.basdaiScore, { color, flex: 1, textAlign: 'center' }]}>{value}</Text>
-          <TouchableOpacity
-            onPress={() => setValue(Math.min(10, value + 1))}
-            style={[styles.basdaiStepBtn, { borderColor: border, backgroundColor: isDark ? Colors.backgroundDark : Colors.background }]}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.basdaiStepBtnText, { color: textPrimary }]}>+</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <Text style={[styles.basdaiHint, { color: textSecondary }]}>0 = None</Text>
-          <Text style={[styles.basdaiHint, { color: textSecondary }]}>10 = Severe</Text>
-        </View>
-      </View>
+      <DragSlider
+        value={value}
+        onChange={setValue}
+        isDark={isDark}
+        minLabel="0 = None"
+        maxLabel="10 = Severe"
+      />
     );
   }
 
@@ -561,7 +560,7 @@ function BasdaiModal({ visible, onClose, onSave, isDark }: BasdaiModalProps) {
             <View key={q.key} style={[styles.basdaiQuestion, { backgroundColor: cardBg, borderColor: border }]}>
               <Text style={[styles.basdaiQuestionNum, { color: textSecondary }]}>Q{idx + 1}</Text>
               <Text style={[styles.basdaiQuestionText, { color: textPrimary }]}>{q.text}</Text>
-              <QuestionStepper qKey={q.key} value={values[q.key as keyof typeof values]} setValue={setters[q.key]} />
+              <QuestionSlider value={values[q.key as keyof typeof values]} setValue={setters[q.key]} />
             </View>
           ))}
 
@@ -598,7 +597,7 @@ function BasdaiModal({ visible, onClose, onSave, isDark }: BasdaiModalProps) {
 
 // ─── BasdaiPromptCard ─────────────────────────────────────────────────────────
 
-const BASDAI_INFO = 'BASDAI (Bath Ankylosing Spondylitis Disease Activity Index) is the standard clinical tool for measuring AS disease activity. You score six questions on a 0–10 scale — fatigue, spinal pain, joint pain, enthesitis, morning stiffness severity, and duration. A score of 4 or above is the threshold at which biologic therapy is typically considered.';
+const BASDAI_INFO = 'BASDAI (Bath Ankylosing Spondylitis Disease Activity Index) is the standard clinical tool for measuring AS disease activity. You score six questions on a 0-10 scale: fatigue, spinal pain, joint pain, enthesitis, morning stiffness severity, and duration. A score of 4 or above is the threshold at which biologic therapy is typically considered.';
 
 function BasdaiPromptCard({
   latestScore,
@@ -761,6 +760,13 @@ export default function InsightsScreen() {
   // Determine if user has tracked >= 14 days (for trial prompt)
   const hasEnoughDataForTrialPrompt = allLogs.length >= 14;
 
+  const handlePurchase = useCallback(async () => {
+    const success = await purchase();
+    if (!success) {
+      Alert.alert('', t('profile.purchase_unavailable'));
+    }
+  }, [purchase, t]);
+
   const painData = logs.map((l) => l.pain_score);
   const fatigueData = logs.map((l) => l.fatigue_score);
   const moodData = logs.map((l) => moodToScore(l.mood)).filter((v) => v > 0);
@@ -832,7 +838,7 @@ export default function InsightsScreen() {
           ) : hasEnoughDataForTrialPrompt ? (
             <TrialPromptCard
               isDark={isDark}
-              onStartTrial={purchase}
+              onStartTrial={handlePurchase}
             />
           ) : null
         )}
@@ -901,6 +907,11 @@ export default function InsightsScreen() {
               <Text style={[styles.cardTitle, { color: textPrimary }]}>
                 {t('insights.pain_fatigue')}
               </Text>
+              {allLogs.length < 7 && (
+                <Text style={[styles.chartHint, { color: textSecondary }]}>
+                  This chart fills out as you log more days.
+                </Text>
+              )}
               <TrendChart
                 series={[
                   { data: painData, color: Colors.error, label: t('insights.legend_pain') },
@@ -936,6 +947,11 @@ export default function InsightsScreen() {
                 <Text style={[styles.cardTitle, { color: textPrimary }]}>
                   {t('insights.mood_trend')}
                 </Text>
+                {allLogs.length < 7 && (
+                  <Text style={[styles.chartHint, { color: textSecondary }]}>
+                    This chart fills out as you log more days.
+                  </Text>
+                )}
                 <TrendChart
                   series={[
                     { data: moodData, color: Colors.success, label: 'mood' },
@@ -954,6 +970,11 @@ export default function InsightsScreen() {
               <Text style={[styles.cardTitle, { color: textPrimary }]}>
                 {t('insights.patterns')}
               </Text>
+              {allLogs.length < 7 && (
+                <Text style={[styles.chartHint, { color: textSecondary }]}>
+                  Patterns become clearer as you log more days.
+                </Text>
+              )}
               <View style={styles.statsGrid}>
                 <StatRow
                   label={t('insights.avg_pain')}
@@ -1001,12 +1022,16 @@ export default function InsightsScreen() {
             <TouchableOpacity
               style={styles.ctaBtn}
               activeOpacity={0.8}
-              onPress={purchase}
+              onPress={handlePurchase}
             >
               <Text style={styles.ctaBtnText}>{t('insights.unlock_ai_cta')}</Text>
             </TouchableOpacity>
           </View>
         )}
+
+        <Text style={[styles.disclaimer, { color: isDark ? Colors.textSecondaryDark : Colors.textSecondary }]}>
+          For informational purposes only. Not medical advice. Always consult your rheumatologist or healthcare team about your symptoms and treatment.
+        </Text>
 
       </ScrollView>
 
@@ -1112,6 +1137,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: Spacing.md,
     lineHeight: 20,
+  },
+  chartHint: {
+    fontSize: FontSize.xs,
+    marginBottom: Spacing.sm,
+    lineHeight: 17,
+    opacity: 0.75,
+  },
+  disclaimer: {
+    fontSize: FontSize.xs,
+    textAlign: 'center',
+    lineHeight: 17,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    opacity: 0.7,
   },
   legend: {
     flexDirection: 'row',
@@ -1317,6 +1356,12 @@ const styles = StyleSheet.create({
   showMoreText: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+  },
+  welcomeMessageText: {
+    fontSize: FontSize.md,
+    lineHeight: 24,
+    fontWeight: '400',
+    marginBottom: Spacing.xs,
   },
   teaserText: {
     fontSize: FontSize.sm,

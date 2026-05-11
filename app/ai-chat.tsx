@@ -122,7 +122,7 @@ function TypingIndicator({ isDark }: { isDark: boolean }) {
   return (
     <View style={[styles.bubbleWrapper, styles.assistantWrapper]}>
       <View style={[styles.bubble, styles.assistantBubble, { backgroundColor: bubbleBg, borderColor: bubbleBorder }]}>
-        <Text style={{ color: dotColor, fontSize: FontSize.lg, letterSpacing: 2 }}>
+        <Text style={{ color: dotColor, fontSize: FontSize.lg }}>
           {'· · ·'}
         </Text>
       </View>

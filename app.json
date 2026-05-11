@@ -19,7 +19,6 @@
       "bundleIdentifier": "com.spondy.app",
       "infoPlist": {
         "NSHealthShareUsageDescription": "Spondy reads your health data to identify patterns that may relate to your AS symptoms.",
-        "NSHealthUpdateUsageDescription": "Spondy may write workout and symptom data to Apple Health.",
         "UIBackgroundModes": [
           "fetch",
           "processing"
@@ -58,7 +57,16 @@
       ],
       "react-native-health",
       "expo-background-fetch",
-      "expo-task-manager"
+      "expo-task-manager",
+      "@sentry/react-native",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "spondy",
+          "organization": "spondy"
+        }
+      ]
     ],
     "scheme": "spondy",
     "extra": {

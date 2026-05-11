@@ -147,7 +147,7 @@ function buildReportHTML(params: {
           <td>${e.end_date ? fmtDateShort(e.end_date) : '<em>Ongoing</em>'}</td>
           <td>${flareDays(e.start_date, e.end_date)} days</td>
           <td style="text-transform:capitalize;">${e.severity}</td>
-          <td>${capitalize(e.affected_eye)} eye${e.treatment_received ? ' — treated' : ''}</td>
+          <td>${capitalize(e.affected_eye)} eye${e.treatment_received ? ', treated' : ''}</td>
         </tr>`).join('');
 
   // ── Biologic injections ───────────────────────────────────────────────────
@@ -157,7 +157,7 @@ function buildReportHTML(params: {
         <tr>
           <td>${fmtDateShort(i.injected_at.split('T')[0])}</td>
           <td>${i.medication_name}${i.lot_number ? ` (lot: ${i.lot_number})` : ''}</td>
-          <td>${i.response_rating !== null ? `${i.response_rating}/5` : '—'}${i.notes ? ` — ${i.notes}` : ''}</td>
+          <td>${i.response_rating !== null ? `${i.response_rating}/5` : '—'}${i.notes ? ` · ${i.notes}` : ''}</td>
         </tr>`).join('');
 
   // ── Notes HTML ────────────────────────────────────────────────────────────
@@ -243,7 +243,7 @@ function buildReportHTML(params: {
   <div class="header">
     <div class="header-left">
       <h1>Spondy Health Summary</h1>
-      <p class="subtitle">Ankylosing Spondylitis Tracking Report — for your rheumatologist</p>
+      <p class="subtitle">Ankylosing Spondylitis Tracking Report, for your rheumatologist</p>
     </div>
     <div class="header-right">
       <div>Generated: ${generatedAt}</div>
@@ -326,7 +326,7 @@ function buildReportHTML(params: {
       <div class="stiff-label">&gt;2 hours</div>
     </div>
   </div>
-  ${prolongedStiffnessDays > 0 ? `<p class="callout">⚠ ${prolongedStiffnessDays} day${prolongedStiffnessDays > 1 ? 's' : ''} with stiffness lasting over 1 hour — a key indicator of active disease (BASDAI Q5/Q6).</p>` : ''}
+  ${prolongedStiffnessDays > 0 ? `<p class="callout">⚠ ${prolongedStiffnessDays} day${prolongedStiffnessDays > 1 ? 's' : ''} with stiffness lasting over 1 hour. A key indicator of active disease (BASDAI Q5/Q6).</p>` : ''}
 
   <!-- Mood -->
   <h2>Mood Distribution</h2>
@@ -341,7 +341,7 @@ function buildReportHTML(params: {
   <!-- Exercise -->
   <h2>Exercise &amp; Activity</h2>
   <p style="font-size:13px;">Exercise logged on <strong>${exerciseDays} of ${logs.length} days</strong> (${exercisePct}%).
-    ${exercisePct >= 50 ? 'Good consistency — regular movement is one of the best AS management tools.' : exercisePct === 0 ? 'No exercise logged in this period.' : 'Consider increasing frequency — even short walks count.'}</p>
+    ${exercisePct >= 50 ? 'Good consistency. Regular movement is one of the best AS management tools.' : exercisePct === 0 ? 'No exercise logged in this period.' : 'Consider increasing frequency. Even short walks count.'}</p>
 
   ${topTriggers.length > 0 ? `
   <!-- Diet -->
@@ -376,7 +376,7 @@ function buildReportHTML(params: {
       }).join('')}
     </tbody>
   </table>
-  <p class="callout">BASDAI ≥4 indicates high disease activity — the threshold at which biologic therapy is typically considered. Scores trend from oldest to newest.</p>
+  <p class="callout">BASDAI ≥4 indicates high disease activity. This is the threshold at which biologic therapy is typically considered. Scores trend from oldest to newest.</p>
   ` : ''}
 
   <!-- AS Flares -->

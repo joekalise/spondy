@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { supabase } from '@/services/supabase';
 import { BasdaiScore, DailyLog, Flare, HealthData, UserProfile } from '@/types';
 
 export interface WeeklyInsight {
@@ -6,9 +6,12 @@ export interface WeeklyInsight {
   points: Array<{ title: string; detail: string }>;
 }
 
-const client = new Anthropic({
-  apiKey: process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY!,
-});
+async function callClaude(body: object): Promise<string> {
+  const { data, error } = await supabase.functions.invoke('claude-proxy', { body });
+  if (error) throw new Error(`Claude proxy error: ${error.message}`);
+  if (!data?.text) throw new Error('No text in Claude proxy response');
+  return data.text;
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -177,6 +180,21 @@ ${topTriggers ? `- Most frequent triggers: ${topTriggers}` : '- No specific trig
     exerciseSection = `\n\nEXERCISE: Logged exercise on ${exerciseDays.length} of ${logs.length} days (${pct}%).`;
   }
 
+  // Period section (only present when user tracks period data)
+  let periodSection = '';
+  const periodLogs = logs.filter(l => l.period_active === true);
+  if (periodLogs.length > 0) {
+    const nonPeriodLogs = logs.filter(l => l.period_active === false || l.period_active === null);
+    let correlationLine = '';
+    if (periodLogs.length >= 2 && nonPeriodLogs.length >= 2) {
+      const avgPainPeriod = (periodLogs.reduce((s, l) => s + l.pain_score, 0) / periodLogs.length).toFixed(1);
+      const avgPainNonPeriod = (nonPeriodLogs.reduce((s, l) => s + l.pain_score, 0) / nonPeriodLogs.length).toFixed(1);
+      const avgFatiguePeriod = (periodLogs.reduce((s, l) => s + l.fatigue_score, 0) / periodLogs.length).toFixed(1);
+      correlationLine = `\n- Avg pain on period days: ${avgPainPeriod}/10 vs non-period days: ${avgPainNonPeriod}/10; avg fatigue on period days: ${avgFatiguePeriod}/10`;
+    }
+    periodSection = `\n\nMENSTRUAL CYCLE DATA: Period active on ${periodLogs.length} logged days.${correlationLine}`;
+  }
+
   // BASDAI section
   let basdaiSection = '';
   if (basdaiScores && basdaiScores.length > 0) {
@@ -201,14 +219,17 @@ FLARES:
 ${flareSummary}
 
 USER NOTES (free text from check-ins):
-${notes || '  None'}${dietSection}${healthSection}${exerciseSection}${basdaiSection}
+${notes || '  None'}${dietSection}${healthSection}${exerciseSection}${periodSection}${basdaiSection}
 `.trim();
 }
 
 function buildProfileSummary(profile: UserProfile): string {
+  const sexLine = profile.biological_sex && profile.biological_sex !== 'prefer_not_to_say'
+    ? `- Biological sex: ${profile.biological_sex}${profile.biological_sex === 'female' ? ' (period tracking enabled — menstrual cycle data may be present in logs)' : ''}\n`
+    : '';
   return `
 USER PROFILE:
-- Age range: ${profile.age_range ?? 'not specified'}
+${sexLine}- Age range: ${profile.age_range ?? 'not specified'}
 - Years diagnosed: ${profile.diagnosis_years ?? 'not specified'}
 - Disease activity: ${profile.severity ?? 'not specified'}
 - Medications: ${profile.medications.join(', ') || 'none'}
@@ -260,23 +281,14 @@ ${buildDataSummary(logs, flares, healthHistory, basdaiScores)}
 ${aiContext ? `\nAdditional context: ${aiContext}` : ''}`;
 
   try {
-    const response = await client.messages.create({
+    const text = await callClaude({
       model: 'claude-sonnet-4-6',
       max_tokens: 1024,
-      system: [
-        {
-          type: 'text',
-          text: systemPrompt,
-          cache_control: { type: 'ephemeral' },
-        },
-      ],
+      system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: userMessage }],
     });
 
-    const content = response.content[0];
-    if (content.type !== 'text') throw new Error('Unexpected response type');
-
-    const jsonMatch = content.text.match(/\{[\s\S]*\}/);
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('No JSON found in response');
 
     return JSON.parse(jsonMatch[0]) as WeeklyInsight;
@@ -318,27 +330,12 @@ Guidelines for your responses:
 - If asked about something outside your knowledge, say so honestly`;
 
   try {
-    const response = await client.messages.create({
+    return await callClaude({
       model: 'claude-sonnet-4-6',
       max_tokens: 512,
-      system: [
-        {
-          type: 'text',
-          text: systemPrompt,
-          cache_control: { type: 'ephemeral' },
-        },
-      ],
-      messages: messages.map((m) => ({
-        role: m.role,
-        content: m.content,
-      })),
+      system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
+      messages: messages.map((m) => ({ role: m.role, content: m.content })),
     });
-
-    const content = response.content[0];
-    if (content.type !== 'text') {
-      throw new Error('Unexpected response type from Claude');
-    }
-    return content.text;
   } catch (err) {
     console.error('sendChatMessage error:', err);
     throw new Error(

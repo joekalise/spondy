@@ -1,9 +1,12 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { supabase } from '@/services/supabase';
 import { OnboardingData, WelcomeContent } from '@/types';
 
-const client = new Anthropic({
-  apiKey: process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY!,
-});
+async function callClaude(body: object): Promise<string> {
+  const { data, error } = await supabase.functions.invoke('claude-proxy', { body });
+  if (error) throw new Error(`Claude proxy error: ${error.message}`);
+  if (!data?.text) throw new Error('No text in Claude proxy response');
+  return data.text;
+}
 
 function buildOnboardingPrompt(data: OnboardingData): string {
   const medicationLabels: Record<string, string> = {
@@ -59,10 +62,14 @@ function buildOnboardingPrompt(data: OnboardingData): string {
     over_2_hours: 'more than 2 hours',
   };
 
+  const sexLine = data.biological_sex && data.biological_sex !== 'prefer_not_to_say'
+    ? `- Biological sex: ${data.biological_sex}${data.biological_sex === 'female' ? ' (note: AS often presents with more peripheral joint involvement in women; hormonal fluctuations may affect symptom severity)' : ''}\n`
+    : '';
+
   return `You are a warm, knowledgeable companion for someone living with Ankylosing Spondylitis (AS).
 
 Here is their profile:
-- Age range: ${ageLabels[data.age_range ?? ''] ?? 'unknown'}
+${sexLine}- Age range: ${ageLabels[data.age_range ?? ''] ?? 'unknown'}
 - Years since AS diagnosis: ${diagnosisLabels[data.diagnosis_years ?? ''] ?? 'unknown'}
 - Current disease activity: ${data.severity ?? 'unknown'}
 - Current treatment: ${data.medications.map(m => medicationLabels[m] ?? m).join(', ') || 'none specified'}
@@ -97,23 +104,13 @@ export async function generateWelcomeContent(
 ): Promise<WelcomeContent> {
   const prompt = buildOnboardingPrompt(data);
 
-  const message = await client.messages.create({
+  const text = await callClaude({
     model: 'claude-sonnet-4-6',
     max_tokens: 1024,
-    messages: [
-      {
-        role: 'user',
-        content: prompt,
-      },
-    ],
+    messages: [{ role: 'user', content: prompt }],
   });
 
-  const content = message.content[0];
-  if (content.type !== 'text') {
-    throw new Error('Unexpected response type from Claude');
-  }
-
-  const jsonMatch = content.text.match(/\{[\s\S]*\}/);
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     throw new Error('No JSON found in Claude response');
   }

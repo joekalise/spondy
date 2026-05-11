@@ -113,7 +113,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: FontSize.md,
     fontWeight: '600',
-    letterSpacing: 0.2,
   },
   labelPrimary: {
     color: '#FFFFFF',

@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import {
+  Alert,
   View,
   ScrollView,
   StyleSheet,
@@ -26,9 +27,11 @@ import { generateWelcomeContent } from '@/services/claude';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useAuth } from '@/contexts/AuthContext';
 
+import { InfoButton } from '@/components/common/InfoButton';
 import {
   OnboardingData,
   AgeRange,
+  BiologicalSex,
   DiagnosisYears,
   Severity,
   Medication,
@@ -40,9 +43,10 @@ import {
   WelcomeContent,
 } from '@/types';
 
-const TOTAL_STEPS = 10;
+const TOTAL_STEPS = 11;
 
 const defaultOnboardingData: OnboardingData = {
+  biological_sex: null,
   age_range: null,
   diagnosis_years: null,
   severity: null,
@@ -76,22 +80,24 @@ export function OnboardingScreen() {
       case 1:
         return data.age_range !== null;
       case 2:
-        return data.diagnosis_years !== null;
+        return data.biological_sex !== null;
       case 3:
-        return data.severity !== null;
+        return data.diagnosis_years !== null;
       case 4:
-        return data.medications.length > 0;
+        return data.severity !== null;
       case 5:
-        return data.pain_locations.length > 0;
+        return data.medications.length > 0;
       case 6:
-        return data.pain_types.length > 0;
+        return data.pain_locations.length > 0;
       case 7:
-        return true; // conditions optional
+        return data.pain_types.length > 0;
       case 8:
-        return data.morning_stiffness !== null;
+        return true; // conditions optional
       case 9:
-        return data.challenges.length > 0;
+        return data.morning_stiffness !== null;
       case 10:
+        return data.challenges.length > 0;
+      case 11:
         return data.notification_time.trim().length > 0;
       default:
         return false;
@@ -129,6 +135,7 @@ export function OnboardingScreen() {
     try {
       await saveProfile({
         user_id: user.id,
+        biological_sex: data.biological_sex,
         age_range: data.age_range,
         diagnosis_years: data.diagnosis_years,
         severity: data.severity,
@@ -210,15 +217,16 @@ export function OnboardingScreen() {
   const getStepTitle = () => {
     const keys: Record<number, string> = {
       1: t('onboarding.age_range.title'),
-      2: t('onboarding.diagnosis_years.title'),
-      3: t('onboarding.severity.title'),
-      4: t('onboarding.medications.title'),
-      5: t('onboarding.pain_locations.title'),
-      6: t('onboarding.pain_types.title'),
-      7: t('onboarding.conditions.title'),
-      8: t('onboarding.morning_stiffness.title'),
-      9: t('onboarding.challenges.title'),
-      10: t('onboarding.notification_time.title'),
+      2: t('onboarding.biological_sex.title'),
+      3: t('onboarding.diagnosis_years.title'),
+      4: t('onboarding.severity.title'),
+      5: t('onboarding.medications.title'),
+      6: t('onboarding.pain_locations.title'),
+      7: t('onboarding.pain_types.title'),
+      8: t('onboarding.conditions.title'),
+      9: t('onboarding.morning_stiffness.title'),
+      10: t('onboarding.challenges.title'),
+      11: t('onboarding.notification_time.title'),
     };
     return keys[currentStep] ?? '';
   };
@@ -226,15 +234,16 @@ export function OnboardingScreen() {
   const getStepSubtitle = () => {
     const keys: Record<number, string> = {
       1: t('onboarding.age_range.subtitle'),
-      2: t('onboarding.diagnosis_years.subtitle'),
-      3: t('onboarding.severity.subtitle'),
-      4: t('onboarding.medications.subtitle'),
-      5: t('onboarding.pain_locations.subtitle'),
-      6: t('onboarding.pain_types.subtitle'),
-      7: t('onboarding.conditions.subtitle'),
-      8: t('onboarding.morning_stiffness.subtitle'),
-      9: t('onboarding.challenges.subtitle'),
-      10: t('onboarding.notification_time.subtitle'),
+      2: t('onboarding.biological_sex.subtitle'),
+      3: t('onboarding.diagnosis_years.subtitle'),
+      4: t('onboarding.severity.subtitle'),
+      5: t('onboarding.medications.subtitle'),
+      6: t('onboarding.pain_locations.subtitle'),
+      7: t('onboarding.pain_types.subtitle'),
+      8: t('onboarding.conditions.subtitle'),
+      9: t('onboarding.morning_stiffness.subtitle'),
+      10: t('onboarding.challenges.subtitle'),
+      11: t('onboarding.notification_time.subtitle'),
     };
     return keys[currentStep] ?? '';
   };
@@ -256,8 +265,33 @@ export function OnboardingScreen() {
           </>
         );
 
-      // Step 2: Diagnosis years
+      // Step 2: Biological sex
       case 2:
+        return (
+          <>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.md, gap: Spacing.xs }}>
+              <Text style={{ fontSize: FontSize.sm, color: isDark ? Colors.textSecondaryDark : Colors.textSecondary }}>
+                Why do we ask this?
+              </Text>
+              <InfoButton
+                title={t('onboarding.biological_sex.info_title')}
+                message={t('onboarding.biological_sex.info_message')}
+                color={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
+              />
+            </View>
+            {(['male', 'female', 'prefer_not_to_say'] as BiologicalSex[]).map(v => (
+              <OptionCard
+                key={v}
+                label={t(`onboarding.biological_sex.${v}`)}
+                isSelected={data.biological_sex === v}
+                onPress={() => setData(d => ({ ...d, biological_sex: v }))}
+              />
+            ))}
+          </>
+        );
+
+      // Step 3: Diagnosis years
+      case 3:
         return (
           <>
             {(['under_1', '1_3', '3_5', '5_10', '10_plus'] as DiagnosisYears[]).map(v => (
@@ -271,8 +305,8 @@ export function OnboardingScreen() {
           </>
         );
 
-      // Step 3: Severity
-      case 3:
+      // Step 4: Severity
+      case 4:
         return (
           <>
             {(['mild', 'moderate', 'severe'] as Severity[]).map(v => (
@@ -286,8 +320,8 @@ export function OnboardingScreen() {
           </>
         );
 
-      // Step 4: Medications (multi)
-      case 4:
+      // Step 5: Medications (multi)
+      case 5:
         return (
           <>
             {(
@@ -316,8 +350,8 @@ export function OnboardingScreen() {
           </>
         );
 
-      // Step 5: Pain locations (multi)
-      case 5:
+      // Step 6: Pain locations (multi)
+      case 6:
         return (
           <>
             {(
@@ -330,6 +364,8 @@ export function OnboardingScreen() {
                 'neck',
                 'chest',
                 'jaw',
+                'heels',
+                'other',
               ] as PainLocation[]
             ).map(v => (
               <MultiSelectCard
@@ -347,8 +383,8 @@ export function OnboardingScreen() {
           </>
         );
 
-      // Step 6: Pain types (multi)
-      case 6:
+      // Step 7: Pain types (multi)
+      case 7:
         return (
           <>
             {(
@@ -369,8 +405,8 @@ export function OnboardingScreen() {
           </>
         );
 
-      // Step 7: Associated conditions (multi, optional)
-      case 7:
+      // Step 8: Associated conditions (multi, optional)
+      case 8:
         return (
           <>
             {(
@@ -400,8 +436,8 @@ export function OnboardingScreen() {
           </>
         );
 
-      // Step 8: Morning stiffness
-      case 8:
+      // Step 9: Morning stiffness
+      case 9:
         return (
           <>
             {(
@@ -417,8 +453,8 @@ export function OnboardingScreen() {
           </>
         );
 
-      // Step 9: Lifestyle challenges (multi)
-      case 9:
+      // Step 10: Lifestyle challenges (multi)
+      case 10:
         return (
           <>
             {(
@@ -445,8 +481,8 @@ export function OnboardingScreen() {
           </>
         );
 
-      // Step 10: Notification time
-      case 10:
+      // Step 11: Notification time
+      case 11:
         return (
           <View>
             <Text
@@ -485,7 +521,7 @@ export function OnboardingScreen() {
   const PREVIEW_SLIDES = [
     {
       title: 'See how you\'re really doing',
-      subtitle: 'Spondy calculates a weekly wellness score from your pain, fatigue, mood, and medication data — all in one number.',
+      subtitle: 'Spondy calculates a weekly wellness score from your pain, fatigue, mood, and medication data. All in one place.',
       mockContent: (
         <View style={[styles.mockCard, isDark && styles.mockCardDark]}>
           <Text style={[styles.mockCardTitle, isDark && styles.mockCardTitleDark]}>Spondy Score</Text>
@@ -512,7 +548,7 @@ export function OnboardingScreen() {
     },
     {
       title: 'Know before a flare hits',
-      subtitle: 'Spondy watches your daily data for early warning patterns — pain trends, stiffness, fatigue — and alerts you before a flare develops.',
+      subtitle: "Spondy watches for the subtle shifts that come before a flare: HRV drops, stiffness trends, rising fatigue. The same signals that helped the app's creator spot a uveitis episode three days before it struck.",
       mockContent: (
         <View style={[styles.mockWarningCard, isDark && styles.mockWarningCardDark]}>
           <Text style={styles.mockWarningTitle}>👀 Symptoms to watch</Text>
@@ -521,7 +557,7 @@ export function OnboardingScreen() {
           </Text>
           <View style={styles.mockChipsRow}>
             <View style={styles.mockChip}>
-              <Text style={styles.mockChipText}>↑ Pain trending up</Text>
+              <Text style={styles.mockChipText}>↓ HRV dropping</Text>
             </View>
             <View style={styles.mockChip}>
               <Text style={styles.mockChipText}>⏱ Long morning stiffness</Text>
@@ -532,7 +568,7 @@ export function OnboardingScreen() {
     },
     {
       title: 'AI insights, just for you',
-      subtitle: 'Every week, your AI companion analyses your patterns and delivers personalised recommendations — based on your actual data, not generic advice.',
+      subtitle: 'Every week, Spondy looks at what actually happened and tells you something useful. Based on your data, not generic advice.',
       mockContent: (
         <View style={[styles.mockCard, isDark && styles.mockCardDark]}>
           <View style={styles.mockAIHeader}>
@@ -540,7 +576,7 @@ export function OnboardingScreen() {
             <View style={styles.mockBadge}><Text style={styles.mockBadgeText}>Premium</Text></View>
           </View>
           <Text style={[styles.mockInsightSummary, isDark && styles.mockTextSec]}>
-            This week your pain was lower on days when you logged at least 7 hours sleep. Your medication adherence was strong — keep it up.
+            This week your pain was lower on days when you got at least 7 hours sleep. Your medication adherence was strong. Keep it up.
           </Text>
           {['Sleep & pain connection', 'Activity patterns', 'What to watch'].map((title) => (
             <View key={title} style={[styles.mockInsightRow, isDark && styles.mockInsightRowDark]}>
@@ -715,7 +751,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.md,
     textAlign: 'center',
-    letterSpacing: 3,
   },
   timeInputDark: {
     color: Colors.textPrimaryDark,

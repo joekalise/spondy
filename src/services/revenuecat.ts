@@ -8,8 +8,8 @@ export async function initializeRevenueCat(userId?: string): Promise<void> {
 
   const apiKey =
     Platform.OS === 'ios'
-      ? process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY!
-      : process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY!;
+      ? (process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY || 'appl_FDnYALlJtpZOVLglvgPEmWBxlHx')
+      : (process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY || 'test_cmkTTrSkBGUWhtFodQGnqIwKCMo');
 
   // Skip initialisation if no key or test key on a real device build
   if (!apiKey || (apiKey.startsWith('test_') && !__DEV__)) return;

@@ -13,6 +13,7 @@ import * as Crypto from 'expo-crypto';
 import * as WebBrowser from 'expo-web-browser';
 import { supabase } from '@/services/supabase';
 import { initializeRevenueCat } from '@/services/revenuecat';
+import { disconnectHealth } from '@/services/healthKit';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -25,6 +26,7 @@ interface AuthContextValue {
   signInWithApple: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -140,7 +142,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    await disconnectHealth();
     const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  }, []);
+
+  const resetPassword = useCallback(async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'spondy://reset-password',
+    });
     if (error) throw error;
   }, []);
 
@@ -155,6 +165,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signInWithApple,
         signInWithGoogle,
         signOut,
+        resetPassword,
       }}
     >
       {children}

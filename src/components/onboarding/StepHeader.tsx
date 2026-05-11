@@ -73,7 +73,6 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.textSecondary,
     fontWeight: '500',
-    letterSpacing: 0.8,
     marginBottom: Spacing.sm,
   },
   stepCountDark: {

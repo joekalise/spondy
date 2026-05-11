@@ -174,7 +174,7 @@ export async function evaluateAndSendNudges(
   ).length;
   if (poorSleepDays >= 3) {
     const message =
-      "Your sleep has been disrupted recently — an early night tonight might help keep a flare at bay.";
+      "Your sleep has been disrupted recently. An early night tonight might help.";
     await sendNudge('Sleep check', message);
     await saveNudgeToDb(userId, 'sleep', message);
     return;
@@ -188,7 +188,7 @@ export async function evaluateAndSendNudges(
     last3Pain[2] > last3Pain[1];
   if (painRising) {
     const message =
-      "You've mentioned more discomfort this week — how's your stress and sleep been?";
+      "Pain has been creeping up. How's your sleep and stress been?";
     await sendNudge('Pain check', message);
     await saveNudgeToDb(userId, 'pain_rising', message);
     return;
@@ -198,7 +198,7 @@ export async function evaluateAndSendNudges(
   const highFatigueDays = recent.filter((l) => l.fatigue_score >= 7).length;
   if (highFatigueDays >= 3) {
     const message =
-      "Your energy has been low for a few days — consider taking it easy and prioritising rest.";
+      "Your energy has been low for a few days. Take it easy and get some rest.";
     await sendNudge('Energy check', message);
     await saveNudgeToDb(userId, 'fatigue', message);
     return;
@@ -210,7 +210,7 @@ export async function evaluateAndSendNudges(
   ).length;
   if (lowMoodDays >= 3) {
     const message =
-      "It sounds like things have been tough lately. Being kind to yourself matters — even small gentle movement can help.";
+      "Things have been tough lately. Be kind to yourself. Even a short gentle walk can help.";
     await sendNudge('Mood check', message);
     await saveNudgeToDb(userId, 'mood', message);
     return;
@@ -222,7 +222,7 @@ export async function evaluateAndSendNudges(
   ).length;
   if (poorDietDays >= 3) {
     const message =
-      "Your diet has been more inflammatory this week — starchy, processed, or sugary foods can quietly drive AS symptoms. Even small changes can help.";
+      "Your diet has been more inflammatory this week. Starchy, processed, or sugary foods can drive AS symptoms. Even small changes help.";
     await sendNudge('Diet check', message);
     await saveNudgeToDb(userId, 'diet', message);
     return;
@@ -234,7 +234,7 @@ export async function evaluateAndSendNudges(
   ).length;
   if (alcoholDays >= 3) {
     const message =
-      "You've logged alcohol several days running — it's a known inflammation driver for AS. Your body might appreciate a rest day or two.";
+      "You've logged alcohol several days running. It's a known inflammation driver for AS. Your body might appreciate a break.";
     await sendNudge('Diet check', message);
     await saveNudgeToDb(userId, 'diet_alcohol', message);
     return;

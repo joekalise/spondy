@@ -13,6 +13,7 @@ import {
   Modal,
   Switch,
 } from 'react-native';
+import { DragSlider } from '@/components/common/DragSlider';
 import { useTranslation } from 'react-i18next';
 import { Colors } from '@/constants/colors';
 import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
@@ -20,6 +21,7 @@ import { useDailyLog } from '@/hooks/useDailyLog';
 import { useHealthData } from '@/hooks/useHealthData';
 import { useMedicationTracking } from '@/hooks/useMedicationTracking';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/contexts/ProfileContext';
 import { getDailyLog, getDailyLogs, saveDailyLog as dbSaveLog } from '@/services/database';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
@@ -65,140 +67,9 @@ function dietQualityEmoji(quality: DietQuality): string {
   }
 }
 
-// ─── Score Picker (replaces NumberSelector) ───────────────────────────────────
+// DragSlider is imported from @/components/common/DragSlider
 
-interface ScorePickerProps {
-  value: number;
-  onChange: (n: number) => void;
-  isDark: boolean;
-}
-
-function scorePickerColor(v: number): string {
-  if (v <= 3) return Colors.success;
-  if (v <= 6) return Colors.warning;
-  return Colors.error;
-}
-
-function ScorePicker({ value, onChange, isDark }: ScorePickerProps) {
-  const color = scorePickerColor(value);
-  const QUICK_PICKS = [0, 3, 5, 7, 10];
-
-  return (
-    <View style={pickerStyles.wrapper}>
-      {/* Main stepper row */}
-      <View style={pickerStyles.stepperRow}>
-        <TouchableOpacity
-          onPress={() => onChange(Math.max(0, value - 1))}
-          style={[pickerStyles.stepBtn, isDark && pickerStyles.stepBtnDark]}
-          activeOpacity={0.7}
-        >
-          <Text style={[pickerStyles.stepBtnText, isDark && { color: Colors.textPrimaryDark }]}>−</Text>
-        </TouchableOpacity>
-
-        <View style={pickerStyles.scoreDisplay}>
-          <Text style={[pickerStyles.scoreNumber, { color }]}>{value}</Text>
-          <Text style={[pickerStyles.scoreSlash, isDark && { color: Colors.textSecondaryDark }]}>/10</Text>
-        </View>
-
-        <TouchableOpacity
-          onPress={() => onChange(Math.min(10, value + 1))}
-          style={[pickerStyles.stepBtn, isDark && pickerStyles.stepBtnDark]}
-          activeOpacity={0.7}
-        >
-          <Text style={[pickerStyles.stepBtnText, isDark && { color: Colors.textPrimaryDark }]}>+</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Quick-tap pills */}
-      <View style={pickerStyles.quickRow}>
-        {QUICK_PICKS.map((n) => {
-          const c = scorePickerColor(n);
-          const selected = n === value;
-          return (
-            <TouchableOpacity
-              key={n}
-              onPress={() => onChange(n)}
-              style={[
-                pickerStyles.quickPill,
-                { borderColor: c + '80', backgroundColor: selected ? c : c + '18' },
-              ]}
-              activeOpacity={0.7}
-            >
-              <Text style={[pickerStyles.quickPillText, { color: selected ? '#FFF' : c }]}>{n}</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-    </View>
-  );
-}
-
-const pickerStyles = StyleSheet.create({
-  wrapper: {
-    gap: Spacing.sm,
-  },
-  stepperRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  stepBtn: {
-    flex: 1,
-    height: 56,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    backgroundColor: Colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepBtnDark: {
-    borderColor: Colors.borderDark,
-    backgroundColor: Colors.backgroundDark,
-  },
-  stepBtnText: {
-    fontSize: 28,
-    fontWeight: '300',
-    color: Colors.textPrimary,
-    lineHeight: 34,
-  },
-  scoreDisplay: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    width: 88,
-  },
-  scoreNumber: {
-    fontSize: 48,
-    fontWeight: '900',
-    lineHeight: 54,
-  },
-  scoreSlash: {
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-    fontWeight: '600',
-    paddingBottom: 6,
-    marginLeft: 2,
-  },
-  quickRow: {
-    flexDirection: 'row',
-    gap: Spacing.xs,
-    justifyContent: 'space-between',
-  },
-  quickPill: {
-    flex: 1,
-    paddingVertical: 5,
-    borderRadius: BorderRadius.full,
-    borderWidth: 1,
-    alignItems: 'center',
-  },
-  quickPillText: {
-    fontSize: FontSize.xs,
-    fontWeight: '700',
-  },
-});
-
-// ─── Stiffness Chips ──────────────────────────────────────────────────────────
+// ─── Stiffness / Medication option rows ──────────────────────────────────────
 
 const STIFFNESS_OPTIONS: { value: MorningStiffness; labelKey: string }[] = [
   { value: 'under_30', labelKey: 'onboarding.morning_stiffness.under_30' },
@@ -207,16 +78,17 @@ const STIFFNESS_OPTIONS: { value: MorningStiffness; labelKey: string }[] = [
   { value: 'over_2_hours', labelKey: 'onboarding.morning_stiffness.over_2_hours' },
 ];
 
-interface ChipRowProps {
+interface OptionRowProps {
   options: { value: string; label: string }[];
   selected: string | null;
   onSelect: (v: string) => void;
   isDark: boolean;
+  accentColor?: string;
 }
 
-function ChipRow({ options, selected, onSelect, isDark }: ChipRowProps) {
+function OptionRow({ options, selected, onSelect, isDark, accentColor = Colors.primary }: OptionRowProps) {
   return (
-    <View style={styles.chipRow}>
+    <View style={styles.moodRow}>
       {options.map((opt) => {
         const isSelected = opt.value === selected;
         return (
@@ -224,19 +96,17 @@ function ChipRow({ options, selected, onSelect, isDark }: ChipRowProps) {
             key={opt.value}
             onPress={() => onSelect(opt.value)}
             style={[
-              styles.chip,
-              isDark && styles.chipDark,
-              isSelected && styles.chipSelected,
+              styles.moodButton,
+              isDark && styles.moodButtonDark,
+              isSelected && { borderColor: accentColor, backgroundColor: accentColor + '22' },
             ]}
             activeOpacity={0.7}
           >
-            <Text
-              style={[
-                styles.chipText,
-                isDark && styles.chipTextDark,
-                isSelected && styles.chipTextSelected,
-              ]}
-            >
+            <Text style={[
+              styles.optionLabel,
+              isDark && styles.textSecDark,
+              isSelected && { color: accentColor, fontWeight: '700' },
+            ]}>
               {opt.label}
             </Text>
           </TouchableOpacity>
@@ -260,7 +130,7 @@ const MOOD_OPTIONS: { value: Mood; emoji: string; labelKey: string; color: strin
 
 const DIET_QUALITY_OPTIONS: { value: DietQuality; label: string; color: string }[] = [
   { value: 'clean', label: 'Clean', color: '#16A34A' },
-  { value: 'mostly_clean', label: 'Mostly good', color: '#65A30D' },
+  { value: 'mostly_clean', label: 'Mostly ok', color: '#65A30D' },
   { value: 'mixed', label: 'Mixed', color: '#D97706' },
   { value: 'poor', label: 'Poor', color: '#DC2626' },
 ];
@@ -347,6 +217,9 @@ interface DayLogFormProps {
   exerciseMinutes: number | null;
   setExerciseMinutes: (v: number | null) => void;
   tracksMedication: boolean;
+  isFemale: boolean;
+  periodActive: boolean;
+  setPeriodActive: (v: boolean) => void;
   isDark: boolean;
   t: (key: string, opts?: Record<string, unknown>) => string;
   isSaving: boolean;
@@ -366,6 +239,7 @@ function DayLogForm({
   exerciseType, setExerciseType,
   exerciseMinutes, setExerciseMinutes,
   tracksMedication,
+  isFemale, periodActive, setPeriodActive,
   isDark, t, isSaving, onSave,
 }: DayLogFormProps) {
   const stiffnessOptions = STIFFNESS_OPTIONS.map((opt) => ({ value: opt.value, label: t(opt.labelKey) }));
@@ -386,7 +260,7 @@ function DayLogForm({
           <View style={styles.symptomSubHeader}>
             <Text style={[styles.symptomSubLabel, isDark && styles.textSecDark]}>{t('tracker.pain_score')}</Text>
           </View>
-          <ScorePicker value={painScore} onChange={setPainScore} isDark={isDark} />
+          <DragSlider value={painScore} onChange={setPainScore} isDark={isDark} />
           <Text style={[styles.hint, isDark && styles.textSecDark]}>{t('tracker.pain_score_hint')}</Text>
         </View>
 
@@ -398,14 +272,14 @@ function DayLogForm({
           <View style={styles.symptomSubHeader}>
             <Text style={[styles.symptomSubLabel, isDark && styles.textSecDark]}>{t('tracker.fatigue_score')}</Text>
           </View>
-          <ScorePicker value={fatigueScore} onChange={setFatigueScore} isDark={isDark} />
+          <DragSlider value={fatigueScore} onChange={setFatigueScore} isDark={isDark} />
           <Text style={[styles.hint, isDark && styles.textSecDark]}>{t('tracker.fatigue_score_hint')}</Text>
         </View>
       </View>
 
       <View style={[styles.section, isDark && styles.sectionDark]}>
         <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>{t('tracker.stiffness_duration')}</Text>
-        <ChipRow options={stiffnessOptions} selected={stiffness} onSelect={(v) => setStiffness(v as MorningStiffness)} isDark={isDark} />
+        <OptionRow options={stiffnessOptions} selected={stiffness} onSelect={(v) => setStiffness(v as MorningStiffness)} isDark={isDark} />
       </View>
 
       <View style={[styles.section, isDark && styles.sectionDark]}>
@@ -437,7 +311,24 @@ function DayLogForm({
       {tracksMedication && (
         <View style={[styles.section, isDark && styles.sectionDark]}>
           <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>{t('tracker.medications_taken')}</Text>
-          <ChipRow options={medOptions} selected={medsTaken} onSelect={(v) => setMedsTaken(v as 'yes' | 'no' | 'partial')} isDark={isDark} />
+          <OptionRow options={medOptions} selected={medsTaken} onSelect={(v) => setMedsTaken(v as 'yes' | 'no' | 'partial')} isDark={isDark} />
+        </View>
+      )}
+
+      {isFemale && (
+        <View style={[styles.section, isDark && styles.sectionDark]}>
+          <View style={styles.periodRow}>
+            <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark, { marginBottom: 0 }]}>{t('tracker.period_today')}</Text>
+            <Switch
+              value={periodActive}
+              onValueChange={setPeriodActive}
+              trackColor={{ true: Colors.primary, false: isDark ? Colors.borderDark : Colors.border }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+          {periodActive && (
+            <Text style={[styles.hint, isDark && styles.textSecDark, { marginTop: 4 }]}>{t('tracker.period_active')}</Text>
+          )}
         </View>
       )}
 
@@ -455,13 +346,13 @@ function DayLogForm({
                 style={[
                   styles.dietQualityChip,
                   isDark && styles.chipDark,
-                  selected && { backgroundColor: opt.color, borderColor: opt.color },
+                  selected && { backgroundColor: opt.color + '22', borderColor: opt.color },
                 ]}
               >
                 <Text style={[
                   styles.chipText,
                   isDark && !selected && styles.chipTextDark,
-                  selected && styles.chipTextSelected,
+                  selected && { color: opt.color, fontWeight: '700' },
                 ]}>
                   {opt.label}
                 </Text>
@@ -583,13 +474,14 @@ interface DayLogModalProps {
   initialLog: DailyLog | null;
   userId: string;
   tracksMedication: boolean;
+  isFemale: boolean;
   isDark: boolean;
   t: (key: string, opts?: Record<string, unknown>) => string;
   onSaved: (log: DailyLog) => void;
   onClose: () => void;
 }
 
-function DayLogModal({ date, initialLog, userId, tracksMedication, isDark, t, onSaved, onClose }: DayLogModalProps) {
+function DayLogModal({ date, initialLog, userId, tracksMedication, isFemale, isDark, t, onSaved, onClose }: DayLogModalProps) {
   const [painScore, setPainScore] = useState(initialLog?.pain_score ?? 0);
   const [fatigueScore, setFatigueScore] = useState(initialLog?.fatigue_score ?? 0);
   const [stiffness, setStiffness] = useState<MorningStiffness | null>(initialLog?.stiffness_duration ?? null);
@@ -601,6 +493,7 @@ function DayLogModal({ date, initialLog, userId, tracksMedication, isDark, t, on
   const [exerciseDone, setExerciseDone] = useState(initialLog?.exercise_done ?? false);
   const [exerciseType, setExerciseType] = useState<string | null>(initialLog?.exercise_type ?? null);
   const [exerciseMinutes, setExerciseMinutes] = useState<number | null>(initialLog?.exercise_minutes ?? null);
+  const [periodActive, setPeriodActive] = useState(initialLog?.period_active ?? false);
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
@@ -620,6 +513,7 @@ function DayLogModal({ date, initialLog, userId, tracksMedication, isDark, t, on
         exercise_done: exerciseDone,
         exercise_type: exerciseType,
         exercise_minutes: exerciseMinutes,
+        period_active: isFemale ? periodActive : null,
       });
       if (saved) onSaved(saved);
       onClose();
@@ -661,6 +555,7 @@ function DayLogModal({ date, initialLog, userId, tracksMedication, isDark, t, on
             exerciseType={exerciseType} setExerciseType={setExerciseType}
             exerciseMinutes={exerciseMinutes} setExerciseMinutes={setExerciseMinutes}
             tracksMedication={tracksMedication}
+            isFemale={isFemale} periodActive={periodActive} setPeriodActive={setPeriodActive}
             isDark={isDark} t={t}
             isSaving={isSaving} onSave={handleSave}
           />
@@ -826,14 +721,16 @@ export default function TrackScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { user } = useAuth();
+  const { profile } = useProfile();
+  const isFemale = profile?.biological_sex === 'female';
 
   const todayStr = localDateString(0);
 
   const { todayLog, todayLogged, streak, isLoading, error, saveLog, refresh } = useDailyLog();
-  const { isConnected: healthConnected, todayData: healthData } = useHealthData();
+  const { isConnected: healthConnected, todayData: healthData, recheck: recheckHealth } = useHealthData();
   const { tracks: tracksMedication } = useMedicationTracking();
 
-  useFocusEffect(useCallback(() => { refresh(); }, [refresh]));
+  useFocusEffect(useCallback(() => { refresh(); recheckHealth(); }, [refresh, recheckHealth]));
 
   // Recent logs (last 7 days, excluding today) + whether older entries exist
   const [recentLogs, setRecentLogs] = useState<DailyLog[]>([]);
@@ -889,6 +786,7 @@ export default function TrackScreen() {
   const [exerciseDone, setExerciseDone] = useState(false);
   const [exerciseType, setExerciseType] = useState<string | null>(null);
   const [exerciseMinutes, setExerciseMinutes] = useState<number | null>(null);
+  const [periodActive, setPeriodActive] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -906,6 +804,7 @@ export default function TrackScreen() {
       setExerciseDone(todayLog.exercise_done ?? false);
       setExerciseType(todayLog.exercise_type ?? null);
       setExerciseMinutes(todayLog.exercise_minutes ?? null);
+      setPeriodActive(todayLog.period_active ?? false);
     } else {
       setPainScore(0);
       setFatigueScore(0);
@@ -918,6 +817,7 @@ export default function TrackScreen() {
       setExerciseDone(false);
       setExerciseType(null);
       setExerciseMinutes(null);
+      setPeriodActive(false);
     }
     setEditing(false);
     setSaved(false);
@@ -928,7 +828,7 @@ export default function TrackScreen() {
     setIsSaving(true);
     setSaved(false);
     try {
-      await saveLog({ pain_score: painScore, fatigue_score: fatigueScore, stiffness_duration: stiffness, mood, medications_taken: medsTaken, notes, diet_quality: dietQuality, diet_triggers: dietTriggers, exercise_done: exerciseDone, exercise_type: exerciseType, exercise_minutes: exerciseMinutes });
+      await saveLog({ pain_score: painScore, fatigue_score: fatigueScore, stiffness_duration: stiffness, mood, medications_taken: medsTaken, notes, diet_quality: dietQuality, diet_triggers: dietTriggers, exercise_done: exerciseDone, exercise_type: exerciseType, exercise_minutes: exerciseMinutes, period_active: isFemale ? periodActive : null });
       setEditing(false);
       setSaved(true);
     } catch {
@@ -1026,6 +926,7 @@ export default function TrackScreen() {
             exerciseType={exerciseType} setExerciseType={setExerciseType}
             exerciseMinutes={exerciseMinutes} setExerciseMinutes={setExerciseMinutes}
             tracksMedication={tracksMedication}
+            isFemale={isFemale} periodActive={periodActive} setPeriodActive={setPeriodActive}
             isDark={isDark} t={t}
             isSaving={isSaving} onSave={handleSaveToday}
           />
@@ -1053,6 +954,7 @@ export default function TrackScreen() {
           initialLog={modalLog}
           userId={user.id}
           tracksMedication={tracksMedication}
+          isFemale={isFemale}
           isDark={isDark}
           t={t}
           onSaved={(saved) => {
@@ -1272,6 +1174,11 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.textSecondary,
   },
+  periodRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
 
   // Symptom sub-sections (inside the merged card)
   symptomSubSection: {
@@ -1301,14 +1208,17 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: Spacing.xs,
     marginTop: Spacing.xs,
+    justifyContent: 'center',
   },
   chip: {
-    paddingVertical: Spacing.xs,
+    paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
-    borderRadius: BorderRadius.full,
+    borderRadius: BorderRadius.md,
     borderWidth: 1.5,
     borderColor: Colors.border,
     backgroundColor: Colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   chipDark: {
     borderColor: Colors.borderDark,
@@ -1322,6 +1232,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.textPrimary,
     fontWeight: '500',
+    textAlign: 'center',
   },
   chipTextDark: {
     color: Colors.textPrimaryDark,
@@ -1358,6 +1269,12 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.textSecondary,
     textAlign: 'center',
+  },
+  optionLabel: {
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    fontWeight: '500',
   },
 
   // Notes
@@ -1413,8 +1330,11 @@ const styles = StyleSheet.create({
   dietQualityChip: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.sm,
+    justifyContent: 'center',
+    minHeight: 44,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.xs,
+    borderRadius: BorderRadius.md,
     borderWidth: 1.5,
     borderColor: Colors.border,
     backgroundColor: Colors.background,

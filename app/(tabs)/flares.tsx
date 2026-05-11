@@ -1285,7 +1285,6 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     fontWeight: '700',
     color: Colors.textSecondary,
-    letterSpacing: 0.8,
   },
   sectionActionLink: {
     fontSize: FontSize.sm,

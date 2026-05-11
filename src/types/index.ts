@@ -1,4 +1,5 @@
 export type AgeRange = 'under_25' | '25_35' | '35_45' | '45_55' | '55_plus';
+export type BiologicalSex = 'male' | 'female' | 'prefer_not_to_say';
 export type DiagnosisYears = 'under_1' | '1_3' | '3_5' | '5_10' | '10_plus';
 export type Severity = 'mild' | 'moderate' | 'severe';
 export type Medication =
@@ -17,7 +18,9 @@ export type PainLocation =
   | 'shoulders'
   | 'neck'
   | 'chest'
-  | 'jaw';
+  | 'jaw'
+  | 'heels'
+  | 'other';
 export type PainType = 'stiffness' | 'sharp_pain' | 'burning' | 'aching' | 'fatigue';
 export type AssociatedCondition =
   | 'uveitis'
@@ -52,6 +55,7 @@ export type DietTrigger =
 export interface UserProfile {
   id?: string;
   user_id: string;
+  biological_sex?: BiologicalSex | null;
   age_range: AgeRange | null;
   diagnosis_years: DiagnosisYears | null;
   severity: Severity | null;
@@ -65,6 +69,7 @@ export interface UserProfile {
   ai_context: string;
   onboarding_complete: boolean;
   welcome_message?: string;
+  preferred_name?: string | null;
 }
 
 export interface DailyLog {
@@ -82,6 +87,7 @@ export interface DailyLog {
   exercise_done: boolean;
   exercise_minutes: number | null;
   exercise_type: string | null;
+  period_active?: boolean | null;
 }
 
 export interface HealthData {
@@ -127,6 +133,7 @@ export interface MedicationReminder {
 }
 
 export interface OnboardingData {
+  biological_sex: BiologicalSex | null;
   age_range: AgeRange | null;
   diagnosis_years: DiagnosisYears | null;
   severity: Severity | null;

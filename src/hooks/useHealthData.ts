@@ -19,6 +19,7 @@ export interface UseHealthDataResult {
   connect: () => Promise<boolean>;
   sync: () => Promise<void>;
   disconnect: () => Promise<void>;
+  recheck: () => Promise<void>;
 }
 
 export function useHealthData(): UseHealthDataResult {
@@ -106,5 +107,13 @@ export function useHealthData(): UseHealthDataResult {
     setTodayData(null);
   }, []);
 
-  return { isAvailable, isConnected, isLoading, todayData, connect, sync, disconnect };
+  const recheck = useCallback(async () => {
+    const connected = await isHealthConnected();
+    if (!connected) {
+      setIsConnected(false);
+      setTodayData(null);
+    }
+  }, []);
+
+  return { isAvailable, isConnected, isLoading, todayData, connect, sync, disconnect, recheck };
 }

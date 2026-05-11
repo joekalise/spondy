@@ -21,6 +21,10 @@ import { useTranslation } from 'react-i18next';
 import Constants from 'expo-constants';
 
 import { Button } from '@/components/common/Button';
+import { InfoButton } from '@/components/common/InfoButton';
+import { OptionCard } from '@/components/onboarding/OptionCard';
+import { MultiSelectCard } from '@/components/onboarding/MultiSelectCard';
+import { supabase } from '@/services/supabase';
 import { Colors } from '@/constants/colors';
 import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -38,6 +42,7 @@ import {
   MedicationReminder,
   BiologicInjection,
   AgeRange,
+  BiologicalSex,
   DiagnosisYears,
   Severity,
   Medication,
@@ -82,6 +87,12 @@ function formatOnboardingMeds(meds: string[]): string {
   return filtered.map((m) => MEDICATION_LABELS[m] ?? capitalize(m)).join(', ');
 }
 
+const BIOLOGICAL_SEX_LABELS: Record<string, string> = {
+  male: 'Male',
+  female: 'Female',
+  prefer_not_to_say: 'Prefer not to say',
+};
+
 const AGE_RANGE_LABELS: Record<string, string> = {
   under_25: 'Under 25',
   '25_35': '25–35',
@@ -113,6 +124,8 @@ const PAIN_LOCATION_LABELS: Record<string, string> = {
   neck: 'Neck',
   chest: 'Chest',
   jaw: 'Jaw',
+  heels: 'Heels',
+  other: 'Other',
 };
 
 const PAIN_TYPE_LABELS: Record<string, string> = {
@@ -229,8 +242,9 @@ function ChipGroup({
 interface ProfileEditModalProps {
   visible: boolean;
   onClose: () => void;
-  profile: { age_range: AgeRange | null; diagnosis_years: DiagnosisYears | null; severity: Severity | null; medications: Medication[]; pain_locations: PainLocation[]; pain_types: PainType[]; conditions: AssociatedCondition[]; morning_stiffness: MorningStiffness | null; challenges: LifestyleChallenge[] } | null;
+  profile: { biological_sex?: BiologicalSex | null; age_range: AgeRange | null; diagnosis_years: DiagnosisYears | null; severity: Severity | null; medications: Medication[]; pain_locations: PainLocation[]; pain_types: PainType[]; conditions: AssociatedCondition[]; morning_stiffness: MorningStiffness | null; challenges: LifestyleChallenge[] } | null;
   onSave: (updates: {
+    biological_sex: BiologicalSex | null;
     age_range: AgeRange | null;
     diagnosis_years: DiagnosisYears | null;
     severity: Severity | null;
@@ -244,12 +258,21 @@ interface ProfileEditModalProps {
   isDark: boolean;
 }
 
+function EditSectionHeader({ label, color }: { label: string; color: string }) {
+  return (
+    <Text style={{ fontSize: FontSize.md, fontWeight: '700', color, marginTop: Spacing.xl, marginBottom: Spacing.sm }}>
+      {label}
+    </Text>
+  );
+}
+
 function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: ProfileEditModalProps) {
   const bg = isDark ? Colors.backgroundDark : Colors.background;
   const cardBorder = isDark ? Colors.borderDark : Colors.border;
   const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
   const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
 
+  const [biologicalSex, setBiologicalSex] = useState<BiologicalSex | null>(null);
   const [ageRange, setAgeRange] = useState<AgeRange | null>(null);
   const [diagnosisYears, setDiagnosisYears] = useState<DiagnosisYears | null>(null);
   const [severity, setSeverity] = useState<Severity | null>(null);
@@ -263,6 +286,7 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
 
   useEffect(() => {
     if (profile && visible) {
+      setBiologicalSex(profile.biological_sex ?? null);
       setAgeRange(profile.age_range);
       setDiagnosisYears(profile.diagnosis_years);
       setSeverity(profile.severity);
@@ -283,6 +307,7 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
     setIsSaving(true);
     try {
       await onSave({
+        biological_sex: biologicalSex,
         age_range: ageRange,
         diagnosis_years: diagnosisYears,
         severity,
@@ -302,6 +327,8 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
     }
   }
 
+  const compactCard = { paddingVertical: 8, marginBottom: 4 } as const;
+
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <SafeAreaView style={{ flex: 1, backgroundColor: bg }}>
@@ -312,106 +339,84 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
           </TouchableOpacity>
         </View>
 
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <ScrollView
-            contentContainerStyle={styles.editModalContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
+        <ScrollView
+          contentContainerStyle={styles.editModalContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <EditSectionHeader label="About you" color={textSecondary} />
+
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Biological sex</Text>
+          {(['male', 'female', 'prefer_not_to_say'] as BiologicalSex[]).map(v => (
+            <OptionCard key={v} style={compactCard} label={BIOLOGICAL_SEX_LABELS[v]} isSelected={biologicalSex === v} onPress={() => setBiologicalSex(v)} />
+          ))}
+
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Age range</Text>
+          {(['under_25', '25_35', '35_45', '45_55', '55_plus'] as AgeRange[]).map(v => (
+            <OptionCard key={v} style={compactCard} label={AGE_RANGE_LABELS[v]} isSelected={ageRange === v} onPress={() => setAgeRange(v)} />
+          ))}
+
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Years with AS</Text>
+          {(['under_1', '1_3', '3_5', '5_10', '10_plus'] as DiagnosisYears[]).map(v => (
+            <OptionCard key={v} style={compactCard} label={DIAGNOSIS_YEARS_LABELS[v]} isSelected={diagnosisYears === v} onPress={() => setDiagnosisYears(v)} />
+          ))}
+
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Disease activity</Text>
+          {(['mild', 'moderate', 'severe'] as Severity[]).map(v => (
+            <OptionCard key={v} style={compactCard} label={SEVERITY_LABELS[v]} isSelected={severity === v} onPress={() => setSeverity(v)} />
+          ))}
+
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Morning stiffness</Text>
+          {(['under_30', '30_60', '1_2_hours', 'over_2_hours'] as MorningStiffness[]).map(v => (
+            <OptionCard key={v} style={compactCard} label={MORNING_STIFFNESS_LABELS[v]} isSelected={morningStiffness === v} onPress={() => setMorningStiffness(v)} />
+          ))}
+
+          <EditSectionHeader label="Symptoms" color={textSecondary} />
+
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Pain locations</Text>
+          {(['lower_back', 'upper_back', 'hips', 'knees', 'shoulders', 'neck', 'chest', 'jaw', 'heels', 'other'] as PainLocation[]).map(v => (
+            <MultiSelectCard key={v} style={compactCard} label={PAIN_LOCATION_LABELS[v]} isSelected={painLocations.includes(v)} onPress={() => setPainLocations(arr => toggle(arr, v))} />
+          ))}
+
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Types of pain</Text>
+          {(['stiffness', 'sharp_pain', 'burning', 'aching', 'fatigue'] as PainType[]).map(v => (
+            <MultiSelectCard key={v} style={compactCard} label={PAIN_TYPE_LABELS[v]} isSelected={painTypes.includes(v)} onPress={() => setPainTypes(arr => toggle(arr, v))} />
+          ))}
+
+          <EditSectionHeader label="Conditions" color={textSecondary} />
+
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Associated conditions</Text>
+          {(['uveitis', 'psoriasis', 'ibd', 'enthesitis', 'peripheral_joint', 'fatigue', 'brain_fog', 'anxiety_depression'] as AssociatedCondition[]).map(v => (
+            <MultiSelectCard key={v} style={compactCard} label={CONDITION_LABELS[v]} isSelected={conditions.includes(v)} onPress={() => setConditions(arr => toggle(arr, v))} />
+          ))}
+
+          <EditSectionHeader label="Lifestyle" color={textSecondary} />
+
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Life challenges</Text>
+          {(['sleep', 'exercise', 'work', 'social_life', 'mental_health'] as LifestyleChallenge[]).map(v => (
+            <MultiSelectCard key={v} style={compactCard} label={CHALLENGE_LABELS[v]} isSelected={challenges.includes(v)} onPress={() => setChallenges(arr => toggle(arr, v))} />
+          ))}
+
+          <EditSectionHeader label="Treatment" color={textSecondary} />
+
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Current treatment</Text>
+          {(['adalimumab', 'secukinumab', 'ixekizumab', 'ustekinumab', 'nsaids_only', 'no_medication', 'other'] as Medication[]).map(v => (
+            <MultiSelectCard key={v} style={compactCard} label={MEDICATION_LABELS[v]} isSelected={medications.includes(v)} onPress={() => setMedications(arr => toggle(arr, v))} />
+          ))}
+
+          <TouchableOpacity
+            onPress={handleSave}
+            disabled={isSaving}
+            activeOpacity={0.8}
+            style={[styles.modalSaveBtn, { marginTop: Spacing.xl, opacity: isSaving ? 0.6 : 1 }]}
           >
-            <Text style={[styles.editSectionTitle, { color: textSecondary }]}>About you</Text>
-            <ChipGroup
-              label="Age range"
-              options={['under_25', '25_35', '35_45', '45_55', '55_plus']}
-              labelMap={AGE_RANGE_LABELS}
-              selected={ageRange}
-              onToggle={(v) => setAgeRange(v as AgeRange)}
-              isDark={isDark}
-            />
-            <ChipGroup
-              label="Years with AS"
-              options={['under_1', '1_3', '3_5', '5_10', '10_plus']}
-              labelMap={DIAGNOSIS_YEARS_LABELS}
-              selected={diagnosisYears}
-              onToggle={(v) => setDiagnosisYears(v as DiagnosisYears)}
-              isDark={isDark}
-            />
-            <ChipGroup
-              label="Disease activity"
-              options={['mild', 'moderate', 'severe']}
-              labelMap={SEVERITY_LABELS}
-              selected={severity}
-              onToggle={(v) => setSeverity(v as Severity)}
-              isDark={isDark}
-            />
-            <ChipGroup
-              label="Morning stiffness"
-              options={['under_30', '30_60', '1_2_hours', 'over_2_hours']}
-              labelMap={MORNING_STIFFNESS_LABELS}
-              selected={morningStiffness}
-              onToggle={(v) => setMorningStiffness(v as MorningStiffness)}
-              isDark={isDark}
-            />
-
-            <Text style={[styles.editSectionTitle, { color: textSecondary }]}>Symptoms</Text>
-            <ChipGroup
-              label="Pain locations"
-              options={['lower_back', 'upper_back', 'hips', 'knees', 'shoulders', 'neck', 'chest', 'jaw']}
-              labelMap={PAIN_LOCATION_LABELS}
-              selected={painLocations}
-              onToggle={(v) => setPainLocations((arr) => toggle(arr, v as PainLocation))}
-              isDark={isDark}
-            />
-            <ChipGroup
-              label="Types of pain"
-              options={['stiffness', 'sharp_pain', 'burning', 'aching', 'fatigue']}
-              labelMap={PAIN_TYPE_LABELS}
-              selected={painTypes}
-              onToggle={(v) => setPainTypes((arr) => toggle(arr, v as PainType))}
-              isDark={isDark}
-            />
-
-            <Text style={[styles.editSectionTitle, { color: textSecondary }]}>Other</Text>
-            <ChipGroup
-              label="Associated conditions"
-              options={['uveitis', 'psoriasis', 'ibd', 'enthesitis', 'peripheral_joint', 'fatigue', 'brain_fog', 'anxiety_depression']}
-              labelMap={CONDITION_LABELS}
-              selected={conditions}
-              onToggle={(v) => setConditions((arr) => toggle(arr, v as AssociatedCondition))}
-              isDark={isDark}
-            />
-            <ChipGroup
-              label="Life challenges"
-              options={['sleep', 'exercise', 'work', 'social_life', 'mental_health']}
-              labelMap={CHALLENGE_LABELS}
-              selected={challenges}
-              onToggle={(v) => setChallenges((arr) => toggle(arr, v as LifestyleChallenge))}
-              isDark={isDark}
-            />
-
-            <Text style={[styles.editSectionTitle, { color: textSecondary }]}>Treatment</Text>
-            <ChipGroup
-              label="Current treatment"
-              options={['adalimumab', 'secukinumab', 'ixekizumab', 'ustekinumab', 'nsaids_only', 'no_medication', 'other']}
-              labelMap={MEDICATION_LABELS}
-              selected={medications}
-              onToggle={(v) => setMedications((arr) => toggle(arr, v as Medication))}
-              isDark={isDark}
-            />
-
-            <TouchableOpacity
-              onPress={handleSave}
-              disabled={isSaving}
-              activeOpacity={0.8}
-              style={[styles.modalSaveBtn, { marginTop: Spacing.lg, opacity: isSaving ? 0.6 : 1 }]}
-            >
-              {isSaving ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
-              ) : (
-                <Text style={styles.modalSaveText}>Save changes</Text>
-              )}
-            </TouchableOpacity>
-          </ScrollView>
-        </KeyboardAvoidingView>
+            {isSaving ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <Text style={styles.modalSaveText}>Save changes</Text>
+            )}
+          </TouchableOpacity>
+        </ScrollView>
       </SafeAreaView>
     </Modal>
   );
@@ -826,24 +831,14 @@ export default function ProfileScreen() {
 
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [editingName, setEditingName] = useState(false);
+  const [nameValue, setNameValue] = useState(profile?.preferred_name ?? '');
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showLogInjection, setShowLogInjection] = useState(false);
   const [injectionDefaultMed, setInjectionDefaultMed] = useState('');
   const [reminderEnabled, setReminderEnabled] = useState(true);
-  const [welcomeInsights, setWelcomeInsights] = useState<string[]>([]);
-  const [watchSummary, setWatchSummary] = useState('');
-
-  useEffect(() => {
-    if (!user) return;
-    AsyncStorage.getItem(`@spondy_welcome_${user.id}`)
-      .then((raw) => {
-        if (!raw) return;
-        const parsed = JSON.parse(raw);
-        setWelcomeInsights(parsed.insights ?? []);
-        setWatchSummary(parsed.watch_summary ?? '');
-      })
-      .catch(() => {});
-  }, [user]);
 
   // Restore persisted reminder toggle and re-schedule notification on mount
   useEffect(() => {
@@ -872,6 +867,10 @@ export default function ProfileScreen() {
   React.useEffect(() => {
     if (profile?.ai_context) setAiContext(profile.ai_context);
   }, [profile?.ai_context]);
+
+  React.useEffect(() => {
+    setNameValue(profile?.preferred_name ?? '');
+  }, [profile?.preferred_name]);
 
   const bg = isDark ? Colors.backgroundDark : Colors.background;
   const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
@@ -1093,6 +1092,50 @@ export default function ProfileScreen() {
     Linking.openURL('https://apps.apple.com/account/subscriptions');
   }, []);
 
+  const isEmailAuth = user?.app_metadata?.provider === 'email' ||
+    user?.identities?.some((i: { provider: string }) => i.provider === 'email');
+
+  const handleChangeEmail = useCallback(() => {
+    Alert.prompt(
+      'Change email',
+      'Enter your new email address.',
+      async (newEmail) => {
+        if (!newEmail?.trim()) return;
+        const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
+        if (error) Alert.alert('Error', 'Failed to update email.');
+        else Alert.alert('', 'Check your new inbox to confirm the change.');
+      },
+      'plain-text',
+      user?.email ?? ''
+    );
+  }, [user?.email]);
+
+  const handleChangePassword = useCallback(() => {
+    Alert.prompt(
+      'New password',
+      'At least 8 characters.',
+      async (newPassword) => {
+        if (!newPassword || newPassword.length < 8) {
+          Alert.alert('', 'Password must be at least 8 characters.');
+          return;
+        }
+        const { error } = await supabase.auth.updateUser({ password: newPassword });
+        if (error) Alert.alert('Error', 'Failed to update password.');
+        else Alert.alert('', 'Password updated.');
+      },
+      'secure-text'
+    );
+  }, []);
+
+  const handleSendFeedback = useCallback(() => {
+    if (!feedbackText.trim()) return;
+    const subject = encodeURIComponent('Spondy Feedback');
+    const body = encodeURIComponent(feedbackText.trim() + (user?.email ? `\n\n— ${user.email}` : ''));
+    Linking.openURL(`mailto:joseph.brockbank@gmail.com?subject=${subject}&body=${body}`);
+    setFeedbackText('');
+    setShowFeedback(false);
+  }, [feedbackText, user?.email]);
+
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: bg }]}>
       <ScrollView
@@ -1101,44 +1144,46 @@ export default function ProfileScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Header */}
-        <Text style={[styles.title, { color: textPrimary }]}>
-          {t('profile.title')}
-        </Text>
+        <Text style={[styles.title, { color: textPrimary }]}>My profile</Text>
 
-        {/* ── MY PROFILE ──────────────────────────────────────────────────── */}
-        <SectionHeader label="My profile" isDark={isDark} firstSection />
-
-        {/* User avatar + email */}
+        {/* User avatar + name + email */}
         <View style={[styles.avatarCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>
-              {user?.email?.charAt(0).toUpperCase() ?? 'U'}
+              {(nameValue || user?.email)?.charAt(0).toUpperCase() ?? 'U'}
             </Text>
           </View>
+          {editingName ? (
+            <TextInput
+              style={[styles.nameInput, { color: textPrimary, borderColor: Colors.primary }]}
+              value={nameValue}
+              onChangeText={setNameValue}
+              placeholder="Your first name"
+              placeholderTextColor={textSecondary}
+              autoFocus
+              returnKeyType="done"
+              onSubmitEditing={async () => {
+                setEditingName(false);
+                try { await saveProfile({ preferred_name: nameValue.trim() || null }); }
+                catch { Alert.alert('Error', 'Could not save name. Please try again.'); }
+              }}
+              onBlur={async () => {
+                setEditingName(false);
+                try { await saveProfile({ preferred_name: nameValue.trim() || null }); }
+                catch { Alert.alert('Error', 'Could not save name. Please try again.'); }
+              }}
+            />
+          ) : (
+            <TouchableOpacity onPress={() => setEditingName(true)} activeOpacity={0.7}>
+              <Text style={[styles.nameDisplay, { color: nameValue ? textPrimary : textSecondary }]}>
+                {nameValue || 'Add your name'}
+              </Text>
+            </TouchableOpacity>
+          )}
           <Text style={[styles.emailText, { color: textSecondary }]}>
             {user?.email ?? ''}
           </Text>
         </View>
-
-        {/* ── Your Spondy Profile (AI welcome content) ─────────────────────── */}
-        {(profile?.welcome_message || welcomeInsights.length > 0) && (
-          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-            <Text style={[styles.cardTitle, { color: textPrimary, marginBottom: Spacing.xs }]}>
-              Your Spondy profile
-            </Text>
-            {profile?.welcome_message ? (
-              <Text style={[styles.profileWelcomeText, { color: textPrimary }]}>
-                {profile.welcome_message}
-              </Text>
-            ) : null}
-            {welcomeInsights.length > 0 && welcomeInsights.map((insight, idx) => (
-              <View key={idx} style={styles.profileInsightRow}>
-                <Text style={[styles.profileInsightBullet, { color: textSecondary }]}>·</Text>
-                <Text style={[styles.profileInsightText, { color: textSecondary }]}>{insight}</Text>
-              </View>
-            ))}
-          </View>
-        )}
 
         {/* ── AI context card — "About you" ─────────────────────────────────── */}
         <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
@@ -1201,67 +1246,66 @@ export default function ProfileScreen() {
           )}
         </View>
 
-        {/* ── Profile summary — 2-column chip grid ───────────────────────── */}
+        {/* ── Profile summary ────────────────────────────────────────────── */}
         <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
           <View style={styles.cardHeader}>
             <Text style={[styles.cardTitle, { color: textPrimary }]}>
               {t('profile.summary')}
             </Text>
-            <TouchableOpacity
-              onPress={() => setShowEditProfile(true)}
-              activeOpacity={0.8}
-            >
+            <TouchableOpacity onPress={() => setShowEditProfile(true)} activeOpacity={0.8}>
               <Text style={styles.editLink}>{t('profile.edit')}</Text>
             </TouchableOpacity>
           </View>
 
-          {/* 2-column chip/tag grid */}
-          <View style={styles.summaryChipGrid}>
-            <SummaryChip
-              label={t('profile.age_range')}
-              value={profile?.age_range ? (AGE_RANGE_LABELS[profile.age_range] ?? '—') : '—'}
-              isDark={isDark}
-            />
-            <SummaryChip
-              label={t('profile.years_diagnosed')}
-              value={profile?.diagnosis_years ? (DIAGNOSIS_YEARS_LABELS[profile.diagnosis_years] ?? '—') : '—'}
-              isDark={isDark}
-            />
-            <SummaryChip
-              label={t('profile.disease_activity')}
-              value={profile?.severity ? (SEVERITY_LABELS[profile.severity] ?? '—') : '—'}
-              isDark={isDark}
-            />
-            <SummaryChip
-              label="Morning stiffness"
-              value={profile?.morning_stiffness ? (MORNING_STIFFNESS_LABELS[profile.morning_stiffness] ?? '—') : '—'}
-              isDark={isDark}
-            />
-            <SummaryChip
-              label="Pain locations"
-              value={formatList(profile?.pain_locations ?? [], PAIN_LOCATION_LABELS)}
-              isDark={isDark}
-              wide
-            />
-            <SummaryChip
-              label="Types of pain"
-              value={formatList(profile?.pain_types ?? [], PAIN_TYPE_LABELS)}
-              isDark={isDark}
-              wide
-            />
-            <SummaryChip
-              label="Conditions"
-              value={formatList(profile?.conditions ?? [], CONDITION_LABELS)}
-              isDark={isDark}
-              wide
-            />
-            <SummaryChip
-              label="Life challenges"
-              value={formatList(profile?.challenges ?? [], CHALLENGE_LABELS)}
-              isDark={isDark}
-              wide
-            />
-          </View>
+          {/* About you */}
+          {(profile?.biological_sex || profile?.age_range || profile?.diagnosis_years || profile?.severity || profile?.morning_stiffness) ? (
+            <>
+              <SummarySection label="About you" isDark={isDark} first />
+              {profile?.biological_sex && <SummaryRow label="Biological sex" value={BIOLOGICAL_SEX_LABELS[profile.biological_sex]} isDark={isDark} />}
+              {profile?.age_range && <SummaryRow label="Age range" value={AGE_RANGE_LABELS[profile.age_range]} isDark={isDark} />}
+              {profile?.diagnosis_years && <SummaryRow label="Years with AS" value={DIAGNOSIS_YEARS_LABELS[profile.diagnosis_years]} isDark={isDark} />}
+              {profile?.severity && <SummaryRow label="Disease activity" value={SEVERITY_LABELS[profile.severity]} isDark={isDark} />}
+              {profile?.morning_stiffness && <SummaryRow label="Morning stiffness" value={MORNING_STIFFNESS_LABELS[profile.morning_stiffness]} isDark={isDark} />}
+            </>
+          ) : null}
+
+          {/* Symptoms */}
+          {((profile?.pain_locations?.length ?? 0) > 0 || (profile?.pain_types?.length ?? 0) > 0) ? (
+            <>
+              <SummarySection label="Symptoms" isDark={isDark} />
+              {(profile?.pain_locations?.length ?? 0) > 0 && <SummaryRow label="Pain locations" value={formatList(profile!.pain_locations, PAIN_LOCATION_LABELS)} isDark={isDark} multiline />}
+              {(profile?.pain_types?.length ?? 0) > 0 && <SummaryRow label="Types of pain" value={formatList(profile!.pain_types, PAIN_TYPE_LABELS)} isDark={isDark} multiline />}
+            </>
+          ) : null}
+
+          {/* Conditions */}
+          {(profile?.conditions?.length ?? 0) > 0 ? (
+            <>
+              <SummarySection label="Conditions" isDark={isDark} />
+              <SummaryRow label="" value={formatList(profile!.conditions, CONDITION_LABELS)} isDark={isDark} multiline />
+            </>
+          ) : null}
+
+          {/* Lifestyle */}
+          {(profile?.challenges?.length ?? 0) > 0 ? (
+            <>
+              <SummarySection label="Lifestyle" isDark={isDark} />
+              <SummaryRow label="" value={formatList(profile!.challenges, CHALLENGE_LABELS)} isDark={isDark} multiline />
+            </>
+          ) : null}
+
+          {/* Treatment */}
+          {(profile?.medications?.filter(m => m !== 'no_medication').length ?? 0) > 0 ? (
+            <>
+              <SummarySection label="Treatment" isDark={isDark} />
+              <SummaryRow label="" value={formatOnboardingMeds(profile!.medications)} isDark={isDark} multiline />
+            </>
+          ) : null}
+
+          {/* Empty state */}
+          {!profile?.biological_sex && !profile?.age_range && !profile?.diagnosis_years && !profile?.severity && (profile?.conditions?.length ?? 0) === 0 && (
+            <Text style={[styles.emptyText, { color: textSecondary }]}>Tap Edit to fill in your profile.</Text>
+          )}
         </View>
 
         {/* ── SUBSCRIPTION ──────────────────────────────────────────────────── */}
@@ -1349,6 +1393,7 @@ export default function ProfileScreen() {
 
         {/* ── Notifications card ─────────────────────────────────────────── */}
         <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+          {/* Daily check-in */}
           <View style={styles.notifRow}>
             <View style={styles.notifInfo}>
               <Text style={[styles.notifLabel, { color: textPrimary }]}>
@@ -1376,6 +1421,52 @@ export default function ProfileScreen() {
                 {t('profile.update_time')}
               </Text>
             </TouchableOpacity>
+          )}
+
+          {/* Medication reminders */}
+          <View style={[styles.medSectionDivider, { borderTopColor: cardBorder, marginTop: Spacing.md }]} />
+
+          <View style={[styles.notifRow, { marginTop: Spacing.md, marginBottom: Spacing.sm }]}>
+            <View style={styles.notifInfo}>
+              <Text style={[styles.notifLabel, { color: textPrimary }]}>
+                {t('profile.track_medication_adherence')}
+              </Text>
+              <Text style={[styles.notifTime, { color: textSecondary }]}>
+                {tracksMedication ? t('profile.track_medication_on') : t('profile.track_medication_off')}
+              </Text>
+            </View>
+            <Switch
+              value={tracksMedication}
+              onValueChange={setTracksMedication}
+              trackColor={{ true: Colors.primary, false: cardBorder }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+
+          {medsLoading ? (
+            <ActivityIndicator color={Colors.primary} style={{ marginVertical: Spacing.md }} />
+          ) : (
+            medications.map((med) => (
+              <View key={med.id} style={[styles.medRow, { borderBottomColor: cardBorder }]}>
+                <View style={styles.medInfo}>
+                  <Text style={[styles.medName, { color: textPrimary }]}>{med.name}</Text>
+                  <View style={styles.medMeta}>
+                    {med.dose ? <Text style={[styles.medDose, { color: textSecondary }]}>{med.dose}</Text> : null}
+                    <View style={styles.freqBadge}>
+                      <Text style={styles.freqBadgeText}>{freqLabel(med.frequency)}</Text>
+                    </View>
+                    <Text style={[styles.medTime, { color: textSecondary }]}>{med.reminder_time}</Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  onPress={() => handleDeleteMed(med.id!, med.name)}
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Text style={styles.deleteIcon}>✕</Text>
+                </TouchableOpacity>
+              </View>
+            ))
           )}
         </View>
 
@@ -1412,108 +1503,6 @@ export default function ProfileScreen() {
 
         {/* ── TREATMENT ─────────────────────────────────────────────────────── */}
         <SectionHeader label="Treatment" isDark={isDark} />
-
-        {/* ── Medications card ─────────────────────────────────────────────── */}
-        <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <Text style={[styles.cardTitle, { color: textPrimary, marginBottom: Spacing.sm }]}>
-            {t('profile.medications_card')}
-          </Text>
-
-          {profile?.medications && profile.medications.filter((m) => m !== 'no_medication').length > 0 ? (
-            profile.medications.filter((m) => m !== 'no_medication').map((med) => (
-              <View key={med} style={styles.medTreatmentRow}>
-                <Text style={[styles.medTreatmentDot, { color: Colors.primary }]}>•</Text>
-                <Text style={[styles.medTreatmentName, { color: textPrimary }]}>
-                  {MEDICATION_LABELS[med] ?? capitalize(med)}
-                </Text>
-              </View>
-            ))
-          ) : (
-            <Text style={[styles.emptyText, { color: textSecondary, paddingVertical: Spacing.xs }]}>
-              No medication selected
-            </Text>
-          )}
-          <TouchableOpacity
-            onPress={() => setShowEditProfile(true)}
-            activeOpacity={0.8}
-            style={{ marginTop: Spacing.xs, marginBottom: Spacing.md }}
-          >
-            <Text style={[styles.helperText, { color: Colors.primary, marginBottom: 0 }]}>
-              Edit treatment in profile →
-            </Text>
-          </TouchableOpacity>
-
-          {/* ── Reminders subsection ── */}
-          <View style={[styles.medSectionDivider, { borderTopColor: cardBorder }]} />
-          <View style={[styles.cardHeader, { marginTop: Spacing.md, marginBottom: Spacing.sm }]}>
-            <Text style={[styles.medSectionLabel, { color: textSecondary, marginBottom: 0 }]}>Reminders</Text>
-            <TouchableOpacity onPress={() => setShowAddMed(true)} activeOpacity={0.8}>
-              <Text style={styles.editLink}>+ Add</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={[styles.notifRow, { marginBottom: Spacing.sm }]}>
-            <View style={styles.notifInfo}>
-              <Text style={[styles.notifLabel, { color: textPrimary }]}>
-                {t('profile.track_medication_adherence')}
-              </Text>
-              <Text style={[styles.notifTime, { color: textSecondary }]}>
-                {tracksMedication
-                  ? t('profile.track_medication_on')
-                  : t('profile.track_medication_off')}
-              </Text>
-            </View>
-            <Switch
-              value={tracksMedication}
-              onValueChange={setTracksMedication}
-              trackColor={{ true: Colors.primary, false: cardBorder }}
-              thumbColor="#FFFFFF"
-            />
-          </View>
-
-          {medsLoading ? (
-            <ActivityIndicator color={Colors.primary} style={{ marginVertical: Spacing.md }} />
-          ) : medications.length === 0 ? (
-            <Text style={[styles.emptyText, { color: textSecondary }]}>
-              No reminders set up yet
-            </Text>
-          ) : (
-            medications.map((med) => (
-              <View
-                key={med.id}
-                style={[styles.medRow, { borderBottomColor: cardBorder }]}
-              >
-                <View style={styles.medInfo}>
-                  <Text style={[styles.medName, { color: textPrimary }]}>
-                    {med.name}
-                  </Text>
-                  <View style={styles.medMeta}>
-                    {med.dose ? (
-                      <Text style={[styles.medDose, { color: textSecondary }]}>
-                        {med.dose}
-                      </Text>
-                    ) : null}
-                    <View style={styles.freqBadge}>
-                      <Text style={styles.freqBadgeText}>
-                        {freqLabel(med.frequency)}
-                      </Text>
-                    </View>
-                    <Text style={[styles.medTime, { color: textSecondary }]}>
-                      {med.reminder_time}
-                    </Text>
-                  </View>
-                </View>
-                <TouchableOpacity
-                  onPress={() => handleDeleteMed(med.id!, med.name)}
-                  activeOpacity={0.7}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <Text style={styles.deleteIcon}>✕</Text>
-                </TouchableOpacity>
-              </View>
-            ))
-          )}
-        </View>
 
         {/* ── Biologic injections card ─────────────────────────────────────── */}
         {profile?.medications && profile.medications.some(m => BIOLOGIC_MEDS.includes(m)) && (
@@ -1593,12 +1582,16 @@ export default function ProfileScreen() {
 
         {/* ── Share with my doctor ────────────────────────────────────────── */}
         <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <Text style={[styles.cardTitle, { color: textPrimary }]}>
-            {t('profile.share_report_title')}
-          </Text>
-          <Text style={[styles.subtitleText, { color: textSecondary }]}>
-            Includes all logs, flares, stiffness trends, medication adherence, and BASDAI scores.
-          </Text>
+          <View style={styles.cardHeader}>
+            <Text style={[styles.cardTitle, { color: textPrimary }]}>
+              {t('profile.share_report_title')}
+            </Text>
+            <InfoButton
+              title="What's in the report"
+              message="A PDF covering all your daily logs, flares, stiffness trends, medication adherence, and BASDAI scores. Set a date range to cover just since your last appointment, then share it with your rheumatologist."
+              color={textSecondary}
+            />
+          </View>
           {/* From date — last rheumatology appointment */}
           <View style={styles.reportDateRow}>
             <Text style={[styles.reportDateLabel, { color: textSecondary }]}>From last appointment:</Text>
@@ -1646,7 +1639,46 @@ export default function ProfileScreen() {
         {/* ── ACCOUNT ───────────────────────────────────────────────────────── */}
         <SectionHeader label="Account" isDark={isDark} />
 
+        {/* Feedback */}
+        <TouchableOpacity
+          style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}
+          onPress={() => setShowFeedback(true)}
+          activeOpacity={0.8}
+        >
+          <View style={styles.cardHeader}>
+            <Text style={[styles.cardTitle, { color: textPrimary }]}>Share your feedback</Text>
+            <Text style={[styles.editLink]}>→</Text>
+          </View>
+          <Text style={[styles.feedbackCardSubtitle, { color: textSecondary }]}>
+            Bugs, ideas, or anything on your mind.
+          </Text>
+        </TouchableOpacity>
+
         <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+          {/* Email */}
+          <TouchableOpacity onPress={handleChangeEmail} activeOpacity={0.8} style={styles.accountRow}>
+            <View>
+              <Text style={[styles.accountRowLabel, { color: textPrimary }]}>Email address</Text>
+              <Text style={[styles.accountRowValue, { color: textSecondary }]}>{user?.email}</Text>
+            </View>
+            <Text style={[styles.editLink]}>Change</Text>
+          </TouchableOpacity>
+
+          {/* Password — only for email auth */}
+          {isEmailAuth && (
+            <>
+              <View style={[styles.innerDivider, { backgroundColor: isDark ? Colors.borderDark : Colors.border }]} />
+              <TouchableOpacity onPress={handleChangePassword} activeOpacity={0.8} style={styles.accountRow}>
+                <View>
+                  <Text style={[styles.accountRowLabel, { color: textPrimary }]}>Password</Text>
+                  <Text style={[styles.accountRowValue, { color: textSecondary }]}>••••••••</Text>
+                </View>
+                <Text style={[styles.editLink]}>Change</Text>
+              </TouchableOpacity>
+            </>
+          )}
+
+          <View style={[styles.innerDivider, { backgroundColor: isDark ? Colors.borderDark : Colors.border }]} />
           <Button
             label={t('auth.sign_out')}
             onPress={handleSignOut}
@@ -1698,66 +1730,91 @@ export default function ProfileScreen() {
         defaultMedicationName={injectionDefaultMed}
         isDark={isDark}
       />
+
+      {/* Feedback modal */}
+      <Modal visible={showFeedback} animationType="slide" transparent onRequestClose={() => setShowFeedback(false)}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContainer, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+              <Text style={[styles.modalTitle, { color: textPrimary }]}>Share your feedback</Text>
+              <Text style={[styles.fieldLabel, { color: textSecondary }]}>What's on your mind?</Text>
+              <TextInput
+                style={[
+                  styles.feedbackInput,
+                  { backgroundColor: inputBg, borderColor: cardBorder, color: textPrimary },
+                ]}
+                multiline
+                numberOfLines={6}
+                textAlignVertical="top"
+                placeholder="Bugs, ideas, or anything else..."
+                placeholderTextColor={textSecondary}
+                value={feedbackText}
+                onChangeText={setFeedbackText}
+                autoFocus
+              />
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  onPress={() => { setFeedbackText(''); setShowFeedback(false); }}
+                  style={[styles.modalCancelBtn, { borderColor: cardBorder }]}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.modalCancelText, { color: textSecondary }]}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleSendFeedback}
+                  style={[styles.modalSaveBtn, { opacity: feedbackText.trim() ? 1 : 0.4 }]}
+                  disabled={!feedbackText.trim()}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.modalSaveText}>Send</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 }
 
-// ─── SummaryChip — 2-column tag for profile summary ──────────────────────────
+// ─── SummarySection ───────────────────────────────────────────────────────────
 
-function SummaryChip({
-  label,
-  value,
-  isDark,
-  wide = false,
-}: {
-  label: string;
-  value: string;
-  isDark: boolean;
-  wide?: boolean;
-}) {
-  const bg = isDark ? '#2A2420' : Colors.background;
-  const border = isDark ? Colors.borderDark : Colors.border;
-  const textPri = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
+function SummarySection({ label, isDark, first }: { label: string; isDark: boolean; first?: boolean }) {
   const textSec = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
-
+  const borderColor = isDark ? Colors.borderDark : Colors.border;
   return (
-    <View
-      style={[
-        styles.summaryChip,
-        { backgroundColor: bg, borderColor: border },
-        wide && styles.summaryChipWide,
-      ]}
-    >
-      <Text style={[styles.summaryChipLabel, { color: textPri }]}>{label}</Text>
-      <Text style={[styles.summaryChipValue, { color: textSec }]} numberOfLines={wide ? 2 : 1}>
-        {value}
-      </Text>
+    <View style={[styles.summarySectionHeader, { borderTopColor: borderColor }, first && styles.summarySectionFirst]}>
+      <Text style={[styles.summarySectionLabel, { color: textSec }]}>{label}</Text>
     </View>
   );
 }
 
-// ─── SummaryRow — kept for backward compatibility (no longer used in main screen) ─
+// ─── SummaryRow ───────────────────────────────────────────────────────────────
 
 function SummaryRow({
   label,
   value,
   isDark,
+  multiline = false,
 }: {
   label: string;
   value: string;
   isDark: boolean;
+  multiline?: boolean;
 }) {
-  return (
-    <View style={styles.summaryRow}>
-      <Text style={[styles.summaryLabel, { color: isDark ? Colors.textSecondaryDark : Colors.textSecondary }]}>
-        {label}
+  const valueColor = isDark ? Colors.textPrimaryDark : '#000000';
+  const textSec = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
+  if (!label) {
+    return (
+      <Text style={[styles.summaryValueFull, { color: valueColor }]} numberOfLines={multiline ? undefined : 2}>
+        {value}
       </Text>
-      <Text
-        style={[
-          styles.summaryValue,
-          { color: isDark ? Colors.textPrimaryDark : Colors.textPrimary, flexShrink: 1, textAlign: 'right', maxWidth: '65%' },
-        ]}
-      >
+    );
+  }
+  return (
+    <View style={styles.summaryRowItem}>
+      <Text style={[styles.summaryRowLabel, { color: textSec }]}>{label}</Text>
+      <Text style={[styles.summaryRowValue, { color: valueColor }]} numberOfLines={multiline ? undefined : 1}>
         {value}
       </Text>
     </View>
@@ -1824,6 +1881,19 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
   },
+  nameDisplay: {
+    fontSize: FontSize.md,
+    fontWeight: '700',
+  },
+  nameInput: {
+    fontSize: FontSize.md,
+    fontWeight: '700',
+    borderBottomWidth: 1.5,
+    paddingVertical: 2,
+    paddingHorizontal: 4,
+    minWidth: 120,
+    textAlign: 'center',
+  },
   emailText: {
     fontSize: FontSize.sm,
   },
@@ -1849,44 +1919,47 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // Summary chip grid — 2 columns
-  summaryChipGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.xs,
+  // Summary section header
+  summarySectionHeader: {
+    marginTop: Spacing.md,
+    paddingTop: Spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    marginBottom: Spacing.xs,
   },
-  summaryChip: {
-    width: '48%',
-    borderRadius: BorderRadius.sm,
-    borderWidth: 1,
-    padding: Spacing.sm,
-    gap: 2,
+  summarySectionFirst: {
+    marginTop: 0,
+    paddingTop: 0,
+    borderTopWidth: 0,
   },
-  summaryChipWide: {
-    width: '100%',
-  },
-  summaryChipLabel: {
+  summarySectionLabel: {
     fontSize: FontSize.xs,
-    fontWeight: '400',
-  },
-  summaryChipValue: {
-    fontSize: FontSize.sm,
-    fontWeight: '600',
-    marginTop: 1,
+    fontWeight: '700',
   },
 
-  // Legacy summary row (unused but kept)
-  summaryRow: {
+  // Summary row
+  summaryRowItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: Spacing.xs,
+    alignItems: 'flex-start',
+    paddingVertical: 3,
+    gap: Spacing.sm,
   },
-  summaryLabel: {
+  summaryRowLabel: {
     fontSize: FontSize.sm,
+    minWidth: 110,
+    flexShrink: 0,
   },
-  summaryValue: {
+  summaryRowValue: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    textAlign: 'right',
+    flexShrink: 1,
+    flex: 1,
+  },
+  summaryValueFull: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    paddingVertical: 3,
   },
 
   notifRow: {
@@ -2014,32 +2087,39 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
     lineHeight: 16,
   },
+  accountRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Spacing.xs,
+  },
+  accountRowLabel: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  accountRowValue: {
+    fontSize: FontSize.xs,
+  },
+  feedbackCardSubtitle: {
+    fontSize: FontSize.sm,
+    lineHeight: 20,
+  },
+  feedbackInput: {
+    borderWidth: 1,
+    borderRadius: BorderRadius.sm,
+    padding: Spacing.sm,
+    fontSize: FontSize.sm,
+    minHeight: 120,
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.md,
+  },
   version: {
     fontSize: FontSize.xs,
     textAlign: 'center',
     marginTop: Spacing.sm,
   },
   // Welcome content card
-  profileWelcomeText: {
-    fontSize: FontSize.sm,
-    lineHeight: 20,
-    marginBottom: Spacing.xs,
-  },
-  profileInsightRow: {
-    flexDirection: 'row',
-    gap: 6,
-    alignItems: 'flex-start',
-    paddingVertical: 1,
-  },
-  profileInsightBullet: {
-    fontSize: FontSize.md,
-    lineHeight: 20,
-  },
-  profileInsightText: {
-    fontSize: FontSize.sm,
-    lineHeight: 20,
-    flex: 1,
-  },
 
   // Health card — simplified single row
   healthSimpleRow: {
@@ -2317,10 +2397,10 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     paddingBottom: Spacing.xxl,
   },
-  editSectionTitle: {
+  editFieldLabel: {
     fontSize: FontSize.sm,
-    fontWeight: '700',
-    marginBottom: Spacing.sm,
-    marginTop: Spacing.xs,
+    fontWeight: '600',
+    marginBottom: Spacing.xs,
+    marginTop: Spacing.md,
   },
 });

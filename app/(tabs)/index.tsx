@@ -22,6 +22,7 @@ import { useFlareRisk } from '@/hooks/useFlareRisk';
 import { useHealthHistory } from '@/hooks/useHealthHistory';
 import { useHealthData } from '@/hooks/useHealthData';
 import { useBiologicInjections } from '@/hooks/useBiologicInjections';
+import { useMedicationTracking } from '@/hooks/useMedicationTracking';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { SpondyMark } from '@/components/common/SpondyMark';
 import { ProfileButton } from '@/components/common/ProfileButton';
@@ -228,7 +229,11 @@ function SpondyScoreCard({
         </>
       ) : (
         <Text style={[styles.noDataText, isDark && styles.textSecDark]}>
-          {t('home.spondy_score_no_data')}
+          {logs.length === 0
+            ? t('home.spondy_score_no_data')
+            : logs.length === 1
+            ? 'Log 2 more days to see your score'
+            : 'Log 1 more day to see your score'}
         </Text>
       )}
     </View>
@@ -473,9 +478,10 @@ export default function HomeScreen() {
   const { logs, isLoading: weekLoading, spondyScore, refresh: refreshWeekly } = useWeeklyData();
   const { activeFlare, flares, isLoading: flaresLoading } = useFlares();
   const { history: healthHistory } = useHealthHistory(7);
-  const { isConnected: healthConnected, todayData: healthData } = useHealthData();
+  const { isConnected: healthConnected, todayData: healthData, recheck: recheckHealth } = useHealthData();
   const flareRisk = useFlareRisk(logs, activeFlare, healthHistory);
   const { injections: biologicInjections } = useBiologicInjections();
+  const { tracks: tracksMedication } = useMedicationTracking();
 
   const nextBiologicDue = useMemo(() => {
     if (biologicInjections.length === 0) return null;
@@ -486,11 +492,12 @@ export default function HomeScreen() {
     return { name: last.medication_name, daysUntil, dueDate: due.toISOString().split('T')[0] };
   }, [biologicInjections]);
 
-  // Refresh streak and weekly data when returning from Track tab
+  // Refresh streak and weekly data when returning from Track tab; re-check health connection state
   useFocusEffect(useCallback(() => {
     refreshLog();
     refreshWeekly();
-  }, [refreshLog, refreshWeekly]));
+    recheckHealth();
+  }, [refreshLog, refreshWeekly, recheckHealth]));
 
   // Send flare warning notification when risk is elevated (once per day max)
   useEffect(() => {
@@ -505,7 +512,8 @@ export default function HomeScreen() {
   }, [user, logs]);
 
   const greetingKey = getGreetingKey();
-  const firstName = user?.user_metadata?.full_name?.split(' ')[0] ?? '';
+  const firstName = profile?.preferred_name || user?.user_metadata?.full_name?.split(' ')[0] || '';
+  const tracksMeds = tracksMedication;
 
   const isLoading = logLoading || weekLoading;
 
@@ -624,15 +632,19 @@ export default function HomeScreen() {
                 </Text>
                 <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>Mood</Text>
               </View>
-              <View style={[styles.todaySummaryDivider, isDark && styles.todaySummaryDividerDark]} />
-              <View style={styles.todaySummaryItem}>
-                <Text style={[styles.todaySummaryValue, {
-                  color: todayLog.medications_taken === 'yes' ? Colors.success : todayLog.medications_taken === 'partial' ? Colors.warning : Colors.error
-                }]}>
-                  {todayLog.medications_taken === 'yes' ? '✓' : todayLog.medications_taken === 'partial' ? '~' : '✗'}
-                </Text>
-                <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>Meds</Text>
-              </View>
+              {tracksMeds && (
+                <>
+                  <View style={[styles.todaySummaryDivider, isDark && styles.todaySummaryDividerDark]} />
+                  <View style={styles.todaySummaryItem}>
+                    <Text style={[styles.todaySummaryValue, {
+                      color: todayLog.medications_taken === 'yes' ? Colors.success : todayLog.medications_taken === 'partial' ? Colors.warning : Colors.error
+                    }]}>
+                      {todayLog.medications_taken === 'yes' ? '✓' : todayLog.medications_taken === 'partial' ? '~' : '✗'}
+                    </Text>
+                    <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>Meds</Text>
+                  </View>
+                </>
+              )}
             </View>
           </View>
         ) : null}
@@ -1016,7 +1028,6 @@ const styles = StyleSheet.create({
   breakdownTitle: {
     fontSize: FontSize.xs,
     fontWeight: '700',
-    letterSpacing: 0.5,
     marginBottom: 4,
   },
   factorRow: {
@@ -1108,7 +1119,6 @@ const styles = StyleSheet.create({
   miniChartEmptyDot: {
     fontSize: FontSize.lg,
     color: Colors.textSecondary,
-    letterSpacing: 4,
   },
 
   // Flare recovery

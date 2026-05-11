@@ -10,6 +10,7 @@ import {
   Platform,
   useColorScheme,
   KeyboardAvoidingView,
+  Linking,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
@@ -184,7 +185,13 @@ export function SignUpScreen() {
 
           {/* Terms */}
           <Text style={[styles.terms, isDark && styles.termsDark]}>
-            {t('auth.terms')}
+            By continuing you agree to our Terms of Service and{' '}
+            <Text
+              style={styles.termsLink}
+              onPress={() => Linking.openURL('https://gist.github.com/joekalise/fb689414dba7ade9f6d7383ccad9cf1f')}
+            >
+              Privacy Policy
+            </Text>
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -287,6 +294,10 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 17,
+  },
+  termsLink: {
+    color: Colors.primary,
+    fontWeight: '500',
   },
   termsDark: {
     color: Colors.textSecondaryDark,
