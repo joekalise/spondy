@@ -7,9 +7,12 @@ const ANDROID_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY || 'test_cmkT
 export function configureRevenueCat(): void {
   const apiKey = Platform.OS === 'ios' ? IOS_KEY : ANDROID_KEY;
   if (!apiKey || (apiKey.startsWith('test_') && !__DEV__)) return;
-  if (Purchases.isConfigured) return;
-  if (__DEV__) Purchases.setLogLevel(LOG_LEVEL.DEBUG);
-  Purchases.configure({ apiKey });
+  try {
+    if (__DEV__) Purchases.setLogLevel(LOG_LEVEL.DEBUG);
+    Purchases.configure({ apiKey });
+  } catch {
+    // Already configured — safe to ignore
+  }
 }
 
 export async function loginRevenueCat(userId: string): Promise<void> {
@@ -26,6 +29,7 @@ export async function getSubscriptionStatus(): Promise<{
   isSubscribed: boolean;
   isInTrial: boolean;
 }> {
+  configureRevenueCat();
   try {
     const customerInfo = await Purchases.getCustomerInfo();
     const isSubscribed =
@@ -41,6 +45,7 @@ export async function getSubscriptionStatus(): Promise<{
 }
 
 export async function purchasePremium(): Promise<boolean> {
+  configureRevenueCat();
   try {
     const offerings = await Purchases.getOfferings();
     const currentOffering = offerings.current;
@@ -65,6 +70,7 @@ export async function purchasePremium(): Promise<boolean> {
 }
 
 export async function restorePurchases(): Promise<boolean> {
+  configureRevenueCat();
   try {
     const customerInfo = await Purchases.restorePurchases();
     return Object.keys(customerInfo.entitlements.active).length > 0;
