@@ -33,7 +33,7 @@ export type AssociatedCondition =
   | 'peripheral_joint';
 
 export type FlareType = 'as' | 'enthesitis' | 'peripheral';
-export type MorningStiffness = 'under_30' | '30_60' | '1_2_hours' | 'over_2_hours';
+export type MorningStiffness = 'none' | 'under_30' | '30_60' | '1_2_hours' | 'over_2_hours';
 export type LifestyleChallenge =
   | 'sleep'
   | 'exercise'

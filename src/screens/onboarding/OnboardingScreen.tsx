@@ -79,6 +79,7 @@ export function OnboardingScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
+  const [showWelcome, setShowWelcome] = useState(true);
   const [currentStep, setCurrentStep] = useState(1);
   const [data, setData] = useState<OnboardingData>(defaultOnboardingData);
   const [isCompleting, setIsCompleting] = useState(false);
@@ -424,6 +425,16 @@ export function OnboardingScreen() {
       case 8:
         return (
           <>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.md, gap: Spacing.xs }}>
+              <Text style={{ fontSize: FontSize.sm, color: isDark ? Colors.textSecondaryDark : Colors.textSecondary }}>
+                Why do we ask this?
+              </Text>
+              <InfoButton
+                title={t('onboarding.conditions.info_title')}
+                message={t('onboarding.conditions.info_message')}
+                color={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
+              />
+            </View>
             {(
               [
                 'uveitis',
@@ -456,7 +467,7 @@ export function OnboardingScreen() {
         return (
           <>
             {(
-              ['under_30', '30_60', '1_2_hours', 'over_2_hours'] as MorningStiffness[]
+              ['none', 'under_30', '30_60', '1_2_hours', 'over_2_hours'] as MorningStiffness[]
             ).map(v => (
               <OptionCard
                 key={v}
@@ -633,6 +644,50 @@ export function OnboardingScreen() {
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
+      </SafeAreaView>
+    );
+  }
+
+  if (showWelcome) {
+    return (
+      <SafeAreaView style={[styles.screen, isDark && styles.screenDark]}>
+        <ScrollView
+          contentContainerStyle={[styles.scrollContent, styles.welcomeScroll]}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.welcomeContent}>
+            <Text style={styles.welcomeEmoji}>🦴</Text>
+            <Text style={[styles.welcomeTitle, isDark && styles.textDark]}>
+              Life with AS,{'\n'}finally understood
+            </Text>
+            <Text style={[styles.welcomeSubtitle, isDark && styles.timeLabelDark]}>
+              Spondy learns your patterns so you can stay ahead of flares and make the most of your good days.
+            </Text>
+
+            <View style={styles.welcomeFeatures}>
+              {[
+                { icon: '📊', text: 'Track pain, fatigue, sleep, and medication in under 60 seconds' },
+                { icon: '🔮', text: 'Spot early warning signs before a flare strikes' },
+                { icon: '🩺', text: 'Share clear reports with your rheumatologist' },
+              ].map(({ icon, text }) => (
+                <View key={text} style={[styles.welcomeFeatureRow, isDark && styles.welcomeFeatureRowDark]}>
+                  <Text style={styles.welcomeFeatureIcon}>{icon}</Text>
+                  <Text style={[styles.welcomeFeatureText, isDark && styles.timeLabelDark]}>{text}</Text>
+                </View>
+              ))}
+            </View>
+
+            <Text style={[styles.welcomeCreator, isDark && styles.timeLabelDark]}>
+              Built by someone with AS, for people with AS.
+            </Text>
+          </View>
+
+          <Button
+            label="Get started"
+            onPress={() => setShowWelcome(false)}
+            style={styles.welcomeButton}
+          />
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -942,5 +997,72 @@ const styles = StyleSheet.create({
   mockChevron: {
     fontSize: FontSize.xs,
     color: Colors.textSecondary,
+  },
+
+  // Welcome screen
+  welcomeScroll: {
+    justifyContent: 'space-between',
+  },
+  welcomeContent: {
+    flex: 1,
+    alignItems: 'center',
+    paddingTop: Spacing.xxl,
+  },
+  welcomeEmoji: {
+    fontSize: 56,
+    marginBottom: Spacing.lg,
+  },
+  welcomeTitle: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+    textAlign: 'center',
+    lineHeight: 38,
+    marginBottom: Spacing.md,
+  },
+  welcomeSubtitle: {
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: Spacing.xl,
+    paddingHorizontal: Spacing.md,
+  },
+  welcomeFeatures: {
+    width: '100%',
+    gap: Spacing.sm,
+    marginBottom: Spacing.xl,
+  },
+  welcomeFeatureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+  },
+  welcomeFeatureRowDark: {
+    backgroundColor: Colors.surfaceDark,
+  },
+  welcomeFeatureIcon: {
+    fontSize: 22,
+    width: 32,
+    textAlign: 'center',
+  },
+  welcomeFeatureText: {
+    flex: 1,
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    lineHeight: 20,
+  },
+  welcomeCreator: {
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    fontStyle: 'italic',
+    marginBottom: Spacing.xl,
+  },
+  welcomeButton: {
+    marginTop: Spacing.lg,
   },
 });

@@ -1,11 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, PanResponder } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { Colors } from '@/constants/colors';
 import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
 
-const THUMB_SIZE = 28;
-const TRACK_HEIGHT = 10;
-const TOUCH_AREA = 52;
+const THUMB_SIZE = 32;
+const TRACK_HEIGHT = 12;
+const TOUCH_AREA = 56;
 
 function sliderColor(value: number, max: number): string {
   const pct = value / max;
@@ -38,10 +39,21 @@ export function DragSlider({
   const [trackWidth, setTrackWidth] = useState(0);
   const trackWidthRef = useRef(0);
   const startXRef = useRef(0);
+  const lastValueRef = useRef(value);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
 
   const color = sliderColor(value, max);
+
+  function computeAndEmit(x: number) {
+    const pct = Math.max(0, Math.min(1, x / trackWidthRef.current));
+    const next = Math.round(pct * (max - min) + min);
+    if (next !== lastValueRef.current) {
+      lastValueRef.current = next;
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    onChangeRef.current(next);
+  }
 
   const panResponder = useRef(
     PanResponder.create({
@@ -50,13 +62,10 @@ export function DragSlider({
       onPanResponderGrant: (evt) => {
         const x = evt.nativeEvent.locationX;
         startXRef.current = x;
-        const pct = Math.max(0, Math.min(1, x / trackWidthRef.current));
-        onChangeRef.current(Math.round(pct * (max - min) + min));
+        computeAndEmit(x);
       },
       onPanResponderMove: (_, gestureState) => {
-        const x = startXRef.current + gestureState.dx;
-        const pct = Math.max(0, Math.min(1, x / trackWidthRef.current));
-        onChangeRef.current(Math.round(pct * (max - min) + min));
+        computeAndEmit(startXRef.current + gestureState.dx);
       },
     })
   ).current;

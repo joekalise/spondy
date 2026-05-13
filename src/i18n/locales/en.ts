@@ -105,6 +105,8 @@ export default {
     conditions: {
       title: 'Do you have any associated conditions?',
       subtitle: 'These often travel with AS. Select any that apply.',
+      info_title: 'About associated conditions',
+      info_message: 'Many people with AS develop related conditions. Tracking these alongside your AS helps us spot patterns — for example, uveitis flares often coincide with increased spinal inflammation. Logging them here lets Spondy flag relevant correlations in your data.',
       uveitis: 'Uveitis (eye inflammation)',
       psoriasis: 'Psoriasis',
       ibd: 'Inflammatory bowel disease (IBD)',
@@ -117,6 +119,7 @@ export default {
     morning_stiffness: {
       title: 'How long does your morning stiffness typically last?',
       subtitle: 'When you first wake up and try to get moving',
+      none: 'No morning stiffness',
       under_30: 'Under 30 min',
       '30_60': '30-60 min',
       '1_2_hours': '1-2 hours',
