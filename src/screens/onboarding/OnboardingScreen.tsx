@@ -537,67 +537,128 @@ export function OnboardingScreen() {
   const PREVIEW_SLIDES = [
     {
       title: 'See how you\'re really doing',
-      subtitle: 'Spondy calculates a weekly wellness score from your pain, fatigue, mood, and medication data. All in one place.',
+      subtitle: '',
       mockContent: (
         <View style={[styles.mockCard, isDark && styles.mockCardDark]}>
-          <Text style={[styles.mockCardTitle, isDark && styles.mockCardTitleDark]}>Spondy Score</Text>
+          {/* Score row */}
           <View style={styles.mockScoreRow}>
+            <View>
+              <Text style={[styles.mockCardTitle, isDark && styles.mockCardTitleDark]}>Spondy Score</Text>
+              <Text style={[styles.mockScoreHint, isDark && styles.mockTextSec]}>This week · 6 days logged</Text>
+            </View>
             <View style={[styles.mockScoreCircle, { borderColor: Colors.success }]}>
               <Text style={[styles.mockScoreNum, { color: Colors.success }]}>74</Text>
               <Text style={[styles.mockScoreOut, { color: Colors.success }]}>/100</Text>
             </View>
-            <View style={styles.mockScoreRight}>
-              <Text style={[styles.mockScoreLabel, { color: Colors.success }]}>Managing well</Text>
-              <Text style={[styles.mockScoreHint, isDark && styles.mockTextSec]}>Based on 6 days this week</Text>
-              <View style={styles.mockFactorRow}>
-                <Text style={[styles.mockFactor, isDark && styles.mockTextSec]}>Logging streak</Text>
-                <Text style={[styles.mockFactorVal, { color: Colors.success }]}>+17</Text>
-              </View>
-              <View style={styles.mockFactorRow}>
-                <Text style={[styles.mockFactor, isDark && styles.mockTextSec]}>Pain</Text>
-                <Text style={[styles.mockFactorVal, { color: Colors.error }]}>−12</Text>
-              </View>
-            </View>
           </View>
+
+          {/* Mini bar chart */}
+          <View style={styles.mockWeekBars}>
+            {[55, 42, 68, 80, 62, 78, 74].map((h, i) => (
+              <View key={i} style={styles.mockBarWrap}>
+                <View style={styles.mockBarTrack}>
+                  <View style={[styles.mockBarFill, { height: `${h}%`, backgroundColor: h >= 65 ? Colors.success : Colors.warning }]} />
+                </View>
+                <Text style={[styles.mockBarLabel, isDark && styles.mockTextSec]}>{['M','T','W','T','F','S','S'][i]}</Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={[styles.mockDivider, isDark && { backgroundColor: Colors.borderDark }]} />
+
+          {/* Stats */}
+          {[
+            { label: 'Avg pain', value: '4.2 / 10', color: Colors.warning },
+            { label: 'Avg fatigue', value: '3.1 / 10', color: Colors.success },
+            { label: 'Mood', value: '😊 Mostly good', color: Colors.success },
+            { label: 'Streak', value: '🔥 6 days', color: Colors.primary },
+          ].map(s => (
+            <View key={s.label} style={styles.mockFactorRow}>
+              <Text style={[styles.mockFactor, isDark && styles.mockTextSec]}>{s.label}</Text>
+              <Text style={[styles.mockFactorVal, { color: s.color }]}>{s.value}</Text>
+            </View>
+          ))}
         </View>
       ),
     },
     {
       title: 'Know before a flare hits',
-      subtitle: "Spondy watches for the subtle shifts that come before a flare: HRV drops, stiffness trends, rising fatigue. The same signals that helped the app's creator spot a uveitis episode three days before it struck.",
+      subtitle: '',
       mockContent: (
-        <View style={[styles.mockWarningCard, isDark && styles.mockWarningCardDark]}>
-          <Text style={styles.mockWarningTitle}>👀 Symptoms to watch</Text>
-          <Text style={[styles.mockWarningBody, isDark && styles.mockTextSec]}>
-            A couple of signals suggest your body might be under stress. Keep a close eye on symptoms over the next day or two.
-          </Text>
-          <View style={styles.mockChipsRow}>
-            <View style={styles.mockChip}>
-              <Text style={styles.mockChipText}>↓ HRV dropping</Text>
+        <View style={{ gap: Spacing.sm }}>
+          <View style={[styles.mockWarningCard, isDark && styles.mockWarningCardDark]}>
+            <View style={styles.mockScoreRow}>
+              <Text style={styles.mockWarningTitle}>⚠️ Heads up</Text>
+              <View style={[styles.mockChip, { borderColor: Colors.warning + '80' }]}>
+                <Text style={[styles.mockChipText, { color: Colors.warning }]}>Elevated risk</Text>
+              </View>
             </View>
-            <View style={styles.mockChip}>
-              <Text style={styles.mockChipText}>⏱ Long morning stiffness</Text>
+            <Text style={[styles.mockWarningBody, isDark && styles.mockTextSec]}>
+              Pain has been trending up for 3 days and your sleep is shorter. Based on your patterns, take it easy today.
+            </Text>
+
+            {/* Trend bars */}
+            <View style={styles.mockWeekBars}>
+              {[2, 3, 3, 4, 5, 7, 8].map((h, i) => (
+                <View key={i} style={styles.mockBarWrap}>
+                  <View style={styles.mockBarTrack}>
+                    <View style={[styles.mockBarFill, { height: `${(h / 10) * 100}%`, backgroundColor: i >= 5 ? Colors.error : Colors.success }]} />
+                  </View>
+                  <Text style={[styles.mockBarLabel, isDark && styles.mockTextSec]}>{['M','T','W','T','F','S','S'][i]}</Text>
+                </View>
+              ))}
             </View>
+
+            <View style={styles.mockChipsRow}>
+              {['😴 Shorter sleep', '🔄 HRV dropping', '⏱ Stiffness up'].map(chip => (
+                <View key={chip} style={[styles.mockChip, { borderColor: Colors.warning + '60' }]}>
+                  <Text style={[styles.mockChipText, { color: Colors.warning }]}>{chip}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <View style={[styles.mockCard, isDark && styles.mockCardDark]}>
+            <View style={styles.mockFactorRow}>
+              <Text style={[styles.mockFactor, isDark && styles.mockTextSec]}>Creator's note</Text>
+            </View>
+            <Text style={[styles.mockInsightSummary, isDark && styles.mockTextSec]}>
+              These signals predicted a uveitis flare 3 days before it struck. Spondy watches for exactly this.
+            </Text>
           </View>
         </View>
       ),
     },
     {
       title: 'AI insights, just for you',
-      subtitle: 'Every week, Spondy looks at what actually happened and tells you something useful. Based on your data, not generic advice.',
+      subtitle: '',
       mockContent: (
         <View style={[styles.mockCard, isDark && styles.mockCardDark]}>
           <View style={styles.mockAIHeader}>
             <Text style={[styles.mockCardTitle, isDark && styles.mockCardTitleDark]}>Weekly insight</Text>
             <View style={styles.mockBadge}><Text style={styles.mockBadgeText}>Premium</Text></View>
           </View>
-          <Text style={[styles.mockInsightSummary, isDark && styles.mockTextSec]}>
-            This week your pain was lower on days when you got at least 7 hours sleep. Your medication adherence was strong. Keep it up.
-          </Text>
-          {['Sleep & pain connection', 'Activity patterns', 'What to watch'].map((title) => (
-            <View key={title} style={[styles.mockInsightRow, isDark && styles.mockInsightRowDark]}>
-              <Text style={[styles.mockInsightTitle, isDark && styles.mockCardTitleDark]}>{title}</Text>
-              <Text style={[styles.mockChevron, isDark && styles.mockTextSec]}>∨</Text>
+
+          {/* Chat exchange */}
+          <View style={styles.mockChatBubbleUser}>
+            <Text style={styles.mockChatTextUser}>Why was my pain lower this week?</Text>
+          </View>
+          <View style={styles.mockChatBubbleAI}>
+            <Text style={[styles.mockChatTextAI, isDark && styles.mockTextSec]}>
+              You slept 7.5h on average — on those nights, your pain scores dropped by ~35%. Your medication adherence was also perfect this week.
+            </Text>
+          </View>
+
+          <View style={[styles.mockDivider, isDark && { backgroundColor: Colors.borderDark }]} />
+
+          {[
+            { icon: '😴', label: 'Sleep vs pain', value: 'Strong link' },
+            { icon: '💊', label: 'Medication', value: '7/7 days ✓' },
+            { icon: '🚶', label: 'Activity', value: 'Light week' },
+          ].map(r => (
+            <View key={r.label} style={styles.mockFactorRow}>
+              <Text style={[styles.mockFactor, isDark && styles.mockTextSec]}>{r.icon} {r.label}</Text>
+              <Text style={[styles.mockFactorVal, { color: Colors.primary }]}>{r.value}</Text>
             </View>
           ))}
         </View>
@@ -623,7 +684,9 @@ export function OnboardingScreen() {
             </View>
 
             <Text style={[styles.previewTitle, isDark && styles.textDark]}>{slide.title}</Text>
-            <Text style={[styles.previewSubtitle, isDark && styles.timeLabelDark]}>{slide.subtitle}</Text>
+            {slide.subtitle ? (
+              <Text style={[styles.previewSubtitle, isDark && styles.timeLabelDark]}>{slide.subtitle}</Text>
+            ) : null}
 
             <View style={styles.previewMockContainer}>
               {slide.mockContent}
@@ -997,6 +1060,70 @@ const styles = StyleSheet.create({
   mockChevron: {
     fontSize: FontSize.xs,
     color: Colors.textSecondary,
+  },
+  mockWeekBars: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    height: 52,
+    gap: 5,
+    marginVertical: Spacing.sm,
+  },
+  mockBarWrap: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
+    height: '100%',
+    justifyContent: 'flex-end',
+  },
+  mockBarTrack: {
+    width: '100%',
+    flex: 1,
+    justifyContent: 'flex-end',
+    borderRadius: 3,
+  },
+  mockBarFill: {
+    width: '100%',
+    borderRadius: 3,
+    minHeight: 4,
+  },
+  mockBarLabel: {
+    fontSize: 9,
+    color: Colors.textSecondary,
+  },
+  mockDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: Colors.border,
+    marginVertical: Spacing.xs,
+  },
+  mockChatBubbleUser: {
+    alignItems: 'flex-end',
+    marginBottom: Spacing.xs,
+  },
+  mockChatBubbleAI: {
+    alignItems: 'flex-start',
+    marginBottom: Spacing.sm,
+  },
+  mockChatTextUser: {
+    fontSize: FontSize.sm,
+    backgroundColor: Colors.primary,
+    color: '#FFFFFF',
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    maxWidth: '80%',
+    overflow: 'hidden',
+    lineHeight: 19,
+  },
+  mockChatTextAI: {
+    fontSize: FontSize.sm,
+    backgroundColor: Colors.border,
+    color: Colors.textPrimary,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    maxWidth: '88%',
+    overflow: 'hidden',
+    lineHeight: 19,
   },
 
   // Welcome screen

@@ -72,6 +72,7 @@ function dietQualityEmoji(quality: DietQuality): string {
 // ─── Stiffness / Medication option rows ──────────────────────────────────────
 
 const STIFFNESS_OPTIONS: { value: MorningStiffness; labelKey: string }[] = [
+  { value: 'none', labelKey: 'onboarding.morning_stiffness.none' },
   { value: 'under_30', labelKey: 'onboarding.morning_stiffness.under_30' },
   { value: '30_60', labelKey: 'onboarding.morning_stiffness.30_60' },
   { value: '1_2_hours', labelKey: 'onboarding.morning_stiffness.1_2_hours' },
