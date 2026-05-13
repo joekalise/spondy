@@ -1,6 +1,8 @@
 PODS:
   - boost (1.84.0)
   - DoubleConversion (1.1.6)
+  - EASClient (0.14.4):
+    - ExpoModulesCore
   - EXApplication (6.1.5):
     - ExpoModulesCore
   - EXConstants (17.1.8):
@@ -284,6 +286,8 @@ PODS:
     - ExpoModulesCore
   - ExpoFont (13.3.2):
     - ExpoModulesCore
+  - ExpoHaptics (14.1.4):
+    - ExpoModulesCore
   - ExpoHead (5.1.11):
     - ExpoModulesCore
   - ExpoKeepAwake (14.1.4):
@@ -325,18 +329,139 @@ PODS:
     - ExpoModulesCore
   - ExpoWebBrowser (14.2.0):
     - ExpoModulesCore
+  - EXStructuredHeaders (4.1.0)
   - EXTaskManager (13.1.6):
     - ExpoModulesCore
     - UMAppLoader
+  - EXUpdates (0.28.18):
+    - DoubleConversion
+    - EASClient
+    - EXManifests
+    - ExpoModulesCore
+    - EXStructuredHeaders
+    - EXUpdatesInterface
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - ReachabilitySwift
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-hermes
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - EXUpdatesInterface (1.1.0):
     - ExpoModulesCore
   - fast_float (6.1.4)
   - FBLazyVector (0.79.6)
+  - Firebase/CoreOnly (12.10.0):
+    - FirebaseCore (~> 12.10.0)
+  - FirebaseAnalytics/Core (12.10.0):
+    - FirebaseCore (~> 12.10.0)
+    - FirebaseInstallations (~> 12.10.0)
+    - GoogleAppMeasurement/Core (= 12.10.0)
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.1)
+    - GoogleUtilities/MethodSwizzler (~> 8.1)
+    - GoogleUtilities/Network (~> 8.1)
+    - "GoogleUtilities/NSData+zlib (~> 8.1)"
+    - nanopb (~> 3.30910.0)
+  - FirebaseAnalytics/IdentitySupport (12.10.0):
+    - FirebaseCore (~> 12.10.0)
+    - FirebaseInstallations (~> 12.10.0)
+    - GoogleAppMeasurement/IdentitySupport (= 12.10.0)
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.1)
+    - GoogleUtilities/MethodSwizzler (~> 8.1)
+    - GoogleUtilities/Network (~> 8.1)
+    - "GoogleUtilities/NSData+zlib (~> 8.1)"
+    - nanopb (~> 3.30910.0)
+  - FirebaseCore (12.10.0):
+    - FirebaseCoreInternal (~> 12.10.0)
+    - GoogleUtilities/Environment (~> 8.1)
+    - GoogleUtilities/Logger (~> 8.1)
+  - FirebaseCoreInternal (12.10.0):
+    - "GoogleUtilities/NSData+zlib (~> 8.1)"
+  - FirebaseInstallations (12.10.0):
+    - FirebaseCore (~> 12.10.0)
+    - GoogleUtilities/Environment (~> 8.1)
+    - GoogleUtilities/UserDefaults (~> 8.1)
+    - PromisesObjC (~> 2.4)
   - fmt (11.0.2)
   - glog (0.3.5)
+  - GoogleAppMeasurement/Core (12.10.0):
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.1)
+    - GoogleUtilities/MethodSwizzler (~> 8.1)
+    - GoogleUtilities/Network (~> 8.1)
+    - "GoogleUtilities/NSData+zlib (~> 8.1)"
+    - nanopb (~> 3.30910.0)
+  - GoogleAppMeasurement/IdentitySupport (12.10.0):
+    - GoogleAppMeasurement/Core (= 12.10.0)
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.1)
+    - GoogleUtilities/MethodSwizzler (~> 8.1)
+    - GoogleUtilities/Network (~> 8.1)
+    - "GoogleUtilities/NSData+zlib (~> 8.1)"
+    - nanopb (~> 3.30910.0)
+  - GoogleUtilities (8.1.0):
+    - GoogleUtilities/AppDelegateSwizzler (= 8.1.0)
+    - GoogleUtilities/Environment (= 8.1.0)
+    - GoogleUtilities/Logger (= 8.1.0)
+    - GoogleUtilities/MethodSwizzler (= 8.1.0)
+    - GoogleUtilities/Network (= 8.1.0)
+    - "GoogleUtilities/NSData+zlib (= 8.1.0)"
+    - GoogleUtilities/Privacy (= 8.1.0)
+    - GoogleUtilities/Reachability (= 8.1.0)
+    - GoogleUtilities/SwizzlerTestHelpers (= 8.1.0)
+    - GoogleUtilities/UserDefaults (= 8.1.0)
+  - GoogleUtilities/AppDelegateSwizzler (8.1.0):
+    - GoogleUtilities/Environment
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Network
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Environment (8.1.0):
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Logger (8.1.0):
+    - GoogleUtilities/Environment
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/MethodSwizzler (8.1.0):
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Network (8.1.0):
+    - GoogleUtilities/Logger
+    - "GoogleUtilities/NSData+zlib"
+    - GoogleUtilities/Privacy
+    - GoogleUtilities/Reachability
+  - "GoogleUtilities/NSData+zlib (8.1.0)":
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Privacy (8.1.0)
+  - GoogleUtilities/Reachability (8.1.0):
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/SwizzlerTestHelpers (8.1.0):
+    - GoogleUtilities/MethodSwizzler
+  - GoogleUtilities/UserDefaults (8.1.0):
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Privacy
   - hermes-engine (0.79.6):
     - hermes-engine/Pre-built (= 0.79.6)
   - hermes-engine/Pre-built (0.79.6)
+  - nanopb (3.30910.0):
+    - nanopb/decode (= 3.30910.0)
+    - nanopb/encode (= 3.30910.0)
+  - nanopb/decode (3.30910.0)
+  - nanopb/encode (3.30910.0)
+  - PromisesObjC (2.4.0)
   - PurchasesHybridCommon (18.3.0):
     - RevenueCat (= 5.70.0)
   - RCT-Folly (2024.11.18.00):
@@ -364,6 +489,7 @@ PODS:
     - FBLazyVector (= 0.79.6)
     - RCTRequired (= 0.79.6)
     - React-Core (= 0.79.6)
+  - ReachabilitySwift (5.2.4)
   - React (0.79.6):
     - React-Core (= 0.79.6)
     - React-Core/DevSupport (= 0.79.6)
@@ -1992,6 +2118,60 @@ PODS:
     - React
   - RNCAsyncStorage (2.1.2):
     - React-Core
+  - RNDateTimePicker (8.4.1):
+    - React-Core
+  - RNFBAnalytics (24.0.0):
+    - DoubleConversion
+    - FirebaseAnalytics/Core (= 12.10.0)
+    - FirebaseAnalytics/IdentitySupport (= 12.10.0)
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-hermes
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - RNFBApp
+    - Yoga
+  - RNFBApp (24.0.0):
+    - DoubleConversion
+    - Firebase/CoreOnly (= 12.10.0)
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-hermes
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - RNPurchases (10.0.2):
     - PurchasesHybridCommon (= 18.3.0)
     - React-Core
@@ -2055,6 +2235,7 @@ PODS:
 DEPENDENCIES:
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
+  - EASClient (from `../node_modules/expo-eas-client/ios`)
   - EXApplication (from `../node_modules/expo-application/ios`)
   - EXConstants (from `../node_modules/expo-constants/ios`)
   - EXJSONUtils (from `../node_modules/expo-json-utils/ios`)
@@ -2071,6 +2252,7 @@ DEPENDENCIES:
   - ExpoCrypto (from `../node_modules/expo-crypto/ios`)
   - ExpoFileSystem (from `../node_modules/expo-file-system/ios`)
   - ExpoFont (from `../node_modules/expo-font/ios`)
+  - ExpoHaptics (from `../node_modules/expo-haptics/ios`)
   - ExpoHead (from `../node_modules/expo-router/ios`)
   - ExpoKeepAwake (from `../node_modules/expo-keep-awake/ios`)
   - ExpoLinking (from `../node_modules/expo-linking/ios`)
@@ -2080,12 +2262,15 @@ DEPENDENCIES:
   - ExpoSharing (from `../node_modules/expo-sharing/ios`)
   - ExpoSplashScreen (from `../node_modules/expo-splash-screen/ios`)
   - ExpoWebBrowser (from `../node_modules/expo-web-browser/ios`)
+  - EXStructuredHeaders (from `../node_modules/expo-structured-headers/ios`)
   - EXTaskManager (from `../node_modules/expo-task-manager/ios`)
+  - EXUpdates (from `../node_modules/expo-updates/ios`)
   - EXUpdatesInterface (from `../node_modules/expo-updates-interface/ios`)
   - fast_float (from `../node_modules/react-native/third-party-podspecs/fast_float.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - fmt (from `../node_modules/react-native/third-party-podspecs/fmt.podspec`)
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
+  - GoogleUtilities
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCT-Folly/Fabric (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
@@ -2154,6 +2339,9 @@ DEPENDENCIES:
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - RNAppleHealthKit (from `../node_modules/react-native-health`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
+  - "RNDateTimePicker (from `../node_modules/@react-native-community/datetimepicker`)"
+  - "RNFBAnalytics (from `../node_modules/@react-native-firebase/analytics`)"
+  - "RNFBApp (from `../node_modules/@react-native-firebase/app`)"
   - RNPurchases (from `../node_modules/react-native-purchases`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - "RNSentry (from `../node_modules/@sentry/react-native`)"
@@ -2163,7 +2351,17 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - Firebase
+    - FirebaseAnalytics
+    - FirebaseCore
+    - FirebaseCoreInternal
+    - FirebaseInstallations
+    - GoogleAppMeasurement
+    - GoogleUtilities
+    - nanopb
+    - PromisesObjC
     - PurchasesHybridCommon
+    - ReachabilitySwift
     - RevenueCat
     - Sentry
     - SocketRocket
@@ -2173,6 +2371,8 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/react-native/third-party-podspecs/boost.podspec"
   DoubleConversion:
     :podspec: "../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
+  EASClient:
+    :path: "../node_modules/expo-eas-client/ios"
   EXApplication:
     :path: "../node_modules/expo-application/ios"
   EXConstants:
@@ -2205,6 +2405,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-file-system/ios"
   ExpoFont:
     :path: "../node_modules/expo-font/ios"
+  ExpoHaptics:
+    :path: "../node_modules/expo-haptics/ios"
   ExpoHead:
     :path: "../node_modules/expo-router/ios"
   ExpoKeepAwake:
@@ -2223,8 +2425,12 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-splash-screen/ios"
   ExpoWebBrowser:
     :path: "../node_modules/expo-web-browser/ios"
+  EXStructuredHeaders:
+    :path: "../node_modules/expo-structured-headers/ios"
   EXTaskManager:
     :path: "../node_modules/expo-task-manager/ios"
+  EXUpdates:
+    :path: "../node_modules/expo-updates/ios"
   EXUpdatesInterface:
     :path: "../node_modules/expo-updates-interface/ios"
   fast_float:
@@ -2368,6 +2574,12 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-health"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
+  RNDateTimePicker:
+    :path: "../node_modules/@react-native-community/datetimepicker"
+  RNFBAnalytics:
+    :path: "../node_modules/@react-native-firebase/analytics"
+  RNFBApp:
+    :path: "../node_modules/@react-native-firebase/app"
   RNPurchases:
     :path: "../node_modules/react-native-purchases"
   RNScreens:
@@ -2384,6 +2596,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   boost: 7e761d76ca2ce687f7cc98e698152abd03a18f90
   DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
+  EASClient: fe396f88189ce51edd819abe12df16c99e98bcd2
   EXApplication: 1e06972201838375ca1ec1ba34d586a98a5dc718
   EXConstants: d3d551cb154718f5161c4247304e96aa59f6cca7
   EXJSONUtils: 1d3e4590438c3ee593684186007028a14b3686cd
@@ -2400,6 +2613,7 @@ SPEC CHECKSUMS:
   ExpoCrypto: a9f1d75baeea6ef8b03c1660621585196c382e85
   ExpoFileSystem: 7f92f7be2f5c5ed40a7c9efc8fa30821181d9d63
   ExpoFont: cf508bc2e6b70871e05386d71cab927c8524cc8e
+  ExpoHaptics: 0ff6e0d83cd891178a306e548da1450249d54500
   ExpoHead: cfc12096c9a68cbe25de93a8bfc4781c7689467e
   ExpoKeepAwake: bf0811570c8da182bfb879169437d4de298376e7
   ExpoLinking: d5c183998ca6ada66ff45e407e0f965b398a8902
@@ -2409,18 +2623,30 @@ SPEC CHECKSUMS:
   ExpoSharing: b0377be82430d07398c6a4cd60b5a15696accbd3
   ExpoSplashScreen: 1c22c5d37647106e42d4ae1582bb6d0dda3b2385
   ExpoWebBrowser: dc39a88485f007e61a3dff05d6a75f22ab4a2e92
+  EXStructuredHeaders: 32bec6771c2db18c4cd47cecae530d1d06cdf972
   EXTaskManager: 280143f6d8e596f28739d74bf34910300dcbd4ea
+  EXUpdates: c6f4c2351316f4ef7621ae66b95ad0cb70b51fc7
   EXUpdatesInterface: 7ff005b7af94ee63fa452ea7bb95d7a8ff40277a
   fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
   FBLazyVector: 07309209b7b914451b8f822544a18e2a0a85afff
+  Firebase: 99f203d3a114c6ba591f3b32263a9626e450af65
+  FirebaseAnalytics: ef2970f65f3a2807e8f47a49cf3b8719d53e9fce
+  FirebaseCore: f4428e22415ea3b3eca652c2098413dabf2a23a9
+  FirebaseCoreInternal: e7bbaeb00ab73011298f35ed223aa7371e212948
+  FirebaseInstallations: 047343aa91fd6a1ebfa3eb374ddecf36a8aaddfd
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
   glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
+  GoogleAppMeasurement: 57270ccc2b77472d7e85c4cbe45972564eff78bb
+  GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   hermes-engine: 44bb6fe76a6eb400d3a992e2d0b21946ae999fa9
+  nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
+  PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   PurchasesHybridCommon: 5887176727a97a7fc514d87478cf4b794d8d737e
   RCT-Folly: e78785aa9ba2ed998ea4151e314036f6c49e6d82
   RCTDeprecation: 9bc64754b40b86fa5e32f293ab3ea8eea2248339
   RCTRequired: ee36c1ce9a5e65a3f629c13f38a85308eb8eebda
   RCTTypeSafety: 7c0b654b92ef732fffc2a3992a02d10dc8f94bfd
+  ReachabilitySwift: 32793e867593cfc1177f5d16491e3a197d2fccda
   React: bc28da5a227fa5e7b43e7ed68061f34740d4c880
   React-callinvoker: b78b18b44bc2c6634f7e594ad4fd206e624d41e3
   React-Core: 790dbe4191ce86ac1f45fb883f20d3b1d3cd9c17
@@ -2483,6 +2709,9 @@ SPEC CHECKSUMS:
   RevenueCat: f30d8ee4fd36ce56afa40923d314239761eb58a2
   RNAppleHealthKit: 86ef7ab70f762b802f5c5289372de360cca701f9
   RNCAsyncStorage: b9f5f78da5d16a853fe3dc22e8268d932fc45a83
+  RNDateTimePicker: 60f9e986d61e42169a2716c1b51f1f93dfa82665
+  RNFBAnalytics: 3b26849dd7e2b24a3cd6ca1fdae4deb2a344af08
+  RNFBApp: 9c89737d8231a71acbb072a9d7afdb9bd96dc0e9
   RNPurchases: 61c3361bbbe87a0c6a1b8a5ad92c413943757a90
   RNScreens: 62fdbbc4c984150b34c36f095c6ba2510ca9b6a5
   RNSentry: 892426b4ab3a4259e7e30bf14c5b231ba3c774a2
@@ -2492,6 +2721,6 @@ SPEC CHECKSUMS:
   UMAppLoader: 55159b69750129faa7a51c493cb8ea55a7b64eb9
   Yoga: dc7c21200195acacb62fa920c588e7c2106de45e
 
-PODFILE CHECKSUM: eae5cbbd39913ef1ee40d192fa4faea7445d7467
+PODFILE CHECKSUM: a0c701473fcd2bab9614e7b0e2fc0fbd694a055a
 
 COCOAPODS: 1.16.2

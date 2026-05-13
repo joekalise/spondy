@@ -15,6 +15,9 @@ prepare_react_native_project!
 
 $RNFirebaseAsStaticFramework = true
 
+# Required for FirebaseCoreInternal (Swift) to import GoogleUtilities as a static library
+pod 'GoogleUtilities', :modular_headers => true
+
 target 'Spondy' do
   use_expo_modules!
 
