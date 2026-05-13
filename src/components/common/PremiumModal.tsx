@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Colors } from '@/constants/colors';
+import { logEvent, Events } from '@/services/analytics';
 import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
 
 interface PremiumModalProps {
@@ -162,6 +163,7 @@ export function PremiumModal({
       animationType="slide"
       transparent={false}
       onRequestClose={onClose}
+      onShow={() => logEvent(Events.PREMIUM_MODAL_OPENED).catch(() => {})}
     >
       <SafeAreaView style={[styles.screen, { backgroundColor: bg }]}>
         {/* Close button */}

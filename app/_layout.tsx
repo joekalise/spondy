@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useColorScheme } from 'react-native';
+import { View, useColorScheme } from 'react-native';
 import * as Notifications from 'expo-notifications';
 
 import '@/i18n';
@@ -12,7 +12,9 @@ import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 configureRevenueCat();
 import { ProfileProvider, useProfile } from '@/contexts/ProfileContext';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { UpdateBanner } from '@/components/common/UpdateBanner';
 import { registerBackgroundHealthSync, triggerHealthSyncNow } from '@/services/backgroundHealthSync';
+import { setUserId } from '@/services/analytics';
 import * as Sentry from '@sentry/react-native';
 
 Sentry.init({
@@ -50,6 +52,9 @@ function RootNavigator() {
   useEffect(() => {
     if (session?.user?.id) {
       triggerHealthSyncNow(session.user.id).catch(() => {});
+      setUserId(session.user.id).catch(() => {});
+    } else {
+      setUserId(null).catch(() => {});
     }
   }, [session?.user?.id]);
 
@@ -85,14 +90,15 @@ function RootNavigator() {
   }
 
   return (
-    <>
+    <View style={{ flex: 1 }}>
+      <UpdateBanner />
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(onboarding)" />
         <Stack.Screen name="(tabs)" />
       </Stack>
-    </>
+    </View>
   );
 }
 

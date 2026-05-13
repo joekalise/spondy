@@ -31,6 +31,7 @@ import { ProfileButton } from '@/components/common/ProfileButton';
 import { InfoButton } from '@/components/common/InfoButton';
 import { DragSlider } from '@/components/common/DragSlider';
 import { PremiumModal } from '@/components/common/PremiumModal';
+import { logEvent, Events } from '@/services/analytics';
 
 // ─── Insight cache helpers ────────────────────────────────────────────────────
 
@@ -763,12 +764,19 @@ export default function InsightsScreen() {
 
   const handlePurchase = useCallback(async () => {
     setIsPurchasing(true);
+    logEvent(Events.PURCHASE_STARTED).catch(() => {});
     try {
       const success = await purchase();
-      if (success) setShowPremiumModal(false);
-      else Alert.alert('', t('profile.purchase_unavailable'));
+      if (success) {
+        logEvent(Events.PURCHASE_SUCCESS).catch(() => {});
+        setShowPremiumModal(false);
+      } else {
+        logEvent(Events.PURCHASE_CANCELLED).catch(() => {});
+        Alert.alert('', t('profile.purchase_unavailable'));
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
+      logEvent(Events.PURCHASE_ERROR, { message: msg }).catch(() => {});
       Alert.alert('Purchase error', msg);
     } finally {
       setIsPurchasing(false);

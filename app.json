@@ -68,7 +68,8 @@
         }
       ],
       "@react-native-community/datetimepicker",
-      "expo-updates"
+      "expo-updates",
+      "@react-native-firebase/app"
     ],
     "updates": {
       "url": "https://u.expo.dev/d0cda471-dc65-4d6c-b28c-d6e9dde174e6",

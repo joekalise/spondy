@@ -38,6 +38,7 @@ import { useMedicationTracking } from '@/hooks/useMedicationTracking';
 import { useBiologicInjections, BIOLOGIC_INTERVALS } from '@/hooks/useBiologicInjections';
 import { scheduleDailyCheckIn, cancelNotification } from '@/services/notifications';
 import { PremiumModal } from '@/components/common/PremiumModal';
+import { logEvent, Events } from '@/services/analytics';
 import { generateAndShareReport } from '@/services/pdfExport';
 import { getDailyLogs, getUveitisEpisodes, getBasdaiScores, deleteAllUserData } from '@/services/database';
 import {
@@ -1075,13 +1076,18 @@ export default function ProfileScreen() {
 
   const handlePurchase = useCallback(async () => {
     setIsPurchasing(true);
+    logEvent(Events.PURCHASE_STARTED).catch(() => {});
     try {
       const success = await purchase();
-      if (!success) {
+      if (success) {
+        logEvent(Events.PURCHASE_SUCCESS).catch(() => {});
+      } else {
+        logEvent(Events.PURCHASE_CANCELLED).catch(() => {});
         Alert.alert('', t('profile.purchase_unavailable'));
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
+      logEvent(Events.PURCHASE_ERROR, { message: msg }).catch(() => {});
       Alert.alert('Purchase error', msg);
     } finally {
       setIsPurchasing(false);
