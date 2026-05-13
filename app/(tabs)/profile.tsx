@@ -16,6 +16,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
 import Constants from 'expo-constants';
@@ -54,6 +55,17 @@ import {
 } from '@/types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function timeStringToDate(t: string): Date {
+  const [h, m] = t.split(':').map(Number);
+  const d = new Date();
+  d.setHours(isNaN(h) ? 20 : h, isNaN(m) ? 0 : m, 0, 0);
+  return d;
+}
+
+function dateToTimeString(d: Date): string {
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
 
 function formatAgeRange(value: string | null | undefined): string {
   if (!value) return '—';
@@ -619,16 +631,15 @@ function AddMedicationModal({
           <Text style={[styles.fieldLabel, { color: textSecondary }]}>
             {t('medications.reminder_time')}
           </Text>
-          <TextInput
-            style={[
-              styles.textInput,
-              { backgroundColor: inputBg, borderColor: cardBorder, color: textPrimary },
-            ]}
-            placeholder={t('medications.reminder_placeholder')}
-            placeholderTextColor={textSecondary}
-            value={reminderTime}
-            onChangeText={setReminderTime}
-            keyboardType="numbers-and-punctuation"
+          <DateTimePicker
+            value={timeStringToDate(reminderTime)}
+            mode="time"
+            display="spinner"
+            onChange={(_event, date) => {
+              if (date) setReminderTime(dateToTimeString(date));
+            }}
+            textColor={textPrimary}
+            style={{ width: '100%', height: 150 }}
           />
 
           {/* Actions */}
@@ -839,6 +850,8 @@ export default function ProfileScreen() {
   const [showLogInjection, setShowLogInjection] = useState(false);
   const [injectionDefaultMed, setInjectionDefaultMed] = useState('');
   const [reminderEnabled, setReminderEnabled] = useState(true);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [pendingTime, setPendingTime] = useState<Date | null>(null);
 
   // Restore persisted reminder toggle and re-schedule notification on mount
   useEffect(() => {
@@ -963,25 +976,24 @@ export default function ProfileScreen() {
   );
 
   const handleUpdateTime = useCallback(() => {
-    Alert.prompt(
-      t('profile.update_time'),
-      'Use 24-hour format (e.g. 20:00)',
-      async (value) => {
-        if (!value) return;
-        try {
-          await saveProfile({ notification_time: value });
-          if (reminderEnabled) {
-            await scheduleDailyCheckIn(value);
-          }
-        } catch (err) {
-          console.error('Update notification time error:', err);
-          Alert.alert('Error', t('errors.save_failed'));
-        }
-      },
-      'plain-text',
-      profile?.notification_time ?? '20:00'
-    );
-  }, [profile?.notification_time, reminderEnabled, saveProfile, t]);
+    setPendingTime(timeStringToDate(profile?.notification_time ?? '20:00'));
+    setShowTimePicker(true);
+  }, [profile?.notification_time]);
+
+  const handleSaveTime = useCallback(async () => {
+    if (!pendingTime) return;
+    setShowTimePicker(false);
+    const value = dateToTimeString(pendingTime);
+    try {
+      await saveProfile({ notification_time: value });
+      if (reminderEnabled) {
+        await scheduleDailyCheckIn(value);
+      }
+    } catch (err) {
+      console.error('Update notification time error:', err);
+      Alert.alert('Error', t('errors.save_failed'));
+    }
+  }, [pendingTime, reminderEnabled, saveProfile, t]);
 
   const handleSaveAiContext = useCallback(async () => {
     setIsSavingAiContext(true);
@@ -1413,7 +1425,7 @@ export default function ProfileScreen() {
             />
           </View>
 
-          {reminderEnabled && (
+          {reminderEnabled && !showTimePicker && (
             <TouchableOpacity
               onPress={handleUpdateTime}
               activeOpacity={0.8}
@@ -1423,6 +1435,37 @@ export default function ProfileScreen() {
                 {t('profile.update_time')}
               </Text>
             </TouchableOpacity>
+          )}
+
+          {reminderEnabled && showTimePicker && (
+            <View>
+              <DateTimePicker
+                value={pendingTime ?? timeStringToDate(profile?.notification_time ?? '20:00')}
+                mode="time"
+                display="spinner"
+                onChange={(_event, date) => {
+                  if (date) setPendingTime(date);
+                }}
+                textColor={isDark ? Colors.textPrimaryDark : Colors.textPrimary}
+                style={{ width: '100%', height: 150 }}
+              />
+              <View style={styles.timePickerActions}>
+                <TouchableOpacity
+                  onPress={() => setShowTimePicker(false)}
+                  style={[styles.timePickerCancel, { borderColor: cardBorder }]}
+                  activeOpacity={0.8}
+                >
+                  <Text style={{ color: textSecondary, fontWeight: '500' }}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleSaveTime}
+                  style={styles.timePickerSave}
+                  activeOpacity={0.8}
+                >
+                  <Text style={{ color: '#FFFFFF', fontWeight: '600' }}>Save</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           )}
 
           {/* Medication reminders */}
@@ -1991,6 +2034,25 @@ const styles = StyleSheet.create({
   updateTimeText: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+  },
+  timePickerActions: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginTop: Spacing.xs,
+  },
+  timePickerCancel: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: BorderRadius.sm,
+    paddingVertical: Spacing.sm,
+    alignItems: 'center',
+  },
+  timePickerSave: {
+    flex: 1,
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.sm,
+    paddingVertical: Spacing.sm,
+    alignItems: 'center',
   },
   emptyText: {
     fontSize: FontSize.sm,
