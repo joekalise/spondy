@@ -13,7 +13,6 @@ configureRevenueCat();
 import { ProfileProvider, useProfile } from '@/contexts/ProfileContext';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { registerBackgroundHealthSync, triggerHealthSyncNow } from '@/services/backgroundHealthSync';
-import { requestNotificationPermissions } from '@/services/notifications';
 import * as Sentry from '@sentry/react-native';
 
 Sentry.init({
@@ -54,12 +53,6 @@ function RootNavigator() {
     }
   }, [session?.user?.id]);
 
-  // Request notification permissions once after sign-in
-  useEffect(() => {
-    if (session) {
-      requestNotificationPermissions().catch(() => {});
-    }
-  }, [session]);
 
   useEffect(() => {
     if (isLoading) return;

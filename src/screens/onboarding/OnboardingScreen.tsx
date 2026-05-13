@@ -5,13 +5,13 @@ import {
   ScrollView,
   StyleSheet,
   SafeAreaView,
-  TextInput,
   Text,
   useColorScheme,
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 
@@ -28,6 +28,7 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { useAuth } from '@/contexts/AuthContext';
 
 import { InfoButton } from '@/components/common/InfoButton';
+import { requestNotificationPermissions } from '@/services/notifications';
 import {
   OnboardingData,
   AgeRange,
@@ -44,6 +45,17 @@ import {
 } from '@/types';
 
 const TOTAL_STEPS = 11;
+
+function timeStringToDate(t: string): Date {
+  const [h, m] = t.split(':').map(Number);
+  const d = new Date();
+  d.setHours(isNaN(h) ? 20 : h, isNaN(m) ? 0 : m, 0, 0);
+  return d;
+}
+
+function dateToTimeString(d: Date): string {
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
 
 const defaultOnboardingData: OnboardingData = {
   biological_sex: null,
@@ -167,6 +179,9 @@ export function OnboardingScreen() {
   };
 
   const handleNext = () => {
+    if (currentStep === 11) {
+      requestNotificationPermissions().catch(() => {});
+    }
     if (currentStep < TOTAL_STEPS) {
       setCurrentStep(s => s + 1);
     } else {
@@ -484,29 +499,19 @@ export function OnboardingScreen() {
       // Step 11: Notification time
       case 11:
         return (
-          <View>
-            <Text
-              style={[styles.timeLabel, isDark && styles.timeLabelDark]}
-            >
-              {t('onboarding.notification_time.placeholder')}
-            </Text>
-            <TextInput
-              value={data.notification_time}
-              onChangeText={v => setData(d => ({ ...d, notification_time: v }))}
-              placeholder="HH:MM (e.g. 20:00)"
-              placeholderTextColor={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
-              keyboardType="numbers-and-punctuation"
-              style={[
-                styles.timeInput,
-                isDark && styles.timeInputDark,
-              ]}
-              maxLength={5}
+          <View style={styles.timePickerContainer}>
+            <DateTimePicker
+              value={timeStringToDate(data.notification_time)}
+              mode="time"
+              display="spinner"
+              onChange={(_event, date) => {
+                if (date) {
+                  setData(d => ({ ...d, notification_time: dateToTimeString(date) }));
+                }
+              }}
+              style={styles.timePicker}
+              textColor={isDark ? Colors.textPrimaryDark : Colors.textPrimary}
             />
-            <Text
-              style={[styles.timeHint, isDark && styles.timeHintDark]}
-            >
-              {t('onboarding.notification_time.hint')}
-            </Text>
           </View>
         );
 
@@ -731,40 +736,16 @@ const styles = StyleSheet.create({
   textDark: {
     color: Colors.textPrimaryDark,
   },
-  timeLabel: {
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-    fontWeight: '500',
-    marginBottom: Spacing.sm,
-  },
   timeLabelDark: {
     color: Colors.textSecondaryDark,
   },
-  timeInput: {
-    fontSize: FontSize.xl,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-    backgroundColor: Colors.surface,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.md,
-    textAlign: 'center',
+  timePickerContainer: {
+    alignItems: 'center',
+    marginVertical: Spacing.md,
   },
-  timeInputDark: {
-    color: Colors.textPrimaryDark,
-    backgroundColor: Colors.surfaceDark,
-    borderColor: Colors.borderDark,
-  },
-  timeHint: {
-    fontSize: FontSize.xs,
-    color: Colors.textSecondary,
-    marginTop: Spacing.sm,
-    textAlign: 'center',
-  },
-  timeHintDark: {
-    color: Colors.textSecondaryDark,
+  timePicker: {
+    width: '100%',
+    height: 180,
   },
 
   // Preview slides
