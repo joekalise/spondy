@@ -19,6 +19,7 @@
       "bundleIdentifier": "com.spondy.app",
       "infoPlist": {
         "NSHealthShareUsageDescription": "Spondy reads your health data to identify patterns that may relate to your AS symptoms.",
+        "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": [
           "fetch",
           "processing"
