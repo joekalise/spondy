@@ -419,12 +419,12 @@ export default function AIChatScreen() {
           {/* Disclaimer */}
           <View style={[styles.disclaimer, { backgroundColor: isDark ? '#1a1200' : '#FFF9E6', borderBottomColor: isDark ? Colors.borderDark : Colors.border }]}>
             <Text style={[styles.disclaimerText, { color: textSecondary }]}>
-              AI insights are based on your personal data and are not medical advice. Always consult your rheumatologist.{' '}
+              {t('ai_chat.disclaimer')}{' '}
               <Text
                 style={{ color: Colors.primary, textDecorationLine: 'underline' }}
                 onPress={() => require('react-native').Linking.openURL('https://www.nass.co.uk/managing-my-as/')}
               >
-                AS resources
+                {t('ai_chat.as_resources')}
               </Text>
             </Text>
           </View>

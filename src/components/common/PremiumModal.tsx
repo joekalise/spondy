@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Linking,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Colors } from '@/constants/colors';
 import { logEvent, Events } from '@/services/analytics';
 import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
@@ -129,6 +130,7 @@ export function PremiumModal({
   isRestoring,
   isDark,
 }: PremiumModalProps) {
+  const { t } = useTranslation();
   const bg = isDark ? Colors.backgroundDark : Colors.background;
   const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
   const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
@@ -212,24 +214,24 @@ export function PremiumModal({
             </Text>
           )}
           <Text style={[styles.trialLabel, { color: textSecondary }]}>
-            Start with a 14-day free trial
+            {t('subscription.trial_sublabel')}
           </Text>
           <Text style={[styles.pricingNote, { color: textSecondary }]}>
-            Cancel any time from Settings → Apple ID → Subscriptions.
+            {t('subscription.cancel_note')}
           </Text>
           <View style={styles.legalRow}>
             <Text
               style={[styles.legalLink, { color: textSecondary }]}
               onPress={() => Linking.openURL('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')}
             >
-              Terms of Use
+              {t('subscription.terms_of_use')}
             </Text>
             <Text style={[styles.legalDot, { color: textSecondary }]}> · </Text>
             <Text
               style={[styles.legalLink, { color: textSecondary }]}
               onPress={() => Linking.openURL('https://gist.github.com/joekalise/fb689414dba7ade9f6d7383ccad9cf1f')}
             >
-              Privacy Policy
+              {t('subscription.privacy_policy')}
             </Text>
           </View>
 

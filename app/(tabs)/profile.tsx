@@ -1724,12 +1724,12 @@ export default function ProfileScreen() {
 
         {/* Data & AI Privacy */}
         <View style={[styles.aiPrivacyBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <Text style={[styles.aiPrivacyTitle, { color: textPrimary }]}>Data & AI Privacy</Text>
+          <Text style={[styles.aiPrivacyTitle, { color: textPrimary }]}>{t('profile_privacy.ai_title')}</Text>
           <Text style={[styles.aiPrivacyBody, { color: textSecondary }]}>
-            When you use AI Chat or weekly insights, your symptom logs, health data summaries, and profile information are sent to Anthropic (Claude API) to generate responses. Your raw Apple Health data is never sent — only aggregated summaries. Conversation history is stored locally on your device only.
+            {t('profile_privacy.ai_body_1')}
           </Text>
           <Text style={[styles.aiPrivacyBody, { color: textSecondary, marginTop: Spacing.xs }]}>
-            Analytics events (e.g. features used) are sent to Firebase. Crash reports are sent to Sentry. Neither service receives your health or symptom data.
+            {t('profile_privacy.ai_body_2')}
           </Text>
         </View>
 

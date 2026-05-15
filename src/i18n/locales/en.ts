@@ -404,6 +404,10 @@ export default {
     title: 'Spondy Premium',
     price: '€10 / month',
     trial: '14-day free trial',
+    trial_sublabel: 'Start with a 14-day free trial',
+    cancel_note: 'Cancel any time from Settings → Apple ID → Subscriptions.',
+    terms_of_use: 'Terms of Use',
+    privacy_policy: 'Privacy Policy',
     trial_prompt_title: "You've been tracking for 2 weeks",
     trial_prompt_subtitle:
       'Unlock your personalised insight report, free for 14 days',
@@ -415,6 +419,11 @@ export default {
     already_subscribed: "You're on Spondy Premium",
     manage: 'Manage subscription',
     restore: 'Restore purchases',
+  },
+  profile_privacy: {
+    ai_title: 'Data & AI Privacy',
+    ai_body_1: 'When you use AI Chat or weekly insights, your symptom logs, health data summaries, and profile information are sent to Anthropic (Claude API) to generate responses. Your raw Apple Health data is never sent — only aggregated summaries. Conversation history is stored locally on your device only.',
+    ai_body_2: 'Analytics events (e.g. features used) are sent to Firebase. Crash reports are sent to Sentry. Neither service receives your health or symptom data.',
   },
   export: {
     title: 'Share with my doctor',
@@ -447,6 +456,8 @@ export default {
     upgrade_cta: 'Start free trial',
     error: 'Something went wrong. Please try again.',
     send: 'Send',
+    disclaimer: 'AI insights are based on your personal data and are not medical advice. Always consult your rheumatologist.',
+    as_resources: 'AS resources',
   },
   errors: {
     network: 'Check your internet connection and try again',
