@@ -440,6 +440,7 @@ function flareDays(flare: Flare): number {
 // ─── ChatDataCard — compact list-item style ───────────────────────────────────
 
 function ChatDataCard({ isDark, onPress }: { isDark: boolean; onPress: () => void }) {
+  const { t } = useTranslation();
   const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
   const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
   const cardBg = isDark ? '#2D1A0E' : '#FFF7ED';
