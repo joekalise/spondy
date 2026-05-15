@@ -826,7 +826,7 @@ export default function ProfileScreen() {
     deleteMedication,
   } = useMedications();
   const { flares } = useFlares();
-  const { isSubscribed, isLoading: subLoading, monthlyPrice, purchase, restore } = useSubscription();
+  const { isSubscribed, isLoading: subLoading, monthlyPrice, trialDays, purchase, restore } = useSubscription();
   const { tracks: tracksMedication, setTracks: setTracksMedication } = useMedicationTracking();
   const { injections: biologicInjections, logInjection, deleteInjection: deleteBiologicInj } = useBiologicInjections();
   const {
@@ -1777,6 +1777,7 @@ export default function ProfileScreen() {
         onPurchase={handlePurchase}
         onRestore={handleRestore}
         monthlyPrice={monthlyPrice}
+        trialDays={trialDays}
         isPurchasing={isPurchasing}
         isRestoring={isRestoring}
         isDark={isDark}

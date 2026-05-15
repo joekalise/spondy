@@ -21,6 +21,7 @@ interface PremiumModalProps {
   onPurchase: () => void;
   onRestore: () => void;
   monthlyPrice: string | null;
+  trialDays: number | null;
   isPurchasing: boolean;
   isRestoring: boolean;
   isDark: boolean;
@@ -126,6 +127,7 @@ export function PremiumModal({
   onPurchase,
   onRestore,
   monthlyPrice,
+  trialDays,
   isPurchasing,
   isRestoring,
   isDark,
@@ -213,9 +215,11 @@ export function PremiumModal({
               {monthlyPrice} / month
             </Text>
           )}
-          <Text style={[styles.trialLabel, { color: textSecondary }]}>
-            {t('subscription.trial_sublabel')}
-          </Text>
+          {trialDays && (
+            <Text style={[styles.trialLabel, { color: textSecondary }]}>
+              {t('subscription.trial_sublabel_days', { days: trialDays })}
+            </Text>
+          )}
           <Text style={[styles.pricingNote, { color: textSecondary }]}>
             {t('subscription.cancel_note')}
           </Text>

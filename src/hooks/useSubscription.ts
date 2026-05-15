@@ -11,6 +11,7 @@ export function useSubscription(): {
   isInTrial: boolean;
   isLoading: boolean;
   monthlyPrice: string | null;
+  trialDays: number | null;
   purchase: () => Promise<boolean>;
   restore: () => Promise<boolean>;
 } {
@@ -18,6 +19,7 @@ export function useSubscription(): {
   const [isInTrial, setIsInTrial] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [monthlyPrice, setMonthlyPrice] = useState<string | null>(null);
+  const [trialDays, setTrialDays] = useState<number | null>(null);
 
   const loadStatus = useCallback(async () => {
     // In dev, unlock premium so AI features can be tested before IAP is configured
@@ -29,13 +31,14 @@ export function useSubscription(): {
     }
     setIsLoading(true);
     try {
-      const [status, price] = await Promise.all([
+      const [status, priceInfo] = await Promise.all([
         getSubscriptionStatus(),
         getMonthlyPriceString(),
       ]);
       setIsSubscribed(status.isSubscribed);
       setIsInTrial(status.isInTrial);
-      setMonthlyPrice(price);
+      setMonthlyPrice(priceInfo.price);
+      setTrialDays(priceInfo.trialDays);
     } catch (err) {
       console.error('useSubscription: failed to load status', err);
       setIsSubscribed(false);
@@ -74,5 +77,5 @@ export function useSubscription(): {
     }
   }, []);
 
-  return { isSubscribed, isInTrial, isLoading, monthlyPrice, purchase, restore };
+  return { isSubscribed, isInTrial, isLoading, monthlyPrice, trialDays, purchase, restore };
 }

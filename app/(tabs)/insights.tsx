@@ -696,7 +696,7 @@ export default function InsightsScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const { isSubscribed, isLoading: subLoading, monthlyPrice, purchase, restore } = useSubscription();
+  const { isSubscribed, isLoading: subLoading, monthlyPrice, trialDays, purchase, restore } = useSubscription();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
@@ -1074,6 +1074,7 @@ export default function InsightsScreen() {
         onPurchase={handlePurchase}
         onRestore={handleRestore}
         monthlyPrice={monthlyPrice}
+        trialDays={trialDays}
         isPurchasing={isPurchasing}
         isRestoring={isRestoring}
         isDark={isDark}

@@ -440,6 +440,7 @@ export default {
     price: '€10 / month',
     trial: '14-day free trial',
     trial_sublabel: 'Start with a 14-day free trial',
+    trial_sublabel_days: 'Start with a {{days}}-day free trial',
     cancel_note: 'Cancel any time from Settings → Apple ID → Subscriptions.',
     terms_of_use: 'Terms of Use',
     privacy_policy: 'Privacy Policy',

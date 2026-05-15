@@ -81,14 +81,32 @@ export async function purchasePremium(): Promise<boolean> {
   }
 }
 
-export async function getMonthlyPriceString(): Promise<string | null> {
-  if (_configureError) return null;
+export async function getMonthlyPriceString(): Promise<{
+  price: string | null;
+  trialDays: number | null;
+}> {
+  if (_configureError) return { price: null, trialDays: null };
   try {
     const offerings = await Purchases.getOfferings();
     const pkg = offerings.current?.monthly;
-    return pkg?.product.priceString ?? null;
+    if (!pkg) return { price: null, trialDays: null };
+
+    const price = pkg.product.priceString ?? null;
+    const intro = pkg.product.introductoryPrice;
+    let trialDays: number | null = null;
+    if (intro && intro.price === 0) {
+      // Convert intro period to days
+      const units = intro.periodNumberOfUnits ?? 1;
+      switch (intro.periodUnit) {
+        case 'DAY':   trialDays = units; break;
+        case 'WEEK':  trialDays = units * 7; break;
+        case 'MONTH': trialDays = units * 30; break;
+        default:      trialDays = units;
+      }
+    }
+    return { price, trialDays };
   } catch {
-    return null;
+    return { price: null, trialDays: null };
   }
 }
 
