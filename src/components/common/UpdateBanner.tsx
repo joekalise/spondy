@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Updates from 'expo-updates';
 import { Colors } from '@/constants/colors';
 import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
@@ -7,6 +8,7 @@ import { logEvent, Events } from '@/services/analytics';
 
 export function UpdateBanner() {
   const { isUpdateAvailable, isUpdatePending } = Updates.useUpdates();
+  const { top } = useSafeAreaInsets();
   const [isApplying, setIsApplying] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
@@ -27,7 +29,7 @@ export function UpdateBanner() {
   }
 
   return (
-    <View style={styles.banner}>
+    <View style={[styles.banner, { paddingTop: top + Spacing.sm }]}>
       <View style={styles.left}>
         <Text style={styles.title}>Update available</Text>
         <Text style={styles.subtitle}>Tap to get the latest version</Text>
