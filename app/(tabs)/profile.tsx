@@ -1722,6 +1722,17 @@ export default function ProfileScreen() {
           </Text>
         </View>
 
+        {/* Data & AI Privacy */}
+        <View style={[styles.aiPrivacyBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+          <Text style={[styles.aiPrivacyTitle, { color: textPrimary }]}>Data & AI Privacy</Text>
+          <Text style={[styles.aiPrivacyBody, { color: textSecondary }]}>
+            When you use AI Chat or weekly insights, your symptom logs, health data summaries, and profile information are sent to Anthropic (Claude API) to generate responses. Your raw Apple Health data is never sent — only aggregated summaries. Conversation history is stored locally on your device only.
+          </Text>
+          <Text style={[styles.aiPrivacyBody, { color: textSecondary, marginTop: Spacing.xs }]}>
+            Analytics events (e.g. features used) are sent to Firebase. Crash reports are sent to Sentry. Neither service receives your health or symptom data.
+          </Text>
+        </View>
+
         {/* Privacy policy + version */}
         <TouchableOpacity
           onPress={() => Linking.openURL('https://gist.github.com/joekalise/fb689414dba7ade9f6d7383ccad9cf1f')}
@@ -2171,6 +2182,21 @@ const styles = StyleSheet.create({
     minHeight: 120,
     marginTop: Spacing.xs,
     marginBottom: Spacing.md,
+  },
+  aiPrivacyBox: {
+    borderWidth: 1,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  aiPrivacyTitle: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    marginBottom: Spacing.xs,
+  },
+  aiPrivacyBody: {
+    fontSize: FontSize.xs,
+    lineHeight: 18,
   },
   version: {
     fontSize: FontSize.xs,

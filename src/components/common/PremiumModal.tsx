@@ -8,6 +8,7 @@ import {
   StyleSheet,
   SafeAreaView,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { Colors } from '@/constants/colors';
 import { logEvent, Events } from '@/services/analytics';
@@ -205,17 +206,32 @@ export function PremiumModal({
           </View>
 
           {/* Pricing */}
-          <View style={styles.pricingRow}>
-            <Text style={[styles.trialLabel, { color: textPrimary }]}>14-day free trial</Text>
-            {monthlyPrice && (
-              <Text style={[styles.priceLabel, { color: textSecondary }]}>
-                then {monthlyPrice} / month
-              </Text>
-            )}
-          </View>
+          {monthlyPrice && (
+            <Text style={[styles.priceAmount, { color: textPrimary }]}>
+              {monthlyPrice} / month
+            </Text>
+          )}
+          <Text style={[styles.trialLabel, { color: textSecondary }]}>
+            Start with a 14-day free trial
+          </Text>
           <Text style={[styles.pricingNote, { color: textSecondary }]}>
             Cancel any time from Settings → Apple ID → Subscriptions.
           </Text>
+          <View style={styles.legalRow}>
+            <Text
+              style={[styles.legalLink, { color: textSecondary }]}
+              onPress={() => Linking.openURL('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')}
+            >
+              Terms of Use
+            </Text>
+            <Text style={[styles.legalDot, { color: textSecondary }]}> · </Text>
+            <Text
+              style={[styles.legalLink, { color: textSecondary }]}
+              onPress={() => Linking.openURL('https://gist.github.com/joekalise/fb689414dba7ade9f6d7383ccad9cf1f')}
+            >
+              Privacy Policy
+            </Text>
+          </View>
 
           {/* CTAs */}
           <TouchableOpacity
@@ -427,23 +443,31 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     lineHeight: 19,
   },
-  pricingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  priceAmount: {
+    fontSize: 28,
+    fontWeight: '800',
     marginBottom: 4,
   },
   trialLabel: {
-    fontSize: FontSize.lg,
-    fontWeight: '800',
-  },
-  priceLabel: {
     fontSize: FontSize.sm,
+    marginBottom: 6,
   },
   pricingNote: {
     fontSize: FontSize.xs,
     lineHeight: 18,
+    marginBottom: Spacing.sm,
+  },
+  legalRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     marginBottom: Spacing.xl,
+  },
+  legalLink: {
+    fontSize: FontSize.xs,
+    textDecorationLine: 'underline',
+  },
+  legalDot: {
+    fontSize: FontSize.xs,
   },
   primaryBtn: {
     backgroundColor: Colors.primary,

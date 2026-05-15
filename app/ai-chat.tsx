@@ -416,6 +416,19 @@ export default function AIChatScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={0}
         >
+          {/* Disclaimer */}
+          <View style={[styles.disclaimer, { backgroundColor: isDark ? '#1a1200' : '#FFF9E6', borderBottomColor: isDark ? Colors.borderDark : Colors.border }]}>
+            <Text style={[styles.disclaimerText, { color: textSecondary }]}>
+              AI insights are based on your personal data and are not medical advice. Always consult your rheumatologist.{' '}
+              <Text
+                style={{ color: Colors.primary, textDecorationLine: 'underline' }}
+                onPress={() => require('react-native').Linking.openURL('https://www.nass.co.uk/managing-my-as/')}
+              >
+                AS resources
+              </Text>
+            </Text>
+          </View>
+
           {/* Messages list */}
           <ScrollView
             ref={scrollRef}
@@ -492,6 +505,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  disclaimer: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  disclaimerText: {
+    fontSize: 11,
+    lineHeight: 16,
+    textAlign: 'center',
   },
   backBtn: {
     minWidth: 60,
