@@ -337,6 +337,9 @@ export default {
     trial_prompt_title: "You've been tracking for 2 weeks!",
     trial_prompt_body: 'Unlock your personalised insight report, free for 14 days.',
     trial_prompt_cta: 'Start free trial',
+    ai_off_title: 'AI insights are off',
+    ai_off_body: 'To use AI-powered insights and chat, enable AI personalisation in your Profile settings.',
+    ai_off_cta: 'Go to Profile',
   },
   profile: {
     title: 'Your profile',
@@ -476,6 +479,11 @@ export default {
     see_whats_included: "See what's included →",
   },
   profile_privacy: {
+    ai_consent_toggle_label: 'AI personalisation',
+    ai_consent_toggle_subtitle: 'Share health data with Claude AI (Anthropic)',
+    ai_consent_alert_title: 'Enable AI personalisation',
+    ai_consent_alert_body: 'This allows Spondy to share your health data (symptom logs, profile, Apple Health metrics) with Claude AI (Anthropic, Inc.) to generate insights. Anthropic does not use your data to train AI models.',
+    ai_consent_alert_agree: 'I agree',
     ai_title: 'Data & AI Privacy',
     ai_body_1: 'When you use AI Chat or weekly insights, your symptom logs, health data summaries, and profile information are sent to Anthropic (Claude API) to generate responses. Your raw Apple Health data is never sent — only aggregated summaries. Conversation history is stored locally on your device only.',
     ai_body_2: 'Analytics events (e.g. features used) are sent to Firebase. Crash reports are sent to Sentry. Neither service receives your health or symptom data.',
@@ -518,6 +526,9 @@ export default {
     send: 'Send',
     disclaimer: 'AI insights are based on your personal data and are not medical advice. Always consult your rheumatologist.',
     as_resources: 'AS resources',
+    consent_off_title: 'AI chat is off',
+    consent_off_body: 'Enable AI personalisation in Profile to use this feature. Your data stays yours — we just need your permission first.',
+    go_to_profile: 'Go to Profile',
   },
   score: {
     breakdown: 'Score breakdown',

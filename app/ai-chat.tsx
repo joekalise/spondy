@@ -418,16 +418,16 @@ export default function AIChatScreen() {
         <LockedState isDark={isDark} onUpgrade={purchase} />
       ) : aiConsented !== true ? (
         <View style={[styles.lockedContainer, { backgroundColor: bg }]}>
-          <Text style={[styles.lockedTitle, { color: textPrimary }]}>AI chat is off</Text>
+          <Text style={[styles.lockedTitle, { color: textPrimary }]}>{t('ai_chat.consent_off_title')}</Text>
           <Text style={[styles.lockedBody, { color: textSecondary }]}>
-            Enable AI personalisation in Profile to use this feature. Your data stays yours — we just need your permission first.
+            {t('ai_chat.consent_off_body')}
           </Text>
           <TouchableOpacity
             onPress={() => { router.back(); router.push('/(tabs)/profile'); }}
             activeOpacity={0.8}
             style={styles.upgradeBtn}
           >
-            <Text style={styles.upgradeBtnText}>Go to Profile</Text>
+            <Text style={styles.upgradeBtnText}>{t('ai_chat.go_to_profile')}</Text>
           </TouchableOpacity>
         </View>
       ) : (

@@ -883,12 +883,12 @@ export default function ProfileScreen() {
   const handleToggleAiConsent = useCallback((value: boolean) => {
     if (value) {
       Alert.alert(
-        'Enable AI personalisation',
-        'This allows Spondy to share your health data (symptom logs, profile, Apple Health metrics) with Claude AI (Anthropic, Inc.) to generate insights. Anthropic does not use your data to train AI models.',
+        t('profile_privacy.ai_consent_alert_title'),
+        t('profile_privacy.ai_consent_alert_body'),
         [
-          { text: 'Cancel', style: 'cancel' },
+          { text: t('common.cancel'), style: 'cancel' },
           {
-            text: 'I agree',
+            text: t('profile_privacy.ai_consent_alert_agree'),
             onPress: () => {
               setAiConsent(true);
               setAiConsentedState(true);
@@ -900,7 +900,7 @@ export default function ProfileScreen() {
       setAiConsent(false);
       setAiConsentedState(false);
     }
-  }, []);
+  }, [t]);
   const [showAddMed, setShowAddMed] = useState(false);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [reportFromDate, setReportFromDate] = useState<string>('');
@@ -1756,10 +1756,10 @@ export default function ProfileScreen() {
           <View style={styles.notifRow}>
             <View style={styles.notifInfo}>
               <Text style={[styles.aiPrivacyTitle, { color: textPrimary, marginBottom: 2 }]}>
-                AI personalisation
+                {t('profile_privacy.ai_consent_toggle_label')}
               </Text>
               <Text style={[styles.notifTime, { color: textSecondary }]}>
-                Share health data with Claude AI (Anthropic)
+                {t('profile_privacy.ai_consent_toggle_subtitle')}
               </Text>
             </View>
             <Switch

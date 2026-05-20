@@ -449,14 +449,15 @@ function AiOffCard({ isDark, onPress }: { isDark: boolean; onPress: () => void }
   const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
   const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
 
+  const { t } = useTranslation();
   return (
     <View style={[styles.aiCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-      <Text style={[styles.cardTitle, { color: textPrimary, marginBottom: 6 }]}>AI insights are off</Text>
+      <Text style={[styles.cardTitle, { color: textPrimary, marginBottom: 6 }]}>{t('insights.ai_off_title')}</Text>
       <Text style={[styles.insightSummary, { color: textSecondary }]}>
-        To use AI-powered insights and chat, enable AI personalisation in your Profile settings.
+        {t('insights.ai_off_body')}
       </Text>
       <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={[styles.refreshBtn, { borderColor: Colors.primary, marginTop: 12 }]}>
-        <Text style={styles.refreshBtnText}>Go to Profile</Text>
+        <Text style={styles.refreshBtnText}>{t('insights.ai_off_cta')}</Text>
       </TouchableOpacity>
     </View>
   );
