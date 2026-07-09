@@ -1,7 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { DailyLog, MedicationReminder } from '@/types';
 import { supabase } from '@/services/supabase';
+
+const ANDROID_CHANNEL = 'spondy-reminders';
+
+function androidChannel() {
+  return Platform.OS === 'android' ? { channelId: ANDROID_CHANNEL } : {};
+}
 
 // ─── Permissions ─────────────────────────────────────────────────────────────
 
@@ -31,11 +38,41 @@ export async function scheduleDailyCheckIn(timeString: string): Promise<void> {
       title: 'Time for your daily check-in',
       body: "How are you feeling today? Take 60 seconds to log your symptoms.",
       sound: true,
+      ...androidChannel(),
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DAILY,
       hour,
       minute,
+    },
+  });
+}
+
+// Cancels today's check-in and schedules a one-time trigger for tomorrow.
+// Used after saving today's log so the reminder doesn't fire when already logged.
+export async function scheduleDailyCheckInFromTomorrow(timeString: string): Promise<void> {
+  await cancelNotification('daily-checkin');
+
+  const [hourStr, minuteStr] = timeString.split(':');
+  const hour = parseInt(hourStr, 10);
+  const minute = parseInt(minuteStr, 10);
+  if (isNaN(hour) || isNaN(minute)) return;
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(hour, minute, 0, 0);
+
+  await Notifications.scheduleNotificationAsync({
+    identifier: 'daily-checkin',
+    content: {
+      title: 'Time for your daily check-in',
+      body: "How are you feeling today? Take 60 seconds to log your symptoms.",
+      sound: true,
+      ...androidChannel(),
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      date: tomorrow,
     },
   });
 }
@@ -81,6 +118,7 @@ export async function scheduleMedicationReminder(med: MedicationReminder): Promi
         title: `Time for ${med.name}`,
         body: `Don't forget your ${med.dose} dose of ${med.name}.`,
         sound: true,
+        ...androidChannel(),
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
@@ -95,6 +133,7 @@ export async function scheduleMedicationReminder(med: MedicationReminder): Promi
         title: `Time for ${med.name}`,
         body: `Don't forget your ${med.dose} dose of ${med.name}.`,
         sound: true,
+        ...androidChannel(),
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
@@ -111,6 +150,7 @@ export async function scheduleMedicationReminder(med: MedicationReminder): Promi
         title: `Time for ${med.name}`,
         body: `Don't forget your ${med.dose} dose of ${med.name}.`,
         sound: true,
+        ...androidChannel(),
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
@@ -149,7 +189,7 @@ export async function sendFlareWarningIfNeeded(
 
 export async function sendNudge(title: string, body: string): Promise<void> {
   await Notifications.scheduleNotificationAsync({
-    content: { title, body, sound: true },
+    content: { title, body, sound: true, ...androidChannel() },
     trigger: null, // fire immediately
   });
 }

@@ -18,24 +18,30 @@ export function useMedicationTracking(): {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
+    if (!user || !profile) return;
+
+    const key = storageKey(user.id);
+    const noMeds = profile.medications?.includes('no_medication') ?? false;
+
+    if (noMeds) {
+      // Profile explicitly says no medication — always override stored preference
+      setTracksState(false);
+      AsyncStorage.setItem(key, 'false').catch(() => {});
       setIsLoading(false);
       return;
     }
-    const key = storageKey(user.id);
+
     AsyncStorage.getItem(key).then((raw) => {
       if (raw !== null) {
         setTracksState(raw === 'true');
-      } else if (profile) {
-        // First run: derive default from onboarding choice
-        const noMeds = profile.medications?.includes('no_medication') ?? false;
-        const defaultValue = !noMeds;
-        setTracksState(defaultValue);
-        AsyncStorage.setItem(key, String(defaultValue)).catch(() => {});
+      } else {
+        // First run with a medication selected: default to tracking
+        setTracksState(true);
+        AsyncStorage.setItem(key, 'true').catch(() => {});
       }
       setIsLoading(false);
     }).catch(() => setIsLoading(false));
-  }, [user, profile]);
+  }, [user?.id, profile?.medications]);
 
   const setTracks = useCallback(async (value: boolean) => {
     if (!user) return;

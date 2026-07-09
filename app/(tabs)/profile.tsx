@@ -858,19 +858,16 @@ export default function ProfileScreen() {
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [pendingTime, setPendingTime] = useState<Date | null>(null);
 
-  // Restore persisted reminder toggle and re-schedule notification on mount
+  // Restore persisted reminder toggle on mount — scheduling is owned by _layout.tsx
   useEffect(() => {
     if (!user) return;
     AsyncStorage.getItem(`@spondy_reminder_enabled_${user.id}`)
       .then((val) => {
         const enabled = val === null ? true : val === 'true';
         setReminderEnabled(enabled);
-        if (enabled && profile?.notification_time) {
-          scheduleDailyCheckIn(profile.notification_time).catch(() => {});
-        }
       })
       .catch(() => {});
-  }, [user, profile?.notification_time]);
+  }, [user]);
   const [aiContext, setAiContext] = useState(profile?.ai_context ?? '');
   const [isSavingAiContext, setIsSavingAiContext] = useState(false);
   const [editingAiContext, setEditingAiContext] = useState(false);
@@ -1526,7 +1523,7 @@ export default function ProfileScreen() {
             <SectionHeader label="Health data" isDark={isDark} />
             <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
               <View style={styles.healthSimpleRow}>
-                <Text style={[styles.healthSimpleName, { color: textPrimary }]}>Apple Health</Text>
+                <Text style={[styles.healthSimpleName, { color: textPrimary }]}>{Platform.OS === 'ios' ? 'Apple Health' : 'Health Connect'}</Text>
                 <View style={{ flex: 1 }} />
                 {healthConnected && (
                   <View style={[styles.healthConnectedBadge, { backgroundColor: Colors.success + '22' }]}>

@@ -1,6 +1,6 @@
 export type AgeRange = 'under_25' | '25_35' | '35_45' | '45_55' | '55_plus';
 export type BiologicalSex = 'male' | 'female' | 'prefer_not_to_say';
-export type DiagnosisYears = 'under_1' | '1_3' | '3_5' | '5_10' | '10_plus';
+export type DiagnosisYears = 'not_diagnosed' | 'under_1' | '1_3' | '3_5' | '5_10' | '10_plus';
 export type Severity = 'mild' | 'moderate' | 'severe';
 export type Medication =
   | 'adalimumab'

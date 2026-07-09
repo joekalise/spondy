@@ -154,7 +154,8 @@ function TrendChart({
       })}
 
       {labels.map((label, i) => {
-        if (i % 2 !== 0) return null;
+        const step = Math.max(1, Math.ceil(pointCount / 7));
+        if (i % step !== 0) return null;
         return (
           <SvgText
             key={`x-${i}`}
@@ -834,10 +835,15 @@ export default function InsightsScreen() {
   const painData = logs.map((l) => l.pain_score);
   const fatigueData = logs.map((l) => l.fatigue_score);
   const moodData = logs.map((l) => moodToScore(l.mood)).filter((v) => v > 0);
+  const axisLabel = (dateStr: string) =>
+    period <= 7
+      ? dayLabel(dateStr)
+      : new Date(dateStr + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+
   const moodLabels = logs
     .filter((l) => l.mood !== null)
-    .map((l) => dayLabel(l.date));
-  const chartLabels = logs.map((l) => dayLabel(l.date));
+    .map((l) => axisLabel(l.date));
+  const chartLabels = logs.map((l) => axisLabel(l.date));
 
   const avgPain =
     painData.length > 0

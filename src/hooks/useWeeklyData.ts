@@ -3,15 +3,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getDailyLogs, getActiveFlare } from '@/services/database';
 import { DailyLog, Flare, Mood } from '@/types';
 
-function moodScore(mood: Mood | null): number {
-  switch (mood) {
-    case 'great': return 5;
-    case 'good': return 4;
-    case 'okay': return 3;
-    case 'low': return 2;
-    case 'very_low': return 1;
-    default: return 0;
-  }
+export interface ScoreBreakdown {
+  base: number;
+  painPoints: number;
+  fatiguePoints: number;
+  flarePenalty: number;
+  consistencyBonus: number;
+  moodPoints: number;
+  medPoints: number;
+  logCount: number;
 }
 
 function moodToPoints(mood: Mood | null): number {
@@ -29,12 +29,23 @@ function medicationToPoints(taken: 'yes' | 'no' | 'partial' | undefined): number
   switch (taken) {
     case 'yes': return 15;
     case 'partial': return 7.5;
-    case 'no': return 0;
     default: return 0;
   }
 }
 
-function flarePenalty(flare: Flare | null): number {
+// Pain 0–3: small bonus (low pain is good). Pain 4–10: increasing penalty.
+function painContribution(avgPain: number): number {
+  if (avgPain <= 3) return Math.round((3 - avgPain) * 3);
+  return Math.round(-((avgPain - 3) / 7) * 45);
+}
+
+// Fatigue 0–3: small bonus. Fatigue 4–10: increasing penalty.
+function fatigueContribution(avgFatigue: number): number {
+  if (avgFatigue <= 3) return Math.round((3 - avgFatigue) * 2);
+  return Math.round(-((avgFatigue - 3) / 7) * 30);
+}
+
+function activeFlarePenalty(flare: Flare | null): number {
   if (!flare) return 0;
   switch (flare.severity) {
     case 'severe': return 35;
@@ -44,44 +55,59 @@ function flarePenalty(flare: Flare | null): number {
   }
 }
 
-function computeSpondyScore(logs: DailyLog[], activeFlare: Flare | null): number | null {
-  if (logs.length === 0) return null;
+function computeScore(
+  logs: DailyLog[],
+  activeFlare: Flare | null,
+  tracksMedication: boolean,
+): { score: number | null; breakdown: ScoreBreakdown | null } {
+  if (logs.length === 0) return { score: null, breakdown: null };
 
   const count = logs.length;
-
   const avgPain = logs.reduce((sum, l) => sum + l.pain_score, 0) / count;
   const avgFatigue = logs.reduce((sum, l) => sum + l.fatigue_score, 0) / count;
-  const avgMoodPoints = logs.reduce((sum, l) => sum + moodToPoints(l.mood), 0) / count;
-  const avgMedPoints = logs.reduce((sum, l) => sum + medicationToPoints(l.medications_taken), 0) / count;
-
-  // Consistency and meds are small bonuses, not score inflators
-  const consistencyBonus = (count / 7) * 8;
-
-  // Pain is the dominant factor: 0-10 maps to 0 to -45
-  const painPenalty = (avgPain / 10) * 45;
-  // Fatigue: 0-10 maps to 0 to -30
-  const fatiguePenalty = (avgFatigue / 10) * 30;
-  // Active flare always drags the score down
-  const activeFlarePenalty = flarePenalty(activeFlare);
+  const avgMoodRaw = logs.reduce((sum, l) => sum + moodToPoints(l.mood), 0) / count;
+  const avgMedRaw = tracksMedication
+    ? logs.reduce((sum, l) => sum + medicationToPoints(l.medications_taken), 0) / count
+    : 0;
 
   const base = 75;
-  const score =
-    base - painPenalty - fatiguePenalty - activeFlarePenalty +
-    consistencyBonus + avgMoodPoints * 0.5 + avgMedPoints * 0.5;
+  const painPts = painContribution(avgPain);
+  const fatiguePts = fatigueContribution(avgFatigue);
+  const flarePen = activeFlarePenalty(activeFlare);
+  const consistencyBonus = Math.round((count / 7) * 8);
+  const moodPts = Math.round(avgMoodRaw * 0.5);
+  const medPts = Math.round(avgMedRaw * 0.5);
 
-  return Math.round(Math.min(100, Math.max(0, score)));
+  const score = Math.round(
+    Math.min(100, Math.max(0, base + painPts + fatiguePts - flarePen + consistencyBonus + moodPts + medPts))
+  );
+
+  const breakdown: ScoreBreakdown = {
+    base,
+    painPoints: painPts,
+    fatiguePoints: fatiguePts,
+    flarePenalty: flarePen,
+    consistencyBonus,
+    moodPoints: moodPts,
+    medPoints: medPts,
+    logCount: count,
+  };
+
+  return { score, breakdown };
 }
 
-export function useWeeklyData(): {
+export function useWeeklyData(tracksMedication = true): {
   logs: DailyLog[];
   isLoading: boolean;
   spondyScore: number | null;
+  scoreBreakdown: ScoreBreakdown | null;
   refresh: () => Promise<void>;
 } {
   const { user } = useAuth();
   const [logs, setLogs] = useState<DailyLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [spondyScore, setSpondyScore] = useState<number | null>(null);
+  const [scoreBreakdown, setScoreBreakdown] = useState<ScoreBreakdown | null>(null);
 
   const load = useCallback(async () => {
     if (!user) {
@@ -96,7 +122,9 @@ export function useWeeklyData(): {
         getActiveFlare(user.id),
       ]);
       setLogs(weekLogs);
-      setSpondyScore(computeSpondyScore(weekLogs, activeFlare));
+      const { score, breakdown } = computeScore(weekLogs, activeFlare, tracksMedication);
+      setSpondyScore(score);
+      setScoreBreakdown(breakdown);
     } catch (err) {
       console.error('useWeeklyData load error:', err);
     } finally {
@@ -108,5 +136,5 @@ export function useWeeklyData(): {
     load();
   }, [load]);
 
-  return { logs, isLoading, spondyScore, refresh: load };
+  return { logs, isLoading, spondyScore, scoreBreakdown, refresh: load };
 }

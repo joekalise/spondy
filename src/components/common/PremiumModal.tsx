@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   ActivityIndicator,
   Linking,
+  Platform,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Colors } from '@/constants/colors';
@@ -221,7 +222,9 @@ export function PremiumModal({
             </Text>
           )}
           <Text style={[styles.pricingNote, { color: textSecondary }]}>
-            {t('subscription.cancel_note')}
+            {Platform.OS === 'ios'
+              ? t('subscription.cancel_note')
+              : t('subscription.cancel_note_android')}
           </Text>
           <View style={styles.legalRow}>
             <Text

@@ -40,10 +40,10 @@ function buildHealthSummary(healthHistory: HealthData[]): string {
   const withSteps = healthHistory.filter((d) => d.steps !== null);
 
   if (withHRV.length === 0 && withSleep.length === 0 && withHR.length === 0) {
-    return 'No Apple Health data available.';
+    return 'No health data available.';
   }
 
-  const lines: string[] = [`APPLE HEALTH DATA (last ${healthHistory.length} days with data):`];
+  const lines: string[] = [`HEALTH DATA (last ${healthHistory.length} days with data):`];
 
   if (withHRV.length > 0) {
     const avgHRV = (withHRV.reduce((s, d) => s + d.hrv!, 0) / withHRV.length).toFixed(1);

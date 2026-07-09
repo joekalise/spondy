@@ -3,14 +3,85 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Spondy — AS Symptom Tracker</title>
+
+  <title>Spondy: Ankylosing Spondylitis Symptom Tracker App</title>
+  <meta name="description" content="Spondy is the ankylosing spondylitis (AS) tracking app that spots flare patterns, syncs with Apple Health, and generates PDF reports for your rheumatologist. Built by someone with AS." />
+  <meta name="keywords" content="ankylosing spondylitis app, AS symptom tracker, axial spondyloarthritis, axSpA tracker, AS flare tracker, spondylitis app, rheumatology app, BASDAI tracker, biologics tracker" />
+  <link rel="canonical" href="https://spondy.netlify.app/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Spondy: Ankylosing Spondylitis Symptom Tracker" />
+  <meta property="og:description" content="Track your AS symptoms, identify flare patterns, and arrive at every rheumatology appointment with the full picture." />
+  <meta property="og:image" content="https://spondy.netlify.app/icon.png" />
+  <meta property="og:url" content="https://spondy.netlify.app/" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Spondy: AS Symptom Tracker" />
+  <meta name="twitter:description" content="The ankylosing spondylitis app that spots flare patterns before they peak." />
+  <meta name="twitter:image" content="https://spondy.netlify.app/icon.png" />
+
+  <!-- Structured data: SoftwareApplication -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Spondy",
+    "operatingSystem": "iOS, Android",
+    "applicationCategory": "HealthApplication",
+    "description": "Spondy is a symptom tracking app for people with ankylosing spondylitis (AS) and axial spondyloarthritis (axSpA). Track pain, fatigue, flares, medications, and health data. Built by someone who has AS.",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "url": "https://spondy.netlify.app/",
+    "downloadUrl": "https://apps.apple.com/app/id6767585030",
+    "author": {
+      "@type": "Person",
+      "name": "Joseph Brockbank"
+    }
+  }
+  </script>
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --bg: #0f0f0f;
+      --bg-card: #1a1a1a;
+      --border: #2a2a2a;
+      --text: #f0f0f0;
+      --text-muted: #777;
+      --text-heading: #ffffff;
+      --tagline: #999;
+      --footer-text: #444;
+      --footer-link: #666;
+      --android-color: #777;
+      --android-border: #333;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #fafaf9;
+        --bg-card: #ffffff;
+        --border: #e5e5e4;
+        --text: #1c1917;
+        --text-muted: #78716c;
+        --text-heading: #1c1917;
+        --tagline: #57534e;
+        --footer-text: #a8a29e;
+        --footer-link: #78716c;
+        --android-color: #78716c;
+        --android-border: #d4d0ce;
+      }
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #0f0f0f;
-      color: #f0f0f0;
+      background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -43,26 +114,48 @@
       font-size: 2.4rem;
       font-weight: 700;
       letter-spacing: -0.5px;
-      color: #ffffff;
+      color: var(--text-heading);
     }
 
     .tagline {
       margin-top: 12px;
       font-size: 1.1rem;
-      color: #999;
+      color: var(--tagline);
       line-height: 1.6;
     }
 
-    .badge {
-      display: inline-block;
+    .store-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
       margin-top: 32px;
-      background: #F97316;
-      color: #fff;
-      font-size: 0.85rem;
+    }
+
+    .store-btn {
+      display: inline-block;
+      transition: opacity 0.15s;
+    }
+
+    .store-btn:hover { opacity: 0.8; }
+
+    .store-btn img {
+      height: 48px;
+      display: block;
+    }
+
+    .store-btn.secondary {
+      display: inline-flex;
+      align-items: center;
+      background: transparent;
+      border: 1px solid var(--android-border);
+      color: var(--android-color);
+      font-size: 0.9rem;
       font-weight: 600;
-      padding: 8px 20px;
+      padding: 12px 24px;
       border-radius: 100px;
-      letter-spacing: 0.2px;
+      cursor: default;
+      height: 48px;
     }
 
     main {
@@ -83,8 +176,8 @@
     }
 
     .feature {
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
       border-radius: 16px;
       padding: 24px;
     }
@@ -97,14 +190,26 @@
     .feature h3 {
       font-size: 0.95rem;
       font-weight: 600;
-      color: #fff;
+      color: var(--text-heading);
       margin-bottom: 6px;
     }
 
     .feature p {
       font-size: 0.85rem;
-      color: #777;
+      color: var(--text-muted);
       line-height: 1.5;
+    }
+
+    .screenshot-wrap {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+
+    .screenshot-wrap img {
+      width: 240px;
+      border-radius: 32px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+      border: 1px solid #2a2a2a;
     }
 
     .section-title {
@@ -116,9 +221,33 @@
       margin-bottom: 20px;
     }
 
+    .prose-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 16px;
+    }
+
+    .prose-section h2 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text-heading);
+      margin-bottom: 12px;
+    }
+
+    .prose-section p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+
+    .prose-section p:last-child { margin-bottom: 0; }
+
     .support-box {
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
       border-radius: 16px;
       padding: 32px;
       margin-bottom: 20px;
@@ -127,13 +256,13 @@
     .support-box h2 {
       font-size: 1.2rem;
       font-weight: 600;
-      color: #fff;
+      color: var(--text-heading);
       margin-bottom: 8px;
     }
 
     .support-box p {
       font-size: 0.9rem;
-      color: #777;
+      color: var(--text-muted);
       line-height: 1.6;
       margin-bottom: 20px;
     }
@@ -162,12 +291,12 @@
 
     footer p {
       font-size: 0.8rem;
-      color: #444;
+      color: var(--footer-text);
     }
 
     footer a {
       font-size: 0.8rem;
-      color: #666;
+      color: var(--footer-link);
       text-decoration: underline;
     }
 
@@ -177,18 +306,28 @@
 <body>
 
   <header>
-    <div class="logo-mark"><img src="icon.png" alt="Spondy" /></div>
+    <div class="logo-mark"><img src="icon.png" alt="Spondy app icon" /></div>
     <h1>Spondy</h1>
-    <p class="tagline">Track your AS symptoms, identify flare patterns,<br>and arrive at every appointment with the full picture.</p>
-    <span class="badge">Available on the App Store</span>
+    <p class="tagline">Know your AS before it knows you.</p>
+    <div class="store-buttons">
+      <a class="store-btn" href="https://apps.apple.com/app/id6767585030" target="_blank" rel="noopener">
+        <img src="app-store-badge.svg" alt="Download on the App Store" />
+      </a>
+      <span class="store-btn secondary">Android coming soon</span>
+    </div>
   </header>
 
   <main>
+
+    <div class="screenshot-wrap">
+      <img src="screenshot.jpeg" alt="Spondy app showing today's symptoms, Spondy Score, and a flare warning" />
+    </div>
+
     <div class="features">
       <div class="feature">
         <div class="feature-icon">📋</div>
         <h3>Daily Tracking</h3>
-        <p>Log pain, fatigue, and mood in seconds — even on tough days.</p>
+        <p>Log pain, fatigue, stiffness, and mood in seconds. Even on tough AS days.</p>
       </div>
       <div class="feature">
         <div class="feature-icon">🔥</div>
@@ -198,29 +337,43 @@
       <div class="feature">
         <div class="feature-icon">❤️</div>
         <h3>Health Data</h3>
-        <p>Syncs with Apple Health — steps, sleep, HRV, heart rate, and calories.</p>
+        <p>Syncs with Apple Health: steps, sleep, HRV, heart rate, and calories.</p>
       </div>
       <div class="feature">
         <div class="feature-icon">✨</div>
         <h3>AI Insights</h3>
-        <p>Spots patterns between your health data and symptoms that are easy to miss.</p>
+        <p>Spots correlations between your health data and AS symptoms that are easy to miss.</p>
       </div>
       <div class="feature">
         <div class="feature-icon">💊</div>
         <h3>Medications</h3>
-        <p>Track your medications and biologics over time.</p>
+        <p>Track your NSAIDs, biologics, and DMARDs and see how they affect your symptoms.</p>
       </div>
       <div class="feature">
         <div class="feature-icon">📄</div>
         <h3>Doctor Reports</h3>
-        <p>Generate a PDF summary to bring to your rheumatologist.</p>
+        <p>Generate a PDF summary of your symptoms to bring to your rheumatologist.</p>
       </div>
     </div>
 
-    <p class="section-title">Support</p>
+    <p class="section-title">About</p>
+    <div class="prose-section">
+      <h2>Built by someone with ankylosing spondylitis</h2>
+      <p>
+        I was diagnosed with AS a few years ago and spent a lot of time trying to make sense of my symptoms. The existing apps weren't built for AS. They didn't know what enthesitis is. They didn't track uveitis. They didn't connect your sleep and step count to your pain score.
+      </p>
+      <p>
+        So I built one that does. Spondy tracks your daily symptoms, spots patterns in your health data, and warns you when a flare looks like it's building. It actually predicted a uveitis flare before it peaked, which is what convinced me to share it properly.
+      </p>
+      <p>
+        If you have ankylosing spondylitis or axial spondyloarthritis (axSpA), I hope it helps you the way it's helped me.
+      </p>
+    </div>
+
+    <p class="section-title" style="margin-top:40px">Support</p>
     <div class="support-box">
       <h2>Get in touch</h2>
-      <p>Have a question, found a bug, or just want to share feedback? We read every message and typically respond within 48 hours.</p>
+      <p>Have a question, found a bug, or want to share feedback? I read every message and typically respond within 48 hours.</p>
       <a class="email-btn" href="mailto:joseph.brockbank@gmail.com">Email Support</a>
     </div>
 

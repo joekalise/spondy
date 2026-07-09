@@ -183,8 +183,9 @@ export function OnboardingScreen() {
       console.error('Failed to save profile during onboarding:', err);
     }
 
-    setIsCompleting(false);
-
+    // Keep isCompleting = true — the loading screen stays while OnboardingScreen
+    // remains mounted behind profile-ready. This prevents the step-11 DateTimePicker
+    // from rendering on Android and opening a system dialog over the next screen.
     router.push({
       pathname: '/(onboarding)/profile-ready',
       params: {
@@ -344,7 +345,7 @@ export function OnboardingScreen() {
       case 3:
         return (
           <>
-            {(['under_1', '1_3', '3_5', '5_10', '10_plus'] as DiagnosisYears[]).map(v => (
+            {(['not_diagnosed', 'under_1', '1_3', '3_5', '5_10', '10_plus'] as DiagnosisYears[]).map(v => (
               <OptionCard
                 key={v}
                 label={t(`onboarding.diagnosis_years.${v}`)}
@@ -542,7 +543,53 @@ export function OnboardingScreen() {
         );
 
       // Step 11: Notification time
-      case 11:
+      case 11: {
+        if (Platform.OS === 'android') {
+          // DateTimePicker always opens a system dialog on Android — use inline +/- controls instead
+          const [hStr, mStr] = data.notification_time.split(':');
+          const hVal = parseInt(hStr, 10);
+          const mVal = parseInt(mStr, 10);
+          const adjustTime = (hDelta: number, mDelta: number) => {
+            const newH = ((hVal + hDelta) + 24) % 24;
+            const newM = ((mVal + mDelta) + 60) % 60;
+            setData(d => ({ ...d, notification_time: `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}` }));
+          };
+          const textCol = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
+          const mutedCol = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
+          const btnBg = isDark ? Colors.surfaceDark : Colors.surface;
+          const btnBorder = isDark ? Colors.borderDark : Colors.border;
+          return (
+            <View style={styles.timePickerContainer}>
+              <View style={styles.androidTimeRow}>
+                {/* Hours column */}
+                <View style={styles.androidTimeCol}>
+                  <TouchableOpacity style={[styles.androidTimeBtn, { backgroundColor: btnBg, borderColor: btnBorder }]} onPress={() => adjustTime(1, 0)} activeOpacity={0.7}>
+                    <Text style={[styles.androidTimeArrow, { color: Colors.primary }]}>▲</Text>
+                  </TouchableOpacity>
+                  <Text style={[styles.androidTimeValue, { color: textCol }]}>{String(hVal).padStart(2, '0')}</Text>
+                  <TouchableOpacity style={[styles.androidTimeBtn, { backgroundColor: btnBg, borderColor: btnBorder }]} onPress={() => adjustTime(-1, 0)} activeOpacity={0.7}>
+                    <Text style={[styles.androidTimeArrow, { color: Colors.primary }]}>▼</Text>
+                  </TouchableOpacity>
+                  <Text style={[styles.androidTimeUnit, { color: mutedCol }]}>hour</Text>
+                </View>
+
+                <Text style={[styles.androidTimeColon, { color: textCol }]}>:</Text>
+
+                {/* Minutes column */}
+                <View style={styles.androidTimeCol}>
+                  <TouchableOpacity style={[styles.androidTimeBtn, { backgroundColor: btnBg, borderColor: btnBorder }]} onPress={() => adjustTime(0, 5)} activeOpacity={0.7}>
+                    <Text style={[styles.androidTimeArrow, { color: Colors.primary }]}>▲</Text>
+                  </TouchableOpacity>
+                  <Text style={[styles.androidTimeValue, { color: textCol }]}>{String(mVal).padStart(2, '0')}</Text>
+                  <TouchableOpacity style={[styles.androidTimeBtn, { backgroundColor: btnBg, borderColor: btnBorder }]} onPress={() => adjustTime(0, -5)} activeOpacity={0.7}>
+                    <Text style={[styles.androidTimeArrow, { color: Colors.primary }]}>▼</Text>
+                  </TouchableOpacity>
+                  <Text style={[styles.androidTimeUnit, { color: mutedCol }]}>min</Text>
+                </View>
+              </View>
+            </View>
+          );
+        }
         return (
           <View style={styles.timePickerContainer}>
             <DateTimePicker
@@ -559,6 +606,7 @@ export function OnboardingScreen() {
             />
           </View>
         );
+      }
 
       default:
         return null;
@@ -1035,6 +1083,43 @@ const styles = StyleSheet.create({
   timePicker: {
     width: '100%',
     height: 180,
+  },
+  androidTimeRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: Spacing.xl,
+    marginVertical: Spacing.md,
+  },
+  androidTimeCol: {
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  androidTimeBtn: {
+    borderWidth: 1,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+  },
+  androidTimeArrow: {
+    fontSize: FontSize.lg,
+    fontWeight: '700',
+  },
+  androidTimeValue: {
+    fontSize: 52,
+    fontWeight: '700',
+    textAlign: 'center',
+    minWidth: 80,
+  },
+  androidTimeUnit: {
+    fontSize: FontSize.sm,
+    textAlign: 'center',
+  },
+  androidTimeColon: {
+    fontSize: 52,
+    fontWeight: '700',
+    alignSelf: 'center',
+    paddingBottom: 28,
   },
 
   // Preview slides

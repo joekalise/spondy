@@ -63,6 +63,7 @@ function buildOnboardingPrompt(data: OnboardingData): string {
   };
 
   const diagnosisLabels: Record<string, string> = {
+    not_diagnosed: 'not yet diagnosed (suspected AS)',
     under_1: 'less than 1 year',
     '1_3': '1–3 years',
     '3_5': '3–5 years',

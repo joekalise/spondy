@@ -202,7 +202,10 @@ export function ProfileReadyScreen() {
         {watchSummary.length > 0 && (
           <View style={styles.section}>
             <Text style={[styles.sectionLabel, { color: textSecondary }]}>What Spondy will watch for you</Text>
-            <View style={[styles.watchCard, { borderColor: Colors.secondary + '50' }]}>
+            <View style={[styles.watchCard, {
+              backgroundColor: isDark ? Colors.surfaceDark : '#EFF6FF',
+              borderColor: Colors.secondary + '50',
+            }]}>
               <Text style={styles.watchIcon}>👀</Text>
               <Text style={[styles.watchText, { color: isDark ? Colors.textPrimaryDark : '#0C4A6E' }]}>
                 {watchSummary}
@@ -292,7 +295,6 @@ const styles = StyleSheet.create({
 
   // Watch
   watchCard: {
-    backgroundColor: '#EFF6FF',
     borderWidth: 1,
     borderRadius: BorderRadius.md,
     padding: Spacing.md,

@@ -6,6 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   useColorScheme,
+  Linking,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -23,6 +25,8 @@ import { useHealthHistory } from '@/hooks/useHealthHistory';
 import { useHealthData } from '@/hooks/useHealthData';
 import { useBiologicInjections } from '@/hooks/useBiologicInjections';
 import { useMedicationTracking } from '@/hooks/useMedicationTracking';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useReviewPrompt } from '@/hooks/useReviewPrompt';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { SpondyMark } from '@/components/common/SpondyMark';
 import { ProfileButton } from '@/components/common/ProfileButton';
@@ -49,24 +53,6 @@ function moodToNumeric(mood: Mood | null): number {
   }
 }
 
-function moodToPoints(mood: Mood | null): number {
-  switch (mood) {
-    case 'great': return 15;
-    case 'good': return 10;
-    case 'okay': return 0;
-    case 'low': return -5;
-    case 'very_low': return -15;
-    default: return 0;
-  }
-}
-
-function medicationToPoints(taken: 'yes' | 'no' | 'partial' | undefined): number {
-  switch (taken) {
-    case 'yes': return 15;
-    case 'partial': return 7.5;
-    default: return 0;
-  }
-}
 
 function scoreColor(score: number): string {
   if (score >= 70) return Colors.success;
@@ -102,67 +88,27 @@ function flareEndedLabel(endDate: string): string {
 
 // ─── Spondy Score Card — horizontal design ────────────────────────────────────
 
-interface ScoreBreakdown {
-  painPenalty: number;
-  fatiguePenalty: number;
-  activeFlarePenalty: number;
-  consistencyBonus: number;
-  moodPoints: number;
-  medPoints: number;
-  logCount: number;
-}
-
-function computeBreakdown(logs: DailyLog[], activeFlare: Flare | null): ScoreBreakdown | null {
-  if (logs.length === 0) return null;
-  const count = logs.length;
-  const avgPain = logs.reduce((s, l) => s + l.pain_score, 0) / count;
-  const avgFatigue = logs.reduce((s, l) => s + l.fatigue_score, 0) / count;
-  const avgMoodPoints = logs.reduce((s, l) => s + moodToPoints(l.mood), 0) / count;
-  const avgMedPoints = logs.reduce((s, l) => s + medicationToPoints(l.medications_taken), 0) / count;
-
-  let flarePenalty = 0;
-  if (activeFlare) {
-    switch (activeFlare.severity) {
-      case 'severe': flarePenalty = 35; break;
-      case 'moderate': flarePenalty = 25; break;
-      default: flarePenalty = 15;
-    }
-  }
-
-  return {
-    painPenalty: Math.round((avgPain / 10) * 30),
-    fatiguePenalty: Math.round((avgFatigue / 10) * 20),
-    activeFlarePenalty: flarePenalty,
-    consistencyBonus: Math.round((count / 7) * 20),
-    moodPoints: Math.round(avgMoodPoints),
-    medPoints: Math.round(avgMedPoints),
-    logCount: count,
-  };
-}
-
 function SpondyScoreCard({
   score,
+  breakdown,
   logs,
-  activeFlare,
   isDark,
   t,
 }: {
   score: number | null;
+  breakdown: import('@/hooks/useWeeklyData').ScoreBreakdown | null;
   logs: DailyLog[];
-  activeFlare: Flare | null;
   isDark: boolean;
   t: (key: string) => string;
 }) {
   const [showBreakdown, setShowBreakdown] = useState(false);
   const color = score !== null ? scoreColor(score) : Colors.textSecondary;
-  const breakdown = score !== null ? computeBreakdown(logs, activeFlare) : null;
   const textSec = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
-  const textPri = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
 
-  function FactorRow({ label, value, positive }: { label: string; value: number; positive: boolean }) {
+  function FactorRow({ label, value }: { label: string; value: number }) {
     if (value === 0) return null;
-    const sign = positive ? '+' : '−';
-    const col = positive ? Colors.success : Colors.error;
+    const sign = value > 0 ? '+' : '−';
+    const col = value > 0 ? Colors.success : Colors.error;
     return (
       <View style={styles.factorRow}>
         <Text style={[styles.factorLabel, { color: textSec }]}>{label}</Text>
@@ -217,13 +163,13 @@ function SpondyScoreCard({
           {showBreakdown && breakdown && (
             <View style={[styles.breakdownBox, isDark && styles.breakdownBoxDark]}>
               <Text style={[styles.breakdownTitle, { color: textSec }]}>{t('score.breakdown')}</Text>
-              <FactorRow label={t('score.factor_base')} value={75} positive={true} />
-              {breakdown.painPenalty > 0 && <FactorRow label={t('score.factor_pain')} value={breakdown.painPenalty} positive={false} />}
-              {breakdown.fatiguePenalty > 0 && <FactorRow label={t('score.factor_fatigue')} value={breakdown.fatiguePenalty} positive={false} />}
-              {breakdown.activeFlarePenalty > 0 && <FactorRow label={t('score.factor_active_flare')} value={breakdown.activeFlarePenalty} positive={false} />}
-              {breakdown.consistencyBonus > 0 && <FactorRow label={t('score.factor_streak')} value={breakdown.consistencyBonus} positive={true} />}
-              {breakdown.moodPoints !== 0 && <FactorRow label={t('score.factor_mood')} value={Math.abs(breakdown.moodPoints)} positive={breakdown.moodPoints >= 0} />}
-              {breakdown.medPoints > 0 && <FactorRow label={t('score.factor_medication')} value={breakdown.medPoints} positive={true} />}
+              <FactorRow label={t('score.factor_base')} value={breakdown.base} />
+              <FactorRow label={t('score.factor_pain')} value={breakdown.painPoints} />
+              <FactorRow label={t('score.factor_fatigue')} value={breakdown.fatiguePoints} />
+              {breakdown.flarePenalty > 0 && <FactorRow label={t('score.factor_active_flare')} value={-breakdown.flarePenalty} />}
+              <FactorRow label={t('score.factor_streak')} value={breakdown.consistencyBonus} />
+              <FactorRow label={t('score.factor_mood')} value={breakdown.moodPoints} />
+              <FactorRow label={t('score.factor_medication')} value={breakdown.medPoints} />
             </View>
           )}
         </>
@@ -429,10 +375,14 @@ function FlareRiskCard({
   level,
   signals,
   isDark,
+  isPremium,
+  onChatPress,
 }: {
   level: 'watch' | 'warning';
   signals: string[];
   isDark: boolean;
+  isPremium: boolean;
+  onChatPress: () => void;
 }) {
   const isWarning = level === 'warning';
   const accentColor = isWarning ? Colors.error : Colors.warning;
@@ -460,6 +410,58 @@ function FlareRiskCard({
           </View>
         ))}
       </View>
+      {isPremium && (
+        <View style={styles.flareChatRow}>
+          <TouchableOpacity
+            onPress={onChatPress}
+            style={[styles.flareChatBtn, { backgroundColor: accentColor }]}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.flareChatBtnText}>Chat about this</Text>
+          </TouchableOpacity>
+          <View style={styles.flarePremiumBadge}>
+            <Text style={styles.flarePremiumBadgeText}>Premium</Text>
+          </View>
+        </View>
+      )}
+    </View>
+  );
+}
+
+// ─── Review prompt card ───────────────────────────────────────────────────────
+
+function ReviewPromptCard({
+  isDark,
+  onReview,
+  onDismiss,
+}: {
+  isDark: boolean;
+  onReview: () => void;
+  onDismiss: () => void;
+}) {
+  const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
+  const cardBorder = isDark ? Colors.borderDark : Colors.border;
+  const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
+  const textSec = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
+
+  return (
+    <View style={[styles.reviewCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+      <Text style={[styles.reviewTitle, { color: textPrimary }]}>Enjoying Spondy?</Text>
+      <Text style={[styles.reviewBody, { color: textSec }]}>
+        Your review helps more people with AS find the app. It only takes a moment.
+      </Text>
+      <View style={styles.reviewButtons}>
+        <TouchableOpacity
+          style={[styles.reviewBtnPrimary, { backgroundColor: Colors.primary }]}
+          onPress={onReview}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.reviewBtnPrimaryText}>Leave a review ⭐</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={onDismiss} activeOpacity={0.7} style={styles.reviewBtnDismiss}>
+          <Text style={[styles.reviewBtnDismissText, { color: textSec }]}>Not now</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -472,16 +474,17 @@ export default function HomeScreen() {
   const isDark = colorScheme === 'dark';
   const router = useRouter();
   const { user } = useAuth();
+  const { isSubscribed: isPremium } = useSubscription();
   const { profile } = useProfile();
 
   const { todayLog, todayLogged, streak, isLoading: logLoading, refresh: refreshLog } = useDailyLog();
-  const { logs, isLoading: weekLoading, spondyScore, refresh: refreshWeekly } = useWeeklyData();
+  const { tracks: tracksMedication } = useMedicationTracking();
+  const { logs, isLoading: weekLoading, spondyScore, scoreBreakdown, refresh: refreshWeekly } = useWeeklyData(tracksMedication);
   const { activeFlare, flares, isLoading: flaresLoading } = useFlares();
   const { history: healthHistory } = useHealthHistory(7);
   const { isConnected: healthConnected, todayData: healthData, recheck: recheckHealth } = useHealthData();
   const flareRisk = useFlareRisk(logs, activeFlare, healthHistory);
   const { injections: biologicInjections } = useBiologicInjections();
-  const { tracks: tracksMedication } = useMedicationTracking();
 
   const nextBiologicDue = useMemo(() => {
     if (biologicInjections.length === 0) return null;
@@ -498,6 +501,19 @@ export default function HomeScreen() {
     refreshWeekly();
     recheckHealth();
   }, [refreshLog, refreshWeekly, recheckHealth]));
+
+  // Review prompt — show to active users after 7 days
+  const isActiveUser = streak > 0 || todayLogged;
+  const { shouldShow: showReviewPrompt, markCompleted: markReviewCompleted, markDismissed: markReviewDismissed } =
+    useReviewPrompt(user?.created_at, isActiveUser);
+
+  const handleReviewPress = useCallback(async () => {
+    await markReviewCompleted();
+    const url = Platform.OS === 'android'
+      ? 'market://details?id=com.spondy.app'
+      : 'https://apps.apple.com/app/id6767585030?action=write-review';
+    await Linking.openURL(url);
+  }, [markReviewCompleted]);
 
   // Send flare warning notification when risk is elevated (once per day max)
   useEffect(() => {
@@ -563,7 +579,13 @@ export default function HomeScreen() {
 
         {/* 2b. Flare risk card — shown prominently if no active flare */}
         {!activeFlare && flareRisk.level !== 'none' && (
-          <FlareRiskCard level={flareRisk.level} signals={flareRisk.signals} isDark={isDark} />
+          <FlareRiskCard
+            level={flareRisk.level}
+            signals={flareRisk.signals}
+            isDark={isDark}
+            isPremium={isPremium}
+            onChatPress={() => router.push('/ai-chat')}
+          />
         )}
 
         {/* 2c. Biologic countdown */}
@@ -628,7 +650,7 @@ export default function HomeScreen() {
               <View style={[styles.todaySummaryDivider, isDark && styles.todaySummaryDividerDark]} />
               <View style={styles.todaySummaryItem}>
                 <Text style={styles.todaySummaryMoodEmoji}>
-                  {todayLog.mood === 'great' ? '😄' : todayLog.mood === 'good' ? '🙂' : todayLog.mood === 'okay' ? '😐' : todayLog.mood === 'low' ? '😔' : '😞'}
+                  {todayLog.mood === 'great' ? '😄' : todayLog.mood === 'good' ? '🙂' : todayLog.mood === 'okay' ? '😐' : todayLog.mood === 'low' ? '😔' : todayLog.mood === 'very_low' ? '😞' : '—'}
                 </Text>
                 <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>Mood</Text>
               </View>
@@ -695,7 +717,7 @@ export default function HomeScreen() {
         )}
 
         {/* 4. Spondy score — horizontal design */}
-        <SpondyScoreCard score={spondyScore} logs={logs} activeFlare={activeFlare} isDark={isDark} t={t} />
+        <SpondyScoreCard score={spondyScore} breakdown={scoreBreakdown} logs={logs} isDark={isDark} t={t} />
 
         {/* 5. 7-day pain overview — colored pill indicators */}
         <SevenDayOverview logs={logs} isDark={isDark} t={t} />
@@ -707,6 +729,15 @@ export default function HomeScreen() {
               ✓ {flareEndedLabel(recentEndedFlare.end_date)}
             </Text>
           </View>
+        )}
+
+        {/* Review prompt — shown to active users after 7 days */}
+        {showReviewPrompt && (
+          <ReviewPromptCard
+            isDark={isDark}
+            onReview={handleReviewPress}
+            onDismiss={markReviewDismissed}
+          />
         )}
 
         <View style={styles.bottomPad} />
@@ -1170,6 +1201,70 @@ const styles = StyleSheet.create({
   flareRiskChipText: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+  },
+  reviewCard: {
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    padding: Spacing.md,
+    gap: Spacing.sm,
+  },
+  reviewTitle: {
+    fontSize: FontSize.md,
+    fontWeight: '700',
+  },
+  reviewBody: {
+    fontSize: FontSize.sm,
+    lineHeight: 20,
+  },
+  reviewButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    marginTop: Spacing.xs,
+  },
+  reviewBtnPrimary: {
+    borderRadius: BorderRadius.full,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+  },
+  reviewBtnPrimaryText: {
+    color: '#FFFFFF',
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+  },
+  reviewBtnDismiss: {
+    paddingVertical: Spacing.xs,
+  },
+  reviewBtnDismissText: {
+    fontSize: FontSize.sm,
+  },
+
+  flareChatRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  flareChatBtn: {
+    borderRadius: BorderRadius.full,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+  },
+  flareChatBtnText: {
+    color: '#FFFFFF',
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+  },
+  flarePremiumBadge: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.full,
+  },
+  flarePremiumBadgeText: {
+    fontSize: FontSize.xs,
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
 
   // Unused flare info card styles kept for unused component compatibility

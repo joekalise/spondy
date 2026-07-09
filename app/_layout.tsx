@@ -1,9 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View, useColorScheme } from 'react-native';
+import { View, useColorScheme, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
+import * as SplashScreen from 'expo-splash-screen';
+import * as Updates from 'expo-updates';
+
+// Set up Android notification channel with HIGH importance so Doze mode
+// doesn't batch or delay daily reminders.
+if (Platform.OS === 'android') {
+  Notifications.setNotificationChannelAsync('spondy-reminders', {
+    name: 'Spondy reminders',
+    importance: Notifications.AndroidImportance.HIGH,
+    vibrationPattern: [0, 250, 250, 250],
+  }).catch(() => {});
+}
+
+// Keep the native splash up until we've confirmed the correct route is showing.
+// This prevents any JS-rendered flash on cold start (especially visible on Android).
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 import '@/i18n';
 import { configureRevenueCat } from '@/services/revenuecat';
@@ -45,17 +61,27 @@ function RootNavigator() {
   const colorScheme = useColorScheme();
 
   const isLoading = authLoading || profileLoading;
-  const [authReady, setAuthReady] = useState(false);
+  // isReady stays false until segments actually reflect the target route.
+  // router.replace() is async — segments update on the NEXT render after the call,
+  // so we must not show the Stack until we confirm arrival at the right place.
+  const [isReady, setIsReady] = useState(false);
+  const isFirstNavRef = useRef(true);
 
   const inAuthGroup = segments[0] === '(auth)';
   const inOnboardingGroup = segments[0] === '(onboarding)';
   const inTabsGroup = segments[0] === '(tabs)';
   const inModalRoute = segments[0] === 'ai-chat';
 
-  // Mark ready once auth has resolved — not affected by segment changes during navigation
+  // Check for OTA update on every cold start and apply immediately if available
   useEffect(() => {
-    if (!isLoading) setAuthReady(true);
-  }, [isLoading]);
+    if (__DEV__) return;
+    Updates.checkForUpdateAsync()
+      .then(({ isAvailable }) => {
+        if (!isAvailable) return;
+        return Updates.fetchUpdateAsync().then(() => Updates.reloadAsync());
+      })
+      .catch(() => {});
+  }, []);
 
   // Register background health sync once on mount
   useEffect(() => {
@@ -81,7 +107,10 @@ function RootNavigator() {
     }
   }, [session?.user?.id]);
 
-
+  // Route guard: fires whenever auth/profile state or segments change.
+  // On the first navigation only, we wait until segments actually match the
+  // target before marking isReady — router.replace() is async and segments
+  // update one render later, so marking ready immediately causes a flash.
   useEffect(() => {
     if (isLoading) return;
 
@@ -92,9 +121,23 @@ function RootNavigator() {
     } else {
       if (!inTabsGroup && !inModalRoute) router.replace('/(tabs)');
     }
+
+    if (isFirstNavRef.current) {
+      const target = !session ? '(auth)' : !isOnboardingComplete ? '(onboarding)' : '(tabs)';
+      const arrived = segments[0] === target || (target === '(tabs)' && inModalRoute);
+      if (arrived) {
+        isFirstNavRef.current = false;
+        setIsReady(true);
+        SplashScreen.hideAsync().catch(() => {});
+      }
+      // Not arrived yet: segments will update → effect re-fires → we check again
+    }
   }, [session, isOnboardingComplete, isLoading, segments, router]);
 
-  if (isLoading || !authReady) {
+  // Keep spinner until confirmed at the right route on cold start.
+  // Do NOT gate on profileLoading here — saveProfile toggles profileLoading
+  // mid-onboarding and we must not unmount the Stack during that window.
+  if (!isReady) {
     return <LoadingSpinner fullScreen />;
   }
 

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1024px; height: 500px; overflow: hidden; background: #F97316; }
+
+  .wrap {
+    width: 1024px;
+    height: 500px;
+    background: linear-gradient(135deg, #C2410C 0%, #F97316 50%, #FB923C 100%);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Subtle background circles for depth */
+  .bg-circle-1 {
+    position: absolute;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.08);
+    top: -150px; right: 200px;
+  }
+  .bg-circle-2 {
+    position: absolute;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.06);
+    bottom: -100px; right: 320px;
+  }
+  .bg-circle-3 {
+    position: absolute;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.05);
+    top: 40px; left: 360px;
+  }
+
+  /* Left: logo + text */
+  .left {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    z-index: 2;
+  }
+
+  .logo-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .logo-svg {
+    flex-shrink: 0;
+  }
+
+  .app-name {
+    font-family: -apple-system, 'Helvetica Neue', sans-serif;
+    font-size: 52px;
+    font-weight: 800;
+    color: #FFFFFF;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+
+  .tagline {
+    font-family: -apple-system, 'Helvetica Neue', sans-serif;
+    font-size: 22px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.85);
+    line-height: 1.4;
+    max-width: 420px;
+  }
+
+  .tagline strong {
+    color: #FFFFFF;
+    font-weight: 600;
+  }
+
+  /* Right: real screenshot in phone frame */
+  .right {
+    z-index: 2;
+    flex-shrink: 0;
+  }
+
+  .phone-frame {
+    width: 210px;
+    height: 420px;
+    border-radius: 36px;
+    border: 3px solid rgba(255,255,255,0.2);
+    box-shadow: 0 32px 64px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,0,0,0.2);
+    overflow: hidden;
+    transform: rotate(2deg);
+    position: relative;
+  }
+
+  .phone-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+    display: block;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bg-circle-1"></div>
+  <div class="bg-circle-2"></div>
+  <div class="bg-circle-3"></div>
+
+  <div class="left">
+    <div class="logo-row">
+      <!-- SpondyMark SVG -->
+      <svg class="logo-svg" width="72" height="72" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="48" fill="rgba(0,0,0,0.2)"/>
+        <line x1="50" y1="24" x2="50" y2="76" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="50" cy="24" r="9" fill="#FFFFFF"/>
+        <line x1="41" y1="24" x2="28" y2="24" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+        <line x1="59" y1="24" x2="72" y2="24" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="50" cy="50" r="10" fill="#FFFFFF"/>
+        <line x1="40" y1="50" x2="26" y2="50" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+        <line x1="60" y1="50" x2="74" y2="50" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="50" cy="76" r="9" fill="#FFFFFF"/>
+        <line x1="41" y1="76" x2="28" y2="76" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+        <line x1="59" y1="76" x2="72" y2="76" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      <div class="app-name">Spondy</div>
+    </div>
+
+    <div class="tagline">
+      AS symptom tracking, <strong>flare prediction</strong>,<br>and AI insights - built by someone with AS.
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="phone-frame">
+      <img src="./screenshot-today.jpeg" alt="Spondy app screenshot" />
+    </div>
+  </div>
+</div>
+</body>
+</html>

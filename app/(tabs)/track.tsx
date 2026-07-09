@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useFocusEffect } from 'expo-router';
 import {
   View,
@@ -29,6 +29,7 @@ import { Button } from '@/components/common/Button';
 import { ProfileButton } from '@/components/common/ProfileButton';
 import { DailyLog, Mood, MorningStiffness, DietQuality, DietTrigger } from '@/types';
 import { logEvent, Events } from '@/services/analytics';
+import { scheduleDailyCheckInFromTomorrow } from '@/services/notifications';
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
@@ -488,7 +489,7 @@ function DayLogModal({ date, initialLog, userId, tracksMedication, isFemale, isD
   const [fatigueScore, setFatigueScore] = useState(initialLog?.fatigue_score ?? 0);
   const [stiffness, setStiffness] = useState<MorningStiffness | null>(initialLog?.stiffness_duration ?? null);
   const [mood, setMood] = useState<Mood | null>(initialLog?.mood ?? null);
-  const [medsTaken, setMedsTaken] = useState<'yes' | 'no' | 'partial'>(initialLog?.medications_taken ?? 'yes');
+  const [medsTaken, setMedsTaken] = useState<'yes' | 'no' | 'partial'>(initialLog?.medications_taken ?? (tracksMedication ? 'yes' : 'no'));
   const [notes, setNotes] = useState(initialLog?.notes ?? '');
   const [dietQuality, setDietQuality] = useState<DietQuality | null>(initialLog?.diet_quality ?? null);
   const [dietTriggers, setDietTriggers] = useState<DietTrigger[]>(initialLog?.diet_triggers ?? []);
@@ -677,38 +678,43 @@ function DatePickerModal({ isDark, maxDate, onSelect, onClose }: DatePickerModal
 // ─── Recent Logs Card ─────────────────────────────────────────────────────────
 
 interface RecentLogsCardProps {
-  logs: DailyLog[];
-  today: string;
+  recentDays: string[];
+  logsByDate: Record<string, DailyLog>;
   isDark: boolean;
   hasOlderLogs: boolean;
-  onEdit: (date: string, log: DailyLog) => void;
+  onOpenDay: (date: string, log: DailyLog | null) => void;
   onBrowseOlder: () => void;
 }
 
-function RecentLogsCard({ logs, isDark, hasOlderLogs, onEdit, onBrowseOlder }: RecentLogsCardProps) {
-  const sorted = [...logs].sort((a, b) => b.date.localeCompare(a.date));
-
+function RecentLogsCard({ recentDays, logsByDate, isDark, hasOlderLogs, onOpenDay, onBrowseOlder }: RecentLogsCardProps) {
   return (
     <View style={[styles.recentCard, isDark && styles.recentCardDark]}>
       <Text style={[styles.recentCardTitle, isDark && styles.textPrimaryDark]}>Recent check-ins</Text>
 
-      {sorted.map((log) => (
-        <TouchableOpacity
-          key={log.date}
-          style={[styles.recentRow, isDark && styles.recentRowDark]}
-          onPress={() => onEdit(log.date, log)}
-          activeOpacity={0.7}
-        >
-          <View style={styles.recentRowLeft}>
-            <Text style={[styles.recentDate, isDark && styles.textPrimaryDark]}>{dateLabelShort(log.date)}</Text>
-            <Text style={[styles.recentStats, isDark && styles.textSecDark]}>
-              Pain {log.pain_score}/10 · Fatigue {log.fatigue_score}/10 · {moodEmoji(log.mood)}
-              {log.diet_quality ? ` · ${dietQualityEmoji(log.diet_quality)}` : ''}
-            </Text>
-          </View>
-          <Text style={[styles.recentChevron, isDark && styles.textSecDark]}>›</Text>
-        </TouchableOpacity>
-      ))}
+      {recentDays.map((date) => {
+        const log = logsByDate[date];
+        return (
+          <TouchableOpacity
+            key={date}
+            style={[styles.recentRow, isDark && styles.recentRowDark]}
+            onPress={() => onOpenDay(date, log ?? null)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.recentRowLeft}>
+              <Text style={[styles.recentDate, isDark && styles.textPrimaryDark]}>{dateLabelShort(date)}</Text>
+              {log ? (
+                <Text style={[styles.recentStats, isDark && styles.textSecDark]}>
+                  Pain {log.pain_score}/10 · Fatigue {log.fatigue_score}/10 · {moodEmoji(log.mood)}
+                  {log.diet_quality ? ` · ${dietQualityEmoji(log.diet_quality)}` : ''}
+                </Text>
+              ) : (
+                <Text style={[styles.recentStats, { color: Colors.primary }]}>+ Log this day</Text>
+              )}
+            </View>
+            <Text style={[styles.recentChevron, isDark && styles.textSecDark]}>›</Text>
+          </TouchableOpacity>
+        );
+      })}
 
       {hasOlderLogs && (
         <TouchableOpacity style={styles.browseOlderBtn} onPress={onBrowseOlder} activeOpacity={0.7}>
@@ -835,6 +841,9 @@ export default function TrackScreen() {
     try {
       await saveLog({ pain_score: painScore, fatigue_score: fatigueScore, stiffness_duration: stiffness, mood, medications_taken: medsTaken, notes, diet_quality: dietQuality, diet_triggers: dietTriggers, exercise_done: exerciseDone, exercise_type: exerciseType, exercise_minutes: exerciseMinutes, period_active: isFemale ? periodActive : null });
       logEvent(Events.DAY_LOGGED, { date: localDateString() }).catch(() => {});
+      if (profile?.notification_time) {
+        scheduleDailyCheckInFromTomorrow(profile.notification_time).catch(() => {});
+      }
       setEditing(false);
       setSaved(true);
     } catch {
@@ -845,6 +854,18 @@ export default function TrackScreen() {
   }, [user, saveLog, painScore, fatigueScore, stiffness, mood, medsTaken, notes, dietQuality, dietTriggers, exerciseDone, exerciseType, exerciseMinutes, t]);
 
   const showForm = !todayLogged || editing;
+
+  // Last 7 days (excluding today), newest first — shown in recent card regardless of logged status
+  const recentDays = useMemo(
+    () => Array.from({ length: 7 }, (_, i) => localDateString(i + 1)),
+    [todayStr],
+  );
+
+  const logsByDate = useMemo(() => {
+    const map: Record<string, DailyLog> = {};
+    recentLogs.forEach((l) => { map[l.date] = l; });
+    return map;
+  }, [recentLogs]);
 
   // Yesterday context
   const yesterdayStr = localDateString(1);
@@ -938,14 +959,14 @@ export default function TrackScreen() {
           />
         )}
 
-        {/* Recent 7-day history — only shown if there are logged days */}
+        {/* Recent 7-day history — show once user has at least one logged day */}
         {recentLogs.length > 0 && (
           <RecentLogsCard
-            logs={recentLogs}
-            today={todayStr}
+            recentDays={recentDays}
+            logsByDate={logsByDate}
             isDark={isDark}
             hasOlderLogs={hasOlderLogs}
-            onEdit={(date, log) => openEntryForDate(date, log)}
+            onOpenDay={(date, log) => openEntryForDate(date, log)}
             onBrowseOlder={() => setShowDatePicker(true)}
           />
         )}
