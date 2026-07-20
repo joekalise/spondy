@@ -27,7 +27,8 @@ function moodToScore(mood: Mood | null): number {
 export function computeFlareRisk(
   logs: DailyLog[],
   activeFlare: Flare | null,
-  healthHistory?: HealthData[]
+  healthHistory?: HealthData[],
+  tracksMedication = true
 ): FlareRisk {
   // Already in a flare — no separate warning needed
   if (activeFlare) return { level: 'none', signals: [] };
@@ -65,9 +66,11 @@ export function computeFlareRisk(
   ).length;
   if (badStiffness >= 2) signals.push('stiffness_worsening');
 
-  // 4. Missed medication 2+ of last 3 days
-  const missedMeds = recentLogs.filter((l) => l.medications_taken === 'no').length;
-  if (missedMeds >= 2) signals.push('missed_medication');
+  // 4. Missed medication 2+ of last 3 days (skip if all meds are as-needed/PRN)
+  if (tracksMedication) {
+    const missedMeds = recentLogs.filter((l) => l.medications_taken === 'no').length;
+    if (missedMeds >= 2) signals.push('missed_medication');
+  }
 
   // 5. Mood declining significantly
   const recentMood = avg(recentLogs.map((l) => moodToScore(l.mood)));
@@ -144,10 +147,11 @@ export function computeFlareRisk(
 export function useFlareRisk(
   logs: DailyLog[],
   activeFlare: Flare | null,
-  healthHistory?: HealthData[]
+  healthHistory?: HealthData[],
+  tracksMedication = true
 ): FlareRisk {
   return useMemo(
-    () => computeFlareRisk(logs, activeFlare, healthHistory),
-    [logs, activeFlare, healthHistory]
+    () => computeFlareRisk(logs, activeFlare, healthHistory, tracksMedication),
+    [logs, activeFlare, healthHistory, tracksMedication]
   );
 }

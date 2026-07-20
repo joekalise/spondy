@@ -25,6 +25,7 @@ import { useHealthHistory } from '@/hooks/useHealthHistory';
 import { useHealthData } from '@/hooks/useHealthData';
 import { useBiologicInjections } from '@/hooks/useBiologicInjections';
 import { useMedicationTracking } from '@/hooks/useMedicationTracking';
+import { useMedications } from '@/hooks/useMedications';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useReviewPrompt } from '@/hooks/useReviewPrompt';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
@@ -479,11 +480,14 @@ export default function HomeScreen() {
 
   const { todayLog, todayLogged, streak, isLoading: logLoading, refresh: refreshLog } = useDailyLog();
   const { tracks: tracksMedication } = useMedicationTracking();
-  const { logs, isLoading: weekLoading, spondyScore, scoreBreakdown, refresh: refreshWeekly } = useWeeklyData(tracksMedication);
+  const { medications } = useMedications();
+  const hasScheduledMeds = medications.some((m) => !m.as_needed);
+  const tracksScheduledMeds = tracksMedication && hasScheduledMeds;
+  const { logs, isLoading: weekLoading, spondyScore, scoreBreakdown, refresh: refreshWeekly } = useWeeklyData(tracksScheduledMeds);
   const { activeFlare, flares, isLoading: flaresLoading } = useFlares();
   const { history: healthHistory } = useHealthHistory(7);
   const { isConnected: healthConnected, todayData: healthData, recheck: recheckHealth } = useHealthData();
-  const flareRisk = useFlareRisk(logs, activeFlare, healthHistory);
+  const flareRisk = useFlareRisk(logs, activeFlare, healthHistory, tracksScheduledMeds);
   const { injections: biologicInjections } = useBiologicInjections();
 
   const nextBiologicDue = useMemo(() => {
@@ -529,7 +533,7 @@ export default function HomeScreen() {
 
   const greetingKey = getGreetingKey();
   const firstName = profile?.preferred_name || user?.user_metadata?.full_name?.split(' ')[0] || '';
-  const tracksMeds = tracksMedication;
+  const tracksMeds = tracksScheduledMeds;
 
   const isLoading = logLoading || weekLoading;
 

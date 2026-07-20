@@ -88,6 +88,7 @@ export interface DailyLog {
   exercise_minutes: number | null;
   exercise_type: string | null;
   period_active?: boolean | null;
+  prn_taken?: boolean | null;
 }
 
 export interface HealthData {
@@ -130,6 +131,7 @@ export interface MedicationReminder {
   frequency: 'daily' | 'weekly' | 'fortnightly' | 'monthly';
   reminder_time: string;
   active: boolean;
+  as_needed?: boolean;
 }
 
 export interface OnboardingData {

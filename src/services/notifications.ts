@@ -99,7 +99,7 @@ export async function scheduleMedicationReminder(med: MedicationReminder): Promi
   const identifier = `med-${med.id}`;
   await cancelNotification(identifier);
 
-  if (!med.active) return;
+  if (!med.active || med.as_needed) return;
 
   const [hourStr, minuteStr] = med.reminder_time.split(':');
   const hour = parseInt(hourStr, 10);

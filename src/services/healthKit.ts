@@ -63,6 +63,30 @@ export async function disconnectHealth(): Promise<void> {
   await AsyncStorage.removeItem(HEALTH_CONNECTED_KEY);
 }
 
+export async function reinitHealthKit(): Promise<boolean> {
+  const hk = getHK();
+  if (!hk) return false;
+  const permissions = {
+    permissions: {
+      read: [
+        hk.Constants.Permissions.Steps,
+        hk.Constants.Permissions.SleepAnalysis,
+        hk.Constants.Permissions.HeartRate,
+        hk.Constants.Permissions.HeartRateVariability,
+        hk.Constants.Permissions.ActiveEnergyBurned,
+        hk.Constants.Permissions.Workout,
+      ],
+      write: [],
+    },
+  };
+  try {
+    await p<void>((cb) => hk.initHealthKit(permissions, cb));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export type HealthSnapshot = Omit<HealthData, 'id'>;
 
 export async function fetchTodayHealthData(

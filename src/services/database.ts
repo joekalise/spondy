@@ -152,6 +152,23 @@ export async function getActiveFlare(userId: string): Promise<Flare | null> {
   }
 }
 
+export async function getActiveFlares(userId: string): Promise<Flare[]> {
+  try {
+    const { data, error } = await supabase
+      .from('flares')
+      .select('*')
+      .eq('user_id', userId)
+      .is('end_date', null)
+      .order('start_date', { ascending: false });
+
+    if (error) throw error;
+    return (data ?? []) as Flare[];
+  } catch (err) {
+    console.error('getActiveFlares error:', err);
+    return [];
+  }
+}
+
 // ─── Medications ─────────────────────────────────────────────────────────────
 
 export async function getMedications(userId: string): Promise<MedicationReminder[]> {
@@ -370,6 +387,19 @@ export async function deleteBiologicInjection(id: string): Promise<void> {
 }
 
 // ─── Uveitis episodes ─────────────────────────────────────────────────────────
+
+export async function getActiveUveitisEpisode(userId: string): Promise<UveitisEpisode | null> {
+  const { data, error } = await supabase
+    .from('uveitis_episodes')
+    .select('*')
+    .eq('user_id', userId)
+    .is('end_date', null)
+    .order('start_date', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) { console.error('getActiveUveitisEpisode error:', error); return null; }
+  return data as UveitisEpisode | null;
+}
 
 export async function getUveitisEpisodes(userId: string): Promise<UveitisEpisode[]> {
   const { data, error } = await supabase

@@ -78,7 +78,7 @@ export function OnboardingScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { saveProfile } = useProfile();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
@@ -235,6 +235,8 @@ export function OnboardingScreen() {
       }
     } else if (currentStep > 1) {
       setCurrentStep(s => s - 1);
+    } else {
+      router.replace('/(auth)/sign-in');
     }
   };
 
@@ -861,6 +863,14 @@ export function OnboardingScreen() {
   if (showWelcome) {
     return (
       <SafeAreaView style={[styles.screen, isDark && styles.screenDark]}>
+        <TouchableOpacity
+          onPress={() => signOut()}
+          style={styles.welcomeBackButton}
+          activeOpacity={0.7}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        >
+          <Text style={[styles.welcomeBackButtonText, isDark && styles.textDark]}>‹ Back</Text>
+        </TouchableOpacity>
         <ScrollView
           contentContainerStyle={[styles.scrollContent, styles.welcomeScroll]}
           showsVerticalScrollIndicator={false}
@@ -923,17 +933,13 @@ export function OnboardingScreen() {
           <View style={styles.content}>{renderStepContent()}</View>
 
           <View style={styles.navRow}>
-            {currentStep > 1 ? (
-              <Button
-                label={t('common.back')}
-                onPress={handleBack}
-                variant="outline"
-                fullWidth={false}
-                style={styles.backButton}
-              />
-            ) : (
-              <View style={styles.backPlaceholder} />
-            )}
+            <Button
+              label={t('common.back')}
+              onPress={handleBack}
+              variant="outline"
+              fullWidth={false}
+              style={styles.backButton}
+            />
 
             <Button
               label={isLastStep ? t('onboarding.build_profile') : t('common.next')}
@@ -978,6 +984,17 @@ const styles = StyleSheet.create({
   },
   backButton: {
     minWidth: 100,
+  },
+  welcomeBackButton: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.xs,
+    alignSelf: 'flex-start',
+  },
+  welcomeBackButtonText: {
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+    fontWeight: '500',
   },
   nextButton: {
     flex: 1,

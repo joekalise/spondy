@@ -20,6 +20,7 @@ import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
 import { useDailyLog } from '@/hooks/useDailyLog';
 import { useHealthData } from '@/hooks/useHealthData';
 import { useMedicationTracking } from '@/hooks/useMedicationTracking';
+import { useMedications } from '@/hooks/useMedications';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { getDailyLog, getDailyLogs, saveDailyLog as dbSaveLog } from '@/services/database';
@@ -220,6 +221,9 @@ interface DayLogFormProps {
   exerciseMinutes: number | null;
   setExerciseMinutes: (v: number | null) => void;
   tracksMedication: boolean;
+  prnMedNames: string[];
+  prnTaken: boolean | null;
+  setPrnTaken: (v: boolean | null) => void;
   isFemale: boolean;
   periodActive: boolean;
   setPeriodActive: (v: boolean) => void;
@@ -242,6 +246,7 @@ function DayLogForm({
   exerciseType, setExerciseType,
   exerciseMinutes, setExerciseMinutes,
   tracksMedication,
+  prnMedNames, prnTaken, setPrnTaken,
   isFemale, periodActive, setPeriodActive,
   isDark, t, isSaving, onSave,
 }: DayLogFormProps) {
@@ -315,6 +320,25 @@ function DayLogForm({
         <View style={[styles.section, isDark && styles.sectionDark]}>
           <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>{t('tracker.medications_taken')}</Text>
           <OptionRow options={medOptions} selected={medsTaken} onSelect={(v) => setMedsTaken(v as 'yes' | 'no' | 'partial')} isDark={isDark} />
+        </View>
+      )}
+
+      {prnMedNames.length > 0 && (
+        <View style={[styles.section, isDark && styles.sectionDark]}>
+          <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>
+            {prnMedNames.length === 1
+              ? `Did you take ${prnMedNames[0]} today?`
+              : `Did you take any as-needed medication today?`}
+          </Text>
+          <OptionRow
+            options={[
+              { value: 'true', label: 'Yes' },
+              { value: 'false', label: 'No' },
+            ]}
+            selected={prnTaken === null ? '' : String(prnTaken)}
+            onSelect={(v) => setPrnTaken(v === 'true')}
+            isDark={isDark}
+          />
         </View>
       )}
 
@@ -477,6 +501,7 @@ interface DayLogModalProps {
   initialLog: DailyLog | null;
   userId: string;
   tracksMedication: boolean;
+  prnMedNames: string[];
   isFemale: boolean;
   isDark: boolean;
   t: (key: string, opts?: Record<string, unknown>) => string;
@@ -484,7 +509,7 @@ interface DayLogModalProps {
   onClose: () => void;
 }
 
-function DayLogModal({ date, initialLog, userId, tracksMedication, isFemale, isDark, t, onSaved, onClose }: DayLogModalProps) {
+function DayLogModal({ date, initialLog, userId, tracksMedication, prnMedNames, isFemale, isDark, t, onSaved, onClose }: DayLogModalProps) {
   const [painScore, setPainScore] = useState(initialLog?.pain_score ?? 0);
   const [fatigueScore, setFatigueScore] = useState(initialLog?.fatigue_score ?? 0);
   const [stiffness, setStiffness] = useState<MorningStiffness | null>(initialLog?.stiffness_duration ?? null);
@@ -497,6 +522,7 @@ function DayLogModal({ date, initialLog, userId, tracksMedication, isFemale, isD
   const [exerciseType, setExerciseType] = useState<string | null>(initialLog?.exercise_type ?? null);
   const [exerciseMinutes, setExerciseMinutes] = useState<number | null>(initialLog?.exercise_minutes ?? null);
   const [periodActive, setPeriodActive] = useState(initialLog?.period_active ?? false);
+  const [prnTaken, setPrnTaken] = useState<boolean | null>(initialLog?.prn_taken ?? null);
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
@@ -517,6 +543,7 @@ function DayLogModal({ date, initialLog, userId, tracksMedication, isFemale, isD
         exercise_type: exerciseType,
         exercise_minutes: exerciseMinutes,
         period_active: isFemale ? periodActive : null,
+        prn_taken: prnMedNames.length > 0 ? prnTaken : null,
       });
       if (saved) {
         logEvent(Events.DAY_LOGGED, { date }).catch(() => {});
@@ -561,6 +588,7 @@ function DayLogModal({ date, initialLog, userId, tracksMedication, isFemale, isD
             exerciseType={exerciseType} setExerciseType={setExerciseType}
             exerciseMinutes={exerciseMinutes} setExerciseMinutes={setExerciseMinutes}
             tracksMedication={tracksMedication}
+            prnMedNames={prnMedNames} prnTaken={prnTaken} setPrnTaken={setPrnTaken}
             isFemale={isFemale} periodActive={periodActive} setPeriodActive={setPeriodActive}
             isDark={isDark} t={t}
             isSaving={isSaving} onSave={handleSave}
@@ -740,6 +768,9 @@ export default function TrackScreen() {
   const { todayLog, todayLogged, streak, isLoading, error, saveLog, refresh } = useDailyLog();
   const { isConnected: healthConnected, todayData: healthData, recheck: recheckHealth } = useHealthData();
   const { tracks: tracksMedication } = useMedicationTracking();
+  const { medications } = useMedications();
+  const tracksScheduledMeds = tracksMedication && medications.some((m) => !m.as_needed);
+  const prnMedNames = medications.filter((m) => m.as_needed).map((m) => m.name);
 
   useFocusEffect(useCallback(() => { refresh(); recheckHealth(); }, [refresh, recheckHealth]));
 
@@ -798,6 +829,7 @@ export default function TrackScreen() {
   const [exerciseType, setExerciseType] = useState<string | null>(null);
   const [exerciseMinutes, setExerciseMinutes] = useState<number | null>(null);
   const [periodActive, setPeriodActive] = useState(false);
+  const [prnTaken, setPrnTaken] = useState<boolean | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -816,12 +848,14 @@ export default function TrackScreen() {
       setExerciseType(todayLog.exercise_type ?? null);
       setExerciseMinutes(todayLog.exercise_minutes ?? null);
       setPeriodActive(todayLog.period_active ?? false);
+      setPrnTaken(todayLog.prn_taken ?? null);
     } else {
       setPainScore(0);
       setFatigueScore(0);
       setStiffness(null);
       setMood(null);
       setMedsTaken('yes');
+      setPrnTaken(null);
       setNotes('');
       setDietQuality(null);
       setDietTriggers([]);
@@ -839,7 +873,7 @@ export default function TrackScreen() {
     setIsSaving(true);
     setSaved(false);
     try {
-      await saveLog({ pain_score: painScore, fatigue_score: fatigueScore, stiffness_duration: stiffness, mood, medications_taken: medsTaken, notes, diet_quality: dietQuality, diet_triggers: dietTriggers, exercise_done: exerciseDone, exercise_type: exerciseType, exercise_minutes: exerciseMinutes, period_active: isFemale ? periodActive : null });
+      await saveLog({ pain_score: painScore, fatigue_score: fatigueScore, stiffness_duration: stiffness, mood, medications_taken: medsTaken, notes, diet_quality: dietQuality, diet_triggers: dietTriggers, exercise_done: exerciseDone, exercise_type: exerciseType, exercise_minutes: exerciseMinutes, period_active: isFemale ? periodActive : null, prn_taken: prnMedNames.length > 0 ? prnTaken : null });
       logEvent(Events.DAY_LOGGED, { date: localDateString() }).catch(() => {});
       if (profile?.notification_time) {
         scheduleDailyCheckInFromTomorrow(profile.notification_time).catch(() => {});
@@ -952,7 +986,8 @@ export default function TrackScreen() {
             exerciseDone={exerciseDone} setExerciseDone={setExerciseDone}
             exerciseType={exerciseType} setExerciseType={setExerciseType}
             exerciseMinutes={exerciseMinutes} setExerciseMinutes={setExerciseMinutes}
-            tracksMedication={tracksMedication}
+            tracksMedication={tracksScheduledMeds}
+            prnMedNames={prnMedNames} prnTaken={prnTaken} setPrnTaken={setPrnTaken}
             isFemale={isFemale} periodActive={periodActive} setPeriodActive={setPeriodActive}
             isDark={isDark} t={t}
             isSaving={isSaving} onSave={handleSaveToday}
@@ -980,7 +1015,8 @@ export default function TrackScreen() {
           date={modalDate}
           initialLog={modalLog}
           userId={user.id}
-          tracksMedication={tracksMedication}
+          tracksMedication={tracksScheduledMeds}
+          prnMedNames={prnMedNames}
           isFemale={isFemale}
           isDark={isDark}
           t={t}

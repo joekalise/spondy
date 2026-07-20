@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { getDailyLogs, getActiveFlare } from '@/services/database';
-import { DailyLog, Flare, Mood } from '@/types';
+import { getDailyLogs, getActiveFlares, getActiveUveitisEpisode } from '@/services/database';
+
+import { DailyLog, Flare, Mood, UveitisEpisode, UserProfile } from '@/types';
+import { useProfile } from '@/contexts/ProfileContext';
 
 export interface ScoreBreakdown {
   base: number;
@@ -45,19 +47,58 @@ function fatigueContribution(avgFatigue: number): number {
   return Math.round(-((avgFatigue - 3) / 7) * 30);
 }
 
-function activeFlarePenalty(flare: Flare | null): number {
-  if (!flare) return 0;
-  switch (flare.severity) {
-    case 'severe': return 35;
-    case 'moderate': return 25;
-    case 'mild': return 15;
-    default: return 15;
+function flarePenaltyForType(flare: Flare): number {
+  const severityPenalty = flare.severity === 'severe' ? 45 : flare.severity === 'moderate' ? 32 : 20;
+  const typeMultiplier = flare.flare_type === 'as' ? 1.0 : flare.flare_type === 'enthesitis' ? 0.7 : 0.6;
+  return Math.round(severityPenalty * typeMultiplier);
+}
+
+function activeFlaresPenalty(flares: Flare[], uveitisEpisode: UveitisEpisode | null, profile: UserProfile | null): number {
+  let penalty = 0;
+
+  for (const flare of flares) {
+    penalty += flarePenaltyForType(flare);
   }
+
+  if (uveitisEpisode) {
+    switch (uveitisEpisode.severity) {
+      case 'severe': penalty += 30; break;
+      case 'moderate': penalty += 20; break;
+      default: penalty += 12;
+    }
+  }
+
+  // Passive penalty for conditions without dedicated flare tracking
+  if (profile?.conditions.includes('ibd')) penalty += 8;
+  if (profile?.conditions.includes('psoriasis')) penalty += 5;
+
+  return penalty;
+}
+
+function scoreUpperCap(flares: Flare[], uveitisEpisode: UveitisEpisode | null): number {
+  const activeCount = flares.length + (uveitisEpisode ? 1 : 0);
+  if (activeCount === 0) return 100;
+
+  const hasAS = flares.some(f => f.flare_type === 'as');
+  const hasSevere = flares.some(f => f.severity === 'severe') || uveitisEpisode?.severity === 'severe';
+
+  if (activeCount >= 2) return hasSevere ? 38 : 45;
+  if (hasSevere) return hasAS ? 50 : 58;
+
+  const worst = [...flares].sort((a, b) => {
+    const order = { severe: 0, moderate: 1, mild: 2 };
+    return order[a.severity] - order[b.severity];
+  })[0];
+
+  if (worst?.severity === 'moderate') return hasAS ? 62 : 68;
+  return 78;
 }
 
 function computeScore(
   logs: DailyLog[],
-  activeFlare: Flare | null,
+  activeFlares: Flare[],
+  uveitisEpisode: UveitisEpisode | null,
+  profile: UserProfile | null,
   tracksMedication: boolean,
 ): { score: number | null; breakdown: ScoreBreakdown | null } {
   if (logs.length === 0) return { score: null, breakdown: null };
@@ -73,13 +114,14 @@ function computeScore(
   const base = 75;
   const painPts = painContribution(avgPain);
   const fatiguePts = fatigueContribution(avgFatigue);
-  const flarePen = activeFlarePenalty(activeFlare);
+  const flarePen = activeFlaresPenalty(activeFlares, uveitisEpisode, profile);
   const consistencyBonus = Math.round((count / 7) * 8);
   const moodPts = Math.round(avgMoodRaw * 0.5);
   const medPts = Math.round(avgMedRaw * 0.5);
+  const cap = scoreUpperCap(activeFlares, uveitisEpisode);
 
   const score = Math.round(
-    Math.min(100, Math.max(0, base + painPts + fatiguePts - flarePen + consistencyBonus + moodPts + medPts))
+    Math.min(cap, Math.max(0, base + painPts + fatiguePts - flarePen + consistencyBonus + moodPts + medPts))
   );
 
   const breakdown: ScoreBreakdown = {
@@ -104,6 +146,7 @@ export function useWeeklyData(tracksMedication = true): {
   refresh: () => Promise<void>;
 } {
   const { user } = useAuth();
+  const { profile } = useProfile();
   const [logs, setLogs] = useState<DailyLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [spondyScore, setSpondyScore] = useState<number | null>(null);
@@ -117,12 +160,13 @@ export function useWeeklyData(tracksMedication = true): {
 
     setIsLoading(true);
     try {
-      const [weekLogs, activeFlare] = await Promise.all([
+      const [weekLogs, activeFlares, activeUveitis] = await Promise.all([
         getDailyLogs(user.id, 7),
-        getActiveFlare(user.id),
+        getActiveFlares(user.id),
+        getActiveUveitisEpisode(user.id),
       ]);
       setLogs(weekLogs);
-      const { score, breakdown } = computeScore(weekLogs, activeFlare, tracksMedication);
+      const { score, breakdown } = computeScore(weekLogs, activeFlares, activeUveitis, profile, tracksMedication);
       setSpondyScore(score);
       setScoreBreakdown(breakdown);
     } catch (err) {
@@ -130,7 +174,7 @@ export function useWeeklyData(tracksMedication = true): {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, profile]);
 
   useEffect(() => {
     load();
