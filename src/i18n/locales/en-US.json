@@ -1,0 +1,25 @@
+{
+  "onboarding": {
+    "subtitle": "A few questions to personalize your experience",
+    "ai_consent": {
+      "subtitle": "Spondy uses Claude AI (by Anthropic, Inc.) to generate your personalized insights and welcome message.",
+      "agree_cta": "I agree — personalize my experience"
+    }
+  },
+  "insights": {
+    "ai_insight_generating": "Analyzing your data...",
+    "trial_prompt_body": "Unlock your personalized insight report, free for 14 days."
+  },
+  "subscription": {
+    "trial_prompt_subtitle": "Unlock your personalized insight report, free for 14 days",
+    "feature_ai_context": "Extended personalization"
+  },
+  "profile": {
+    "ai_context_helper": "This is included in all your AI interactions to help personalize your insights.",
+    "subscription_feature_4": "Extended AI personalization"
+  },
+  "profile_privacy": {
+    "ai_consent_toggle_label": "AI personalization",
+    "ai_consent_alert_title": "Enable AI personalization"
+  }
+}

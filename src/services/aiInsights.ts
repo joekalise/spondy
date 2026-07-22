@@ -264,10 +264,11 @@ export async function generateWeeklyInsight(params: {
   healthHistory?: HealthData[];
   basdaiScores?: BasdaiScore[];
   aiContext?: string;
+  language?: string;
 }): Promise<WeeklyInsight> {
-  const { logs, flares, profile, healthHistory, basdaiScores, aiContext } = params;
+  const { logs, flares, profile, healthHistory, basdaiScores, aiContext, language } = params;
 
-  const systemPrompt = `You are Spondy, a knowledgeable health companion for someone living with Ankylosing Spondylitis.
+  const systemPrompt = `${language && language !== 'en-GB' ? `Respond in ${language}.\n\n` : ''}You are Spondy, a knowledgeable health companion for someone living with Ankylosing Spondylitis.
 
 Your job is to find genuine, specific correlations and patterns in the user's data — not generic advice.
 
@@ -327,10 +328,11 @@ export async function sendChatMessage(params: {
   healthHistory?: HealthData[];
   basdaiScores?: BasdaiScore[];
   aiContext?: string;
+  language?: string;
 }): Promise<string> {
-  const { messages, logs, flares, profile, healthHistory, basdaiScores, aiContext } = params;
+  const { messages, logs, flares, profile, healthHistory, basdaiScores, aiContext, language } = params;
 
-  const systemPrompt = `You are Spondy, an AI built specifically for people with Ankylosing Spondylitis. You have full access to this user's tracking data — their symptoms, flares, health metrics, medications, and patterns over time.
+  const systemPrompt = `${language && language !== 'en-GB' ? `Respond in ${language}.\n\n` : ''}You are Spondy, an AI built specifically for people with Ankylosing Spondylitis. You have full access to this user's tracking data — their symptoms, flares, health metrics, medications, and patterns over time.
 
 Here is the user's profile and recent data:
 

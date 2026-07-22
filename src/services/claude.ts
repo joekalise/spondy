@@ -116,9 +116,11 @@ Rules:
 }
 
 export async function generateWelcomeContent(
-  data: OnboardingData
+  data: OnboardingData,
+  language?: string
 ): Promise<WelcomeContent> {
-  const prompt = buildOnboardingPrompt(data);
+  const langPrefix = language && language !== 'en-GB' ? `Respond in ${language}.\n\n` : '';
+  const prompt = langPrefix + buildOnboardingPrompt(data);
 
   const text = await callClaude({
     model: 'claude-sonnet-4-6',

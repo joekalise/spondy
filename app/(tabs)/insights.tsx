@@ -213,7 +213,7 @@ interface AIInsightCardProps {
 }
 
 function AIInsightCard({ logs, flares, profile, healthHistory, isDark }: AIInsightCardProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const router = useRouter();
 
@@ -240,6 +240,7 @@ function AIInsightCard({ logs, flares, profile, healthHistory, isDark }: AIInsig
         logs,
         flares,
         healthHistory,
+        language: i18n.language,
         profile: profile ?? {
           user_id: user.id,
           age_range: null,

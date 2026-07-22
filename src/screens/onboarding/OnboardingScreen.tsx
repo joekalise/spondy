@@ -75,7 +75,7 @@ const defaultOnboardingData: OnboardingData = {
 };
 
 export function OnboardingScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const { saveProfile } = useProfile();
   const { user, signOut } = useAuth();
@@ -155,7 +155,7 @@ export function OnboardingScreen() {
 
     if (aiConsented) {
       try {
-        welcomeContent = await generateWelcomeContent(data);
+        welcomeContent = await generateWelcomeContent(data, i18n.language);
       } catch (err) {
         console.warn('Claude API failed, using fallback content:', err);
       }
