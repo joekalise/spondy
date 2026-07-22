@@ -222,7 +222,7 @@ ${topTriggers ? `- Most frequent triggers: ${topTriggers}` : '- No specific trig
   }
 
   return `
-TRACKING DATA SUMMARY (last 28 days, ${logs.length} days logged):
+TRACKING DATA SUMMARY (${logs.length} days logged):
 - Average pain score: ${avgPain}/10
 - Average fatigue score: ${avgFatigue}/10
 - Mood breakdown: ${moodSummary || 'not recorded'}
@@ -268,6 +268,8 @@ export async function generateWeeklyInsight(params: {
 }): Promise<WeeklyInsight> {
   const { logs, flares, profile, healthHistory, basdaiScores, aiContext, language } = params;
 
+  const isEarlyData = logs.length < 7;
+
   const systemPrompt = `${language && language !== 'en-GB' ? `Respond in ${language}.\n\n` : ''}You are Spondy, a knowledgeable health companion for someone living with Ankylosing Spondylitis.
 
 Your job is to find genuine, specific correlations and patterns in the user's data — not generic advice.
@@ -286,7 +288,7 @@ Rules:
 - 3 points always (no more, no less)
 - Every point must reference actual numbers from the data — average scores, specific dates, counts, percentages. Never say "your pain has been high" when you can say "your pain averaged 6.4 this week vs 4.1 the week before"
 - Prioritise correlations over observations: look for relationships between sleep and pain, diet and fatigue, HRV and flare days, steps and mood, medication adherence and scores. If the data shows a correlation, lead with it and give the actual numbers
-- If there are not enough data points for a correlation, report the most notable individual pattern with real numbers
+- If there are not enough data points for a correlation, report the most notable individual pattern with real numbers${isEarlyData ? '\n- This is an early insight with fewer than 7 days of data. Be honest about that — say "in your first X days" rather than implying a full week of data. Focus on what IS visible and frame it as a baseline to build on.' : ''}
 - Never give generic AS advice that isn't grounded in their specific data
 - Never say "you are at risk" or anything diagnostic
 - Use language like "your data suggests", "it looks like", "on days when"

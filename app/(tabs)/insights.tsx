@@ -364,13 +364,13 @@ function AIInsightCard({ logs, flares, profile, healthHistory, isDark }: AIInsig
             {profile.welcome_message}
           </Text>
           <Text style={[styles.teaserText, { color: textSecondary, marginTop: Spacing.sm }]}>
-            Your personalised weekly insight will appear here once you have a few days of data.
+            Log 5 days and your first AI insight will appear here.
           </Text>
         </View>
       ) : (
         <Text style={[styles.teaserText, { color: textSecondary }]}>
           {logs.length === 0
-            ? 'Log a few days and your insight will appear here.'
+            ? 'Log 5 days and your first AI insight will appear here.'
             : 'Generating your insight...'}
         </Text>
       )}
@@ -403,11 +403,11 @@ function TrialPromptCard({ isDark, onStartTrial }: TrialPromptCardProps) {
     >
       <View style={styles.aiTitleRow}>
         <Text style={[styles.cardTitle, { color: textPrimary }]}>
-          You've been tracking for 2 weeks 🎉
+          Your first insight is ready
         </Text>
       </View>
       <Text style={[styles.teaserText, { color: textSecondary }]}>
-        Your data is ready for its first AI analysis. See what patterns are driving your symptoms.
+        You have enough data for your first AI analysis. See what patterns are showing up in your symptoms.
       </Text>
       <Text style={[styles.teaserLink, { color: Colors.primary }]}>{t('premium_teaser.see_whats_included')}</Text>
     </TouchableOpacity>
@@ -799,8 +799,8 @@ export default function InsightsScreen() {
     if (w > 0) setChartWidth(w);
   }
 
-  // Determine if user has tracked >= 14 days (for trial prompt)
-  const hasEnoughDataForTrialPrompt = allLogs.length >= 14;
+  // Determine if user has enough data for trial prompt (5 days is enough for meaningful patterns)
+  const hasEnoughDataForTrialPrompt = allLogs.length >= 5;
 
   const handlePurchase = useCallback(async () => {
     setIsPurchasing(true);

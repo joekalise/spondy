@@ -33,7 +33,7 @@ import { ProfileProvider, useProfile } from '@/contexts/ProfileContext';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { UpdateBanner } from '@/components/common/UpdateBanner';
 import { registerBackgroundHealthSync, triggerHealthSyncNow } from '@/services/backgroundHealthSync';
-import { scheduleDailyCheckIn } from '@/services/notifications';
+import { scheduleDailyCheckIn, cancelLapseNotification } from '@/services/notifications';
 import { setUserId } from '@/services/analytics';
 import * as Sentry from '@sentry/react-native';
 
@@ -97,6 +97,8 @@ function RootNavigator() {
       const hasCheckin = scheduled.some((n) => n.identifier === 'daily-checkin');
       if (!hasCheckin) scheduleDailyCheckIn(profile.notification_time).catch(() => {});
     }).catch(() => {});
+    // User opened the app — cancel any lapse re-engagement notification
+    cancelLapseNotification().catch(() => {});
   }, [session?.user?.id, isOnboardingComplete, profile?.notification_time]);
 
   // Trigger a foreground sync whenever the user signs in

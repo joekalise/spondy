@@ -23,7 +23,6 @@ export async function requestNotificationPermissions(): Promise<boolean> {
 // ─── Daily check-in reminder ─────────────────────────────────────────────────
 
 export async function scheduleDailyCheckIn(timeString: string): Promise<void> {
-  // Cancel existing before scheduling new
   await cancelNotification('daily-checkin');
 
   const [hourStr, minuteStr] = timeString.split(':');
@@ -48,9 +47,64 @@ export async function scheduleDailyCheckIn(timeString: string): Promise<void> {
   });
 }
 
-// Cancels today's check-in and schedules a one-time trigger for tomorrow.
-// Used after saving today's log so the reminder doesn't fire when already logged.
-export async function scheduleDailyCheckInFromTomorrow(timeString: string): Promise<void> {
+export interface CheckInContext {
+  painScore: number;
+  fatigueScore: number;
+  stiffness: string | null;
+  streak: number;
+}
+
+function buildPersonalizedCheckInContent(ctx: CheckInContext): { title: string; body: string } {
+  const { painScore, fatigueScore, stiffness, streak } = ctx;
+
+  if (streak >= 7) {
+    return {
+      title: `🔥 ${streak} day streak`,
+      body: "Don't break it now — log today's check-in in 60 seconds.",
+    };
+  }
+  if (stiffness === 'over_2_hours' || stiffness === '1_2_hours') {
+    return {
+      title: "How's your stiffness today?",
+      body: 'You had long morning stiffness yesterday. Log today to track whether it\'s improving.',
+    };
+  }
+  if (painScore >= 7) {
+    return {
+      title: `Pain was ${painScore}/10 yesterday`,
+      body: 'Log today to track the trend — your data will flag if this keeps building.',
+    };
+  }
+  if (fatigueScore >= 7) {
+    return {
+      title: 'Fatigue check',
+      body: `Fatigue was at ${fatigueScore}/10 yesterday. Log today to see if rest helped.`,
+    };
+  }
+  if (painScore <= 2 && fatigueScore <= 3) {
+    return {
+      title: 'Good day yesterday 👍',
+      body: "Keep tracking so Spondy can spot what's working for you.",
+    };
+  }
+  if (streak >= 3) {
+    return {
+      title: `${streak} days in a row`,
+      body: "You're building a clear picture of your AS. Log today to keep it going.",
+    };
+  }
+  return {
+    title: 'Time for your daily check-in',
+    body: "How are you feeling today? Take 60 seconds to log your symptoms.",
+  };
+}
+
+// Cancels today's check-in and schedules a personalized one-time trigger for tomorrow.
+// Called after saving today's log so the reminder doesn't fire when already logged.
+export async function scheduleDailyCheckInFromTomorrow(
+  timeString: string,
+  ctx?: CheckInContext
+): Promise<void> {
   await cancelNotification('daily-checkin');
 
   const [hourStr, minuteStr] = timeString.split(':');
@@ -62,19 +116,43 @@ export async function scheduleDailyCheckInFromTomorrow(timeString: string): Prom
   tomorrow.setDate(tomorrow.getDate() + 1);
   tomorrow.setHours(hour, minute, 0, 0);
 
+  const content = ctx ? buildPersonalizedCheckInContent(ctx) : {
+    title: 'Time for your daily check-in',
+    body: "How are you feeling today? Take 60 seconds to log your symptoms.",
+  };
+
   await Notifications.scheduleNotificationAsync({
     identifier: 'daily-checkin',
-    content: {
-      title: 'Time for your daily check-in',
-      body: "How are you feeling today? Take 60 seconds to log your symptoms.",
-      sound: true,
-      ...androidChannel(),
-    },
+    content: { ...content, sound: true, ...androidChannel() },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DATE,
       date: tomorrow,
     },
   });
+}
+
+// Schedules a re-engagement push 48h from now. Cancel on next app open.
+// Fires only if the user goes quiet after logging today.
+export async function scheduleLapseNotification(): Promise<void> {
+  await cancelNotification('lapse-reengagement');
+  const fireAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+  await Notifications.scheduleNotificationAsync({
+    identifier: 'lapse-reengagement',
+    content: {
+      title: "Haven't seen you in a couple of days",
+      body: "What's your stiffness like this morning? A quick log helps Spondy spot the pattern.",
+      sound: true,
+      ...androidChannel(),
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      date: fireAt,
+    },
+  });
+}
+
+export async function cancelLapseNotification(): Promise<void> {
+  await cancelNotification('lapse-reengagement');
 }
 
 // ─── Cancel notifications by identifier prefix ────────────────────────────────

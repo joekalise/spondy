@@ -32,7 +32,7 @@ import { Button } from '@/components/common/Button';
 import { ProfileButton } from '@/components/common/ProfileButton';
 import { DailyLog, Mood, MorningStiffness, DietQuality, DietTrigger } from '@/types';
 import { logEvent, Events } from '@/services/analytics';
-import { scheduleDailyCheckInFromTomorrow } from '@/services/notifications';
+import { scheduleDailyCheckInFromTomorrow, scheduleLapseNotification, cancelLapseNotification } from '@/services/notifications';
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
@@ -885,7 +885,13 @@ export default function TrackScreen() {
       await saveLog({ pain_score: painScore, fatigue_score: fatigueScore, stiffness_duration: stiffness, mood, medications_taken: medsTaken, notes, diet_quality: dietQuality, diet_triggers: dietTriggers, exercise_done: exerciseDone, exercise_type: exerciseType, exercise_minutes: exerciseMinutes, period_active: isFemale ? periodActive : null, prn_taken: prnMedNames.length > 0 ? prnTaken : null });
       logEvent(Events.DAY_LOGGED, { date: localDateString() }).catch(() => {});
       if (profile?.notification_time) {
-        scheduleDailyCheckInFromTomorrow(profile.notification_time).catch(() => {});
+        scheduleDailyCheckInFromTomorrow(profile.notification_time, {
+          painScore,
+          fatigueScore,
+          stiffness: stiffness ?? null,
+          streak,
+        }).catch(() => {});
+        scheduleLapseNotification().catch(() => {});
       }
       setEditing(false);
       setSaved(true);
