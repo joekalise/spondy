@@ -364,14 +364,14 @@ function AIInsightCard({ logs, flares, profile, healthHistory, isDark }: AIInsig
             {profile.welcome_message}
           </Text>
           <Text style={[styles.teaserText, { color: textSecondary, marginTop: Spacing.sm }]}>
-            Log 5 days and your first AI insight will appear here.
+            {t('insights.ai_card_teaser')}
           </Text>
         </View>
       ) : (
         <Text style={[styles.teaserText, { color: textSecondary }]}>
           {logs.length === 0
-            ? 'Log 5 days and your first AI insight will appear here.'
-            : 'Generating your insight...'}
+            ? t('insights.ai_card_teaser')
+            : t('insights.ai_insight_generating')}
         </Text>
       )}
 
@@ -403,11 +403,11 @@ function TrialPromptCard({ isDark, onStartTrial }: TrialPromptCardProps) {
     >
       <View style={styles.aiTitleRow}>
         <Text style={[styles.cardTitle, { color: textPrimary }]}>
-          Your first insight is ready
+          {t('insights.trial_ready_title')}
         </Text>
       </View>
       <Text style={[styles.teaserText, { color: textSecondary }]}>
-        You have enough data for your first AI analysis. See what patterns are showing up in your symptoms.
+        {t('insights.trial_ready_body')}
       </Text>
       <Text style={[styles.teaserLink, { color: Colors.primary }]}>{t('premium_teaser.see_whats_included')}</Text>
     </TouchableOpacity>

@@ -415,7 +415,10 @@
     "basdai_label": "BASDAI",
     "basdai_retake": "Retake",
     "basdai_reassessment_due": "Monthly reassessment due",
-    "basdai_last_score": "Your last BASDAI was {{score}} ({{label}}), {{days}} days ago. Time to reassess."
+    "basdai_last_score": "Your last BASDAI was {{score}} ({{label}}), {{days}} days ago. Time to reassess.",
+    "trial_ready_title": "Your first insight is ready",
+    "trial_ready_body": "You have enough data for your first AI analysis. See what patterns are showing up in your symptoms.",
+    "ai_card_teaser": "Log 5 days and your first AI insight will appear here."
   },
   "profile": {
     "title": "Your profile",
@@ -667,5 +670,25 @@
     "save_failed": "Failed to save. Please try again.",
     "load_failed": "Failed to load data. Pull down to refresh.",
     "ai_unavailable": "AI features are temporarily unavailable. Everything else is working fine."
+  },
+  "notifications": {
+    "checkin_title": "Time for your daily check-in",
+    "checkin_body": "How are you feeling today? Take 60 seconds to log your symptoms.",
+    "streak_title": "{{count}} day streak",
+    "streak_body": "Don't break it now. Log today's check-in in 60 seconds.",
+    "stiffness_title": "How is your stiffness today?",
+    "stiffness_body": "You had long morning stiffness yesterday. Log today to track whether it is improving.",
+    "high_pain_title": "Pain was {{score}}/10 yesterday",
+    "high_pain_body": "Log today to track the trend. Your data will flag if this keeps building.",
+    "high_fatigue_title": "Fatigue check",
+    "high_fatigue_body": "Fatigue was at {{score}}/10 yesterday. Log today to see if rest helped.",
+    "good_day_title": "Good day yesterday",
+    "good_day_body": "Keep tracking so Spondy can spot what is working for you.",
+    "streak_short_title": "{{count}} days in a row",
+    "streak_short_body": "You are building a clear picture of your AS. Log today to keep it going.",
+    "lapse_title": "Haven't seen you in a couple of days",
+    "lapse_body": "What's your stiffness like this morning? A quick log helps Spondy spot the pattern.",
+    "med_title": "Time for {{name}}",
+    "med_body": "Don't forget your {{dose}} dose of {{name}}."
   }
 }

@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { DailyLog, MedicationReminder } from '@/types';
 import { supabase } from '@/services/supabase';
+import i18n from '@/i18n';
 
 const ANDROID_CHANNEL = 'spondy-reminders';
 
@@ -34,8 +35,8 @@ export async function scheduleDailyCheckIn(timeString: string): Promise<void> {
   await Notifications.scheduleNotificationAsync({
     identifier: 'daily-checkin',
     content: {
-      title: 'Time for your daily check-in',
-      body: "How are you feeling today? Take 60 seconds to log your symptoms.",
+      title: i18n.t('notifications.checkin_title') as string,
+      body: i18n.t('notifications.checkin_body') as string,
       sound: true,
       ...androidChannel(),
     },
@@ -56,46 +57,47 @@ export interface CheckInContext {
 
 function buildPersonalizedCheckInContent(ctx: CheckInContext): { title: string; body: string } {
   const { painScore, fatigueScore, stiffness, streak } = ctx;
+  const t = (key: string, opts?: Record<string, unknown>) => i18n.t(key, opts as any) as string;
 
   if (streak >= 7) {
     return {
-      title: `🔥 ${streak} day streak`,
-      body: "Don't break it now — log today's check-in in 60 seconds.",
+      title: `🔥 ${t('notifications.streak_title', { count: streak })}`,
+      body: t('notifications.streak_body'),
     };
   }
   if (stiffness === 'over_2_hours' || stiffness === '1_2_hours') {
     return {
-      title: "How's your stiffness today?",
-      body: 'You had long morning stiffness yesterday. Log today to track whether it\'s improving.',
+      title: t('notifications.stiffness_title'),
+      body: t('notifications.stiffness_body'),
     };
   }
   if (painScore >= 7) {
     return {
-      title: `Pain was ${painScore}/10 yesterday`,
-      body: 'Log today to track the trend — your data will flag if this keeps building.',
+      title: t('notifications.high_pain_title', { score: painScore }),
+      body: t('notifications.high_pain_body'),
     };
   }
   if (fatigueScore >= 7) {
     return {
-      title: 'Fatigue check',
-      body: `Fatigue was at ${fatigueScore}/10 yesterday. Log today to see if rest helped.`,
+      title: t('notifications.high_fatigue_title'),
+      body: t('notifications.high_fatigue_body', { score: fatigueScore }),
     };
   }
   if (painScore <= 2 && fatigueScore <= 3) {
     return {
-      title: 'Good day yesterday 👍',
-      body: "Keep tracking so Spondy can spot what's working for you.",
+      title: t('notifications.good_day_title'),
+      body: t('notifications.good_day_body'),
     };
   }
   if (streak >= 3) {
     return {
-      title: `${streak} days in a row`,
-      body: "You're building a clear picture of your AS. Log today to keep it going.",
+      title: t('notifications.streak_short_title', { count: streak }),
+      body: t('notifications.streak_short_body'),
     };
   }
   return {
-    title: 'Time for your daily check-in',
-    body: "How are you feeling today? Take 60 seconds to log your symptoms.",
+    title: t('notifications.checkin_title'),
+    body: t('notifications.checkin_body'),
   };
 }
 
@@ -117,8 +119,8 @@ export async function scheduleDailyCheckInFromTomorrow(
   tomorrow.setHours(hour, minute, 0, 0);
 
   const content = ctx ? buildPersonalizedCheckInContent(ctx) : {
-    title: 'Time for your daily check-in',
-    body: "How are you feeling today? Take 60 seconds to log your symptoms.",
+    title: i18n.t('notifications.checkin_title') as string,
+    body: i18n.t('notifications.checkin_body') as string,
   };
 
   await Notifications.scheduleNotificationAsync({
@@ -139,8 +141,8 @@ export async function scheduleLapseNotification(): Promise<void> {
   await Notifications.scheduleNotificationAsync({
     identifier: 'lapse-reengagement',
     content: {
-      title: "Haven't seen you in a couple of days",
-      body: "What's your stiffness like this morning? A quick log helps Spondy spot the pattern.",
+      title: i18n.t('notifications.lapse_title') as string,
+      body: i18n.t('notifications.lapse_body') as string,
       sound: true,
       ...androidChannel(),
     },
@@ -193,8 +195,8 @@ export async function scheduleMedicationReminder(med: MedicationReminder): Promi
     await Notifications.scheduleNotificationAsync({
       identifier,
       content: {
-        title: `Time for ${med.name}`,
-        body: `Don't forget your ${med.dose} dose of ${med.name}.`,
+        title: i18n.t('notifications.med_title', { name: med.name }) as string,
+        body: i18n.t('notifications.med_body', { dose: med.dose, name: med.name }) as string,
         sound: true,
         ...androidChannel(),
       },
@@ -208,8 +210,8 @@ export async function scheduleMedicationReminder(med: MedicationReminder): Promi
     await Notifications.scheduleNotificationAsync({
       identifier,
       content: {
-        title: `Time for ${med.name}`,
-        body: `Don't forget your ${med.dose} dose of ${med.name}.`,
+        title: i18n.t('notifications.med_title', { name: med.name }) as string,
+        body: i18n.t('notifications.med_body', { dose: med.dose, name: med.name }) as string,
         sound: true,
         ...androidChannel(),
       },
@@ -225,8 +227,8 @@ export async function scheduleMedicationReminder(med: MedicationReminder): Promi
     await Notifications.scheduleNotificationAsync({
       identifier,
       content: {
-        title: `Time for ${med.name}`,
-        body: `Don't forget your ${med.dose} dose of ${med.name}.`,
+        title: i18n.t('notifications.med_title', { name: med.name }) as string,
+        body: i18n.t('notifications.med_body', { dose: med.dose, name: med.name }) as string,
         sound: true,
         ...androidChannel(),
       },
