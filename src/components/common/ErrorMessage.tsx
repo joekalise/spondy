@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
 import { Colors } from '@/constants/colors';
-import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
+import { FontSize, FontFamily, Spacing, BorderRadius } from '@/constants/theme';
 
 interface ErrorMessageProps {
   message: string;
@@ -48,6 +48,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xl,
     color: Colors.error,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     width: 28,
     height: 28,
     textAlign: 'center',
@@ -76,5 +77,6 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: '#FFFFFF',
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
 });

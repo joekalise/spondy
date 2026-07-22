@@ -27,7 +27,7 @@ import { OptionCard } from '@/components/onboarding/OptionCard';
 import { MultiSelectCard } from '@/components/onboarding/MultiSelectCard';
 import { supabase } from '@/services/supabase';
 import { Colors } from '@/constants/colors';
-import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
+import { FontSize, FontFamily, Spacing, BorderRadius } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useMedications } from '@/hooks/useMedications';
@@ -275,7 +275,7 @@ interface ProfileEditModalProps {
 
 function EditSectionHeader({ label, color }: { label: string; color: string }) {
   return (
-    <Text style={{ fontSize: FontSize.md, fontWeight: '700', color, marginTop: Spacing.xl, marginBottom: Spacing.sm }}>
+    <Text style={{ fontSize: FontSize.md, fontWeight: '700', fontFamily: FontFamily.bold, color, marginTop: Spacing.xl, marginBottom: Spacing.sm }}>
       {label}
     </Text>
   );
@@ -350,9 +350,9 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={{ flex: 1, backgroundColor: bg, paddingTop: topInset }}>
         <View style={[styles.editModalHeader, { borderBottomColor: cardBorder }]}>
-          <Text style={[styles.editModalTitle, { color: textPrimary }]}>Edit profile</Text>
+          <Text style={[styles.editModalTitle, { color: textPrimary }]}>{t('profile.edit')}</Text>
           <TouchableOpacity onPress={onClose} activeOpacity={0.8}>
-            <Text style={[styles.editModalClose, { color: textSecondary }]}>Cancel</Text>
+            <Text style={[styles.editModalClose, { color: textSecondary }]}>{t('common.cancel')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -361,62 +361,62 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <EditSectionHeader label="About you" color={textSecondary} />
+          <EditSectionHeader label={t('profile_alerts.about_me')} color={textSecondary} />
 
-          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Biological sex</Text>
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_alerts.biological_sex')}</Text>
           {(['male', 'female', 'prefer_not_to_say'] as BiologicalSex[]).map(v => (
             <OptionCard key={v} style={compactCard} label={BIOLOGICAL_SEX_LABELS[v]} isSelected={biologicalSex === v} onPress={() => setBiologicalSex(v)} />
           ))}
 
-          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Age range</Text>
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('onboarding.age_range')}</Text>
           {(['under_25', '25_35', '35_45', '45_55', '55_plus'] as AgeRange[]).map(v => (
             <OptionCard key={v} style={compactCard} label={AGE_RANGE_LABELS[v]} isSelected={ageRange === v} onPress={() => setAgeRange(v)} />
           ))}
 
-          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Years with AS</Text>
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_alerts.years_with_as')}</Text>
           {(['under_1', '1_3', '3_5', '5_10', '10_plus'] as DiagnosisYears[]).map(v => (
             <OptionCard key={v} style={compactCard} label={DIAGNOSIS_YEARS_LABELS[v]} isSelected={diagnosisYears === v} onPress={() => setDiagnosisYears(v)} />
           ))}
 
-          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Disease activity</Text>
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('onboarding.disease_activity')}</Text>
           {(['mild', 'moderate', 'severe'] as Severity[]).map(v => (
             <OptionCard key={v} style={compactCard} label={SEVERITY_LABELS[v]} isSelected={severity === v} onPress={() => setSeverity(v)} />
           ))}
 
-          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Morning stiffness</Text>
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_alerts.morning_stiffness')}</Text>
           {(['under_30', '30_60', '1_2_hours', 'over_2_hours'] as MorningStiffness[]).map(v => (
             <OptionCard key={v} style={compactCard} label={MORNING_STIFFNESS_LABELS[v]} isSelected={morningStiffness === v} onPress={() => setMorningStiffness(v)} />
           ))}
 
-          <EditSectionHeader label="Symptoms" color={textSecondary} />
+          <EditSectionHeader label={t('profile_alerts.symptoms_section')} color={textSecondary} />
 
-          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Pain locations</Text>
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_alerts.pain_locations')}</Text>
           {(['lower_back', 'upper_back', 'hips', 'knees', 'shoulders', 'neck', 'chest', 'jaw', 'heels', 'other'] as PainLocation[]).map(v => (
             <MultiSelectCard key={v} style={compactCard} label={PAIN_LOCATION_LABELS[v]} isSelected={painLocations.includes(v)} onPress={() => setPainLocations(arr => toggle(arr, v))} />
           ))}
 
-          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Types of pain</Text>
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_alerts.pain_types')}</Text>
           {(['stiffness', 'sharp_pain', 'burning', 'aching', 'fatigue'] as PainType[]).map(v => (
             <MultiSelectCard key={v} style={compactCard} label={PAIN_TYPE_LABELS[v]} isSelected={painTypes.includes(v)} onPress={() => setPainTypes(arr => toggle(arr, v))} />
           ))}
 
-          <EditSectionHeader label="Conditions" color={textSecondary} />
+          <EditSectionHeader label={t('profile_alerts.conditions_section')} color={textSecondary} />
 
-          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Associated conditions</Text>
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_alerts.conditions')}</Text>
           {(['uveitis', 'psoriasis', 'ibd', 'enthesitis', 'peripheral_joint', 'fatigue', 'brain_fog', 'anxiety_depression'] as AssociatedCondition[]).map(v => (
             <MultiSelectCard key={v} style={compactCard} label={CONDITION_LABELS[v]} isSelected={conditions.includes(v)} onPress={() => setConditions(arr => toggle(arr, v))} />
           ))}
 
-          <EditSectionHeader label="Lifestyle" color={textSecondary} />
+          <EditSectionHeader label={t('profile_alerts.lifestyle_section')} color={textSecondary} />
 
-          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Life challenges</Text>
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_alerts.challenges')}</Text>
           {(['sleep', 'exercise', 'work', 'social_life', 'mental_health'] as LifestyleChallenge[]).map(v => (
             <MultiSelectCard key={v} style={compactCard} label={CHALLENGE_LABELS[v]} isSelected={challenges.includes(v)} onPress={() => setChallenges(arr => toggle(arr, v))} />
           ))}
 
-          <EditSectionHeader label="Treatment" color={textSecondary} />
+          <EditSectionHeader label={t('profile_alerts.treatment_section')} color={textSecondary} />
 
-          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Current treatment</Text>
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_alerts.current_treatment')}</Text>
           {(['adalimumab', 'secukinumab', 'ixekizumab', 'ustekinumab', 'nsaids_only', 'no_medication', 'other'] as Medication[]).map(v => (
             <MultiSelectCard key={v} style={compactCard} label={MEDICATION_LABELS[v]} isSelected={medications.includes(v)} onPress={() => setMedications(arr => toggle(arr, v))} />
           ))}
@@ -430,7 +430,7 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
             {isSaving ? (
               <ActivityIndicator color="#FFFFFF" size="small" />
             ) : (
-              <Text style={styles.modalSaveText}>Save changes</Text>
+              <Text style={styles.modalSaveText}>{t('common.save_changes')}</Text>
             )}
           </TouchableOpacity>
         </ScrollView>
@@ -581,13 +581,13 @@ function AddMedicationModal({
           {!isEditing && (
             <View style={{ marginBottom: Spacing.md }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.xs, marginTop: Spacing.sm }}>
-                <Text style={[styles.fieldLabel, { color: textSecondary, marginBottom: 0, marginTop: 0 }]}>From your treatment</Text>
+                <Text style={[styles.fieldLabel, { color: textSecondary, marginBottom: 0, marginTop: 0 }]}>{t('profile_alerts.from_treatment')}</Text>
                 {onOpenEditProfile && (
                   <TouchableOpacity
                     onPress={() => { handleClose(); onOpenEditProfile(); }}
                     activeOpacity={0.8}
                   >
-                    <Text style={{ fontSize: FontSize.xs, color: Colors.primary, fontWeight: '600' }}>Edit treatment ›</Text>
+                    <Text style={{ fontSize: FontSize.xs, color: Colors.primary, fontWeight: '600', fontFamily: FontFamily.semiBold }}>{t('profile_alerts.edit_treatment_link')}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -617,12 +617,12 @@ function AddMedicationModal({
                     })}
                   </View>
                   <Text style={[styles.helperText, { color: textSecondary, marginBottom: 0, marginTop: 4 }]}>
-                    Tap to fill in the name, then set the dose and schedule below
+                    {t('profile_alerts.treatment_tap_hint')}
                   </Text>
                 </>
               ) : (
                 <Text style={[styles.helperText, { color: textSecondary, marginBottom: 0 }]}>
-                  No treatment in your profile yet. Tap Edit treatment above to add yours.
+                  {t('profile_alerts.no_treatment_yet')}
                 </Text>
               )}
             </View>
@@ -698,7 +698,7 @@ function AddMedicationModal({
               ]}
             >
               <Text style={[styles.chipText, { color: asNeeded ? '#FFFFFF' : textSecondary }]}>
-                As needed
+                {t('medications.as_needed')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -746,7 +746,7 @@ function AddMedicationModal({
                 <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
                 <Text style={styles.modalSaveText}>
-                  {isEditing ? 'Save changes' : t('medications.save')}
+                  {isEditing ? t('common.save_changes') : t('medications.save')}
                 </Text>
               )}
             </TouchableOpacity>
@@ -820,9 +820,9 @@ function LogInjectionModal({ visible, onClose, onSave, defaultMedicationName, is
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
         <View style={[styles.modalContainer, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <Text style={[styles.modalTitle, { color: textPrimary }]}>Log injection</Text>
+          <Text style={[styles.modalTitle, { color: textPrimary }]}>{t('profile_alerts.log_injection')}</Text>
 
-          <Text style={[styles.fieldLabel, { color: textSecondary }]}>Medication</Text>
+          <Text style={[styles.fieldLabel, { color: textSecondary }]}>{t('profile_alerts.injection_medication')}</Text>
           <TextInput
             style={[styles.textInput, { backgroundColor: inputBg, borderColor: cardBorder, color: textPrimary }]}
             value={medicationName}
@@ -831,7 +831,7 @@ function LogInjectionModal({ visible, onClose, onSave, defaultMedicationName, is
             placeholderTextColor={textSecondary}
           />
 
-          <Text style={[styles.fieldLabel, { color: textSecondary }]}>Date (YYYY-MM-DD)</Text>
+          <Text style={[styles.fieldLabel, { color: textSecondary }]}>{t('profile_alerts.injection_date')}</Text>
           <TextInput
             style={[styles.textInput, { backgroundColor: inputBg, borderColor: cardBorder, color: textPrimary }]}
             value={injectedAt}
@@ -840,7 +840,7 @@ function LogInjectionModal({ visible, onClose, onSave, defaultMedicationName, is
             placeholderTextColor={textSecondary}
           />
 
-          <Text style={[styles.fieldLabel, { color: textSecondary }]}>Interval (days)</Text>
+          <Text style={[styles.fieldLabel, { color: textSecondary }]}>{t('profile_alerts.injection_interval')}</Text>
           <View style={styles.chipsRow}>
             {[14, 28, 84].map((d) => (
               <TouchableOpacity
@@ -854,7 +854,7 @@ function LogInjectionModal({ visible, onClose, onSave, defaultMedicationName, is
             ))}
           </View>
 
-          <Text style={[styles.fieldLabel, { color: textSecondary }]}>Lot number (optional)</Text>
+          <Text style={[styles.fieldLabel, { color: textSecondary }]}>{t('profile_alerts.injection_lot')}</Text>
           <TextInput
             style={[styles.textInput, { backgroundColor: inputBg, borderColor: cardBorder, color: textPrimary }]}
             value={lotNumber}
@@ -863,7 +863,7 @@ function LogInjectionModal({ visible, onClose, onSave, defaultMedicationName, is
             placeholderTextColor={textSecondary}
           />
 
-          <Text style={[styles.fieldLabel, { color: textSecondary }]}>Notes (optional)</Text>
+          <Text style={[styles.fieldLabel, { color: textSecondary }]}>{t('profile_alerts.injection_notes')}</Text>
           <TextInput
             style={[styles.textInput, { backgroundColor: inputBg, borderColor: cardBorder, color: textPrimary }]}
             value={notes}
@@ -874,13 +874,13 @@ function LogInjectionModal({ visible, onClose, onSave, defaultMedicationName, is
 
           <View style={styles.modalActions}>
             <TouchableOpacity onPress={onClose} style={[styles.modalCancelBtn, { borderColor: cardBorder }]} activeOpacity={0.8}>
-              <Text style={[styles.modalCancelText, { color: textSecondary }]}>Cancel</Text>
+              <Text style={[styles.modalCancelText, { color: textSecondary }]}>{t('common.cancel')}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={handleSave} disabled={isSaving} style={[styles.modalSaveBtn, { opacity: isSaving ? 0.6 : 1 }]} activeOpacity={0.8}>
               {isSaving ? (
                 <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
-                <Text style={styles.modalSaveText}>Save</Text>
+                <Text style={styles.modalSaveText}>{t('common.save')}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -1236,8 +1236,8 @@ export default function ProfileScreen() {
 
   const handleChangeEmail = useCallback(() => {
     Alert.prompt(
-      'Change email',
-      'Enter your new email address.',
+      t('common.change_email'),
+      t('common.enter_new_email'),
       async (newEmail) => {
         if (!newEmail?.trim()) return;
         const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
@@ -1251,8 +1251,8 @@ export default function ProfileScreen() {
 
   const handleChangePassword = useCallback(() => {
     Alert.prompt(
-      'New password',
-      'At least 8 characters.',
+      t('common.new_password'),
+      t('common.password_hint'),
       async (newPassword) => {
         if (!newPassword || newPassword.length < 8) {
           Alert.alert('', t('profile_alerts.error_password_short'));
@@ -1277,6 +1277,10 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: bg }]}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -1328,7 +1332,7 @@ export default function ProfileScreen() {
             onPress={() => setShowEditProfile(true)}
             activeOpacity={0.7}
           >
-            <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>Edit profile</Text>
+            <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>{t('profile.edit')}</Text>
             <Text style={[styles.chevron, { color: textSecondary }]}>›</Text>
           </TouchableOpacity>
 
@@ -1342,7 +1346,7 @@ export default function ProfileScreen() {
                 activeOpacity={0.7}
               >
                 <View style={styles.settingsRowLeft}>
-                  <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>About me</Text>
+                  <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>{t('profile_alerts.about_me')}</Text>
                   {!editingAiContext && (
                     <Text style={[styles.settingsRowSub, { color: textSecondary }]} numberOfLines={1}>
                       {aiContext || "Personalise your AI's understanding"}
@@ -1379,7 +1383,7 @@ export default function ProfileScreen() {
                   activeOpacity={0.8}
                   style={[styles.cancelContextBtn, { borderColor: cardBorder }]}
                 >
-                  <Text style={[styles.cancelContextText, { color: textSecondary }]}>Cancel</Text>
+                  <Text style={[styles.cancelContextText, { color: textSecondary }]}>{t('common.cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={handleSaveAiContext}
@@ -1407,7 +1411,7 @@ export default function ProfileScreen() {
                   {t('profile.subscription_active')}
                 </Text>
                 <View style={styles.premiumBadge}>
-                  <Text style={styles.premiumBadgeText}>Premium</Text>
+                  <Text style={styles.premiumBadgeText}>{t('common.premium')}</Text>
                 </View>
               </View>
               <View style={[styles.rowDivider, { backgroundColor: Colors.primary + '30' }]} />
@@ -1431,7 +1435,7 @@ export default function ProfileScreen() {
               <View style={styles.premiumTeaserRow}>
                 <View style={styles.premiumTeaserLeft}>
                   <View style={styles.premiumBadge}>
-                    <Text style={styles.premiumBadgeText}>Premium</Text>
+                    <Text style={styles.premiumBadgeText}>{t('common.premium')}</Text>
                   </View>
                   <Text style={[styles.premiumTeaserTitle, { color: textPrimary }]}>
                     {t('premium_teaser.ai_title')}
@@ -1449,7 +1453,7 @@ export default function ProfileScreen() {
         )}
 
         {/* ── Notifications & Medications ─────────────────────────────────── */}
-        <Text style={[styles.sectionLabel, { color: textSecondary }]}>Notifications</Text>
+        <Text style={[styles.sectionLabel, { color: textSecondary }]}>{t('profile.notifications')}</Text>
         <View style={[styles.settingsCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
           {/* Daily check-in */}
           <View style={styles.settingsRow}>
@@ -1472,7 +1476,7 @@ export default function ProfileScreen() {
                 activeOpacity={0.7}
                 style={styles.settingsRow}
               >
-                <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>Reminder time</Text>
+                <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>{t('medications.reminder_time')}</Text>
                 <Text style={[styles.settingsRowValue, { color: Colors.primary }]}>
                   {profile?.notification_time ?? '20:00'} ›
                 </Text>
@@ -1498,14 +1502,14 @@ export default function ProfileScreen() {
                   style={[styles.timePickerCancel, { borderColor: cardBorder }]}
                   activeOpacity={0.8}
                 >
-                  <Text style={{ color: textSecondary, fontWeight: '500' }}>Cancel</Text>
+                  <Text style={{ color: textSecondary, fontWeight: '500', fontFamily: FontFamily.medium }}>{t('common.cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={handleSaveTime}
                   style={styles.timePickerSave}
                   activeOpacity={0.8}
                 >
-                  <Text style={{ color: '#FFFFFF', fontWeight: '600' }}>Save</Text>
+                  <Text style={{ color: '#FFFFFF', fontWeight: '600', fontFamily: FontFamily.semiBold }}>{t('common.save')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1549,7 +1553,7 @@ export default function ProfileScreen() {
                       {med.dose ? <Text style={[styles.medDose, { color: textSecondary }]}>{med.dose}</Text> : null}
                       {med.as_needed ? (
                         <View style={[styles.freqBadge, { backgroundColor: Colors.warning + '20' }]}>
-                          <Text style={[styles.freqBadgeText, { color: Colors.warning }]}>As needed</Text>
+                          <Text style={[styles.freqBadgeText, { color: Colors.warning }]}>{t('medications.as_needed')}</Text>
                         </View>
                       ) : (
                         <>
@@ -1582,7 +1586,7 @@ export default function ProfileScreen() {
                 activeOpacity={0.7}
                 style={styles.settingsRow}
               >
-                <Text style={[styles.settingsRowLabel, { color: Colors.primary }]}>+ Add medication</Text>
+                <Text style={[styles.settingsRowLabel, { color: Colors.primary }]}>+ {t('profile.add_medication')}</Text>
               </TouchableOpacity>
             </>
           )}
@@ -1591,7 +1595,7 @@ export default function ProfileScreen() {
         {/* ── Health data ──────────────────────────────────────────────────── */}
         {healthAvailable && (
           <>
-            <Text style={[styles.sectionLabel, { color: textSecondary }]}>Health data</Text>
+            <Text style={[styles.sectionLabel, { color: textSecondary }]}>{t('profile.health_data')}</Text>
             <View style={[styles.settingsCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
               <View style={[styles.settingsRow, { paddingRight: Spacing.md }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs }}>
@@ -1620,7 +1624,7 @@ export default function ProfileScreen() {
         )}
 
         {/* ── Treatment ───────────────────────────────────────────────────── */}
-        <Text style={[styles.sectionLabel, { color: textSecondary }]}>Treatment</Text>
+        <Text style={[styles.sectionLabel, { color: textSecondary }]}>{t('profile_alerts.treatment_section')}</Text>
 
         {/* Biologic injections card */}
         {profile?.medications && profile.medications.some(m => BIOLOGIC_MEDS.includes(m)) && (
@@ -1634,7 +1638,7 @@ export default function ProfileScreen() {
               }}
               activeOpacity={0.7}
             >
-              <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>Biologic injections</Text>
+              <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>{t('profile_alerts.biologic_injections')}</Text>
               <Text style={[styles.settingsRowValue, { color: Colors.primary }]}>+ Log ›</Text>
             </TouchableOpacity>
 
@@ -1657,11 +1661,11 @@ export default function ProfileScreen() {
                     <View style={styles.settingsRowLeft}>
                       <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>{MEDICATION_LABELS[med] ?? med}</Text>
                       {lastInj && (
-                        <Text style={[styles.settingsRowSub, { color: textSecondary }]}>Last: {lastInj.injected_at}</Text>
+                        <Text style={[styles.settingsRowSub, { color: textSecondary }]}>{t('profile_alerts.injection_last', { date: lastInj.injected_at })}</Text>
                       )}
                     </View>
                     <Text style={[styles.settingsRowValue, { color: dueColor }]}>
-                      {daysUntil == null ? 'None logged' : daysUntil <= 0 ? 'Due today' : daysUntil === 1 ? 'Due tomorrow' : `Due in ${daysUntil}d`}
+                      {daysUntil == null ? t('profile_alerts.injection_none_logged') : daysUntil <= 0 ? t('profile_alerts.injection_due_today') : daysUntil === 1 ? t('profile_alerts.injection_due_tomorrow') : t('profile_alerts.injection_due_in', { days: daysUntil })}
                     </Text>
                   </View>
                 </React.Fragment>
@@ -1722,11 +1726,11 @@ export default function ProfileScreen() {
               activeOpacity={0.7}
               style={styles.settingsRow}
             >
-              <Text style={[styles.settingsRowSub, { color: textSecondary }]}>From last appointment</Text>
+              <Text style={[styles.settingsRowSub, { color: textSecondary }]}>{t('profile_alerts.from_last_appointment')}</Text>
               <Text style={[styles.reportDateValue, { color: reportFromDate ? textPrimary : Colors.primary }]}>
                 {reportFromDate
                   ? new Date(reportFromDate + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-                  : 'Last 12 months'} ›
+                  : t('profile_alerts.last_12_months')} ›
               </Text>
             </TouchableOpacity>
           ) : (
@@ -1753,14 +1757,14 @@ export default function ProfileScreen() {
                   style={[styles.timePickerCancel, { borderColor: cardBorder }]}
                   activeOpacity={0.8}
                 >
-                  <Text style={{ color: textSecondary, fontWeight: '500' }}>Cancel</Text>
+                  <Text style={{ color: textSecondary, fontWeight: '500', fontFamily: FontFamily.medium }}>{t('common.cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => { setReportFromDate(pendingReportDate); setShowReportDatePicker(false); }}
                   style={styles.timePickerSave}
                   activeOpacity={0.8}
                 >
-                  <Text style={{ color: '#FFFFFF', fontWeight: '600' }}>Set</Text>
+                  <Text style={{ color: '#FFFFFF', fontWeight: '600', fontFamily: FontFamily.semiBold }}>{t('common.set')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1791,7 +1795,7 @@ export default function ProfileScreen() {
         </View>
 
         {/* ── Account ─────────────────────────────────────────────────────── */}
-        <Text style={[styles.sectionLabel, { color: textSecondary }]}>Account</Text>
+        <Text style={[styles.sectionLabel, { color: textSecondary }]}>{t('profile.account')}</Text>
         <View style={[styles.settingsCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
           {/* Feedback */}
           <TouchableOpacity
@@ -1800,7 +1804,7 @@ export default function ProfileScreen() {
             activeOpacity={0.7}
           >
             <View style={styles.settingsRowLeft}>
-              <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>Share feedback</Text>
+              <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>{t('profile_alerts.share_feedback_title')}</Text>
               <Text style={[styles.settingsRowSub, { color: textSecondary }]}>
                 Bugs, ideas, or anything on your mind
               </Text>
@@ -1813,12 +1817,12 @@ export default function ProfileScreen() {
           {/* Email */}
           <TouchableOpacity style={styles.settingsRow} onPress={handleChangeEmail} activeOpacity={0.7}>
             <View style={styles.settingsRowLeft}>
-              <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>Email</Text>
+              <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>{t('common.email')}</Text>
               <Text style={[styles.settingsRowSub, { color: textSecondary }]} numberOfLines={1}>
                 {user?.email}
               </Text>
             </View>
-            <Text style={[styles.settingsRowValue, { color: Colors.primary }]}>Change</Text>
+            <Text style={[styles.settingsRowValue, { color: Colors.primary }]}>{t('common.change')}</Text>
           </TouchableOpacity>
 
           {/* Password */}
@@ -1827,10 +1831,10 @@ export default function ProfileScreen() {
               <View style={[styles.rowDivider, { backgroundColor: cardBorder }]} />
               <TouchableOpacity style={styles.settingsRow} onPress={handleChangePassword} activeOpacity={0.7}>
                 <View style={styles.settingsRowLeft}>
-                  <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>Password</Text>
+                  <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>{t('common.password')}</Text>
                   <Text style={[styles.settingsRowSub, { color: textSecondary }]}>••••••••</Text>
                 </View>
-                <Text style={[styles.settingsRowValue, { color: Colors.primary }]}>Change</Text>
+                <Text style={[styles.settingsRowValue, { color: Colors.primary }]}>{t('common.change')}</Text>
               </TouchableOpacity>
             </>
           )}
@@ -1952,12 +1956,13 @@ export default function ProfileScreen() {
           activeOpacity={0.7}
           style={styles.privacyLink}
         >
-          <Text style={[styles.privacyLinkText, { color: textSecondary }]}>Privacy Policy</Text>
+          <Text style={[styles.privacyLinkText, { color: textSecondary }]}>{t('profile_alerts.privacy_policy')}</Text>
         </TouchableOpacity>
         <Text style={[styles.version, { color: textSecondary }]}>
           {t('profile.version', { version })}
         </Text>
       </ScrollView>
+      </KeyboardAvoidingView>
 
       <AddMedicationModal
         visible={showAddMed}
@@ -2003,8 +2008,8 @@ export default function ProfileScreen() {
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={styles.modalOverlay}>
             <View style={[styles.modalContainer, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-              <Text style={[styles.modalTitle, { color: textPrimary }]}>Share your feedback</Text>
-              <Text style={[styles.fieldLabel, { color: textSecondary }]}>What's on your mind?</Text>
+              <Text style={[styles.modalTitle, { color: textPrimary }]}>{t('profile_alerts.share_feedback_title')}</Text>
+              <Text style={[styles.fieldLabel, { color: textSecondary }]}>{t('profile_alerts.feedback_prompt')}</Text>
               <TextInput
                 style={[
                   styles.feedbackInput,
@@ -2025,7 +2030,7 @@ export default function ProfileScreen() {
                   style={[styles.modalCancelBtn, { borderColor: cardBorder }]}
                   activeOpacity={0.8}
                 >
-                  <Text style={[styles.modalCancelText, { color: textSecondary }]}>Cancel</Text>
+                  <Text style={[styles.modalCancelText, { color: textSecondary }]}>{t('common.cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={handleSendFeedback}
@@ -2033,7 +2038,7 @@ export default function ProfileScreen() {
                   disabled={!feedbackText.trim()}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.modalSaveText}>Send</Text>
+                  <Text style={styles.modalSaveText}>{t('common.send')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -2083,6 +2088,8 @@ const styles = StyleSheet.create({
   settingsRowLabel: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
+    fontFamily: FontFamily.semiBold,
   },
   settingsRowSub: {
     fontSize: FontSize.xs,
@@ -2091,10 +2098,13 @@ const styles = StyleSheet.create({
   settingsRowValue: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
+    fontFamily: FontFamily.semiBold,
   },
   chevron: {
     fontSize: 20,
     fontWeight: '300',
+    fontFamily: FontFamily.regular,
   },
   rowDivider: {
     height: StyleSheet.hairlineWidth,
@@ -2109,6 +2119,8 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: FontSize.xs,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.bold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: Spacing.sm,
@@ -2139,6 +2151,8 @@ const styles = StyleSheet.create({
   sectionHeaderLabel: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.bold,
     color: Colors.textSecondary,
   },
 
@@ -2153,15 +2167,21 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: FontSize.xxl,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.bold,
     color: '#FFFFFF',
   },
   nameDisplay: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.bold,
   },
   nameInput: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.bold,
     borderBottomWidth: 1.5,
     paddingVertical: 2,
     paddingHorizontal: 4,
@@ -2202,6 +2222,8 @@ const styles = StyleSheet.create({
   medName: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.bold,
   },
   medMeta: {
     flexDirection: 'row',
@@ -2223,6 +2245,8 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.primaryDark,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
+    fontFamily: FontFamily.semiBold,
   },
   medTime: {
     fontSize: FontSize.xs,
@@ -2256,6 +2280,8 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.bold,
   },
   cancelContextBtn: {
     flex: 1,
@@ -2267,6 +2293,8 @@ const styles = StyleSheet.create({
   cancelContextText: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
+    fontFamily: FontFamily.semiBold,
   },
   deleteDataNote: {
     fontSize: FontSize.xs,
@@ -2308,6 +2336,8 @@ const styles = StyleSheet.create({
   reportDateValue: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
+    fontFamily: FontFamily.semiBold,
   },
   // Subscription card
   premiumTeaser: {
@@ -2325,6 +2355,8 @@ const styles = StyleSheet.create({
   premiumTeaserTitle: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.bold,
   },
   premiumTeaserBody: {
     fontSize: FontSize.sm,
@@ -2333,6 +2365,8 @@ const styles = StyleSheet.create({
   premiumTeaserArrow: {
     fontSize: 20,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
+    fontFamily: FontFamily.semiBold,
   },
   premiumBadge: {
     backgroundColor: Colors.primary,
@@ -2344,6 +2378,8 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: '#FFFFFF',
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.bold,
   },
   // Modal
   modalOverlay: {
@@ -2361,11 +2397,15 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: FontSize.lg,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
+    fontFamily: FontFamily.extraBold,
     marginBottom: Spacing.md,
   },
   fieldLabel: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
+    fontFamily: FontFamily.semiBold,
     marginBottom: Spacing.xs,
     marginTop: Spacing.sm,
   },
@@ -2390,6 +2430,8 @@ const styles = StyleSheet.create({
   chipText: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
+    fontFamily: FontFamily.semiBold,
   },
   modalActions: {
     flexDirection: 'row',
@@ -2406,6 +2448,8 @@ const styles = StyleSheet.create({
   modalCancelText: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
+    fontFamily: FontFamily.semiBold,
   },
   modalSaveBtn: {
     flex: 2,
@@ -2418,6 +2462,8 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.bold,
   },
   // Profile edit modal
   editModalHeader: {
@@ -2431,10 +2477,14 @@ const styles = StyleSheet.create({
   editModalTitle: {
     fontSize: FontSize.lg,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.bold,
   },
   editModalClose: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
+    fontFamily: FontFamily.semiBold,
   },
   editModalContent: {
     padding: Spacing.lg,
@@ -2443,6 +2493,8 @@ const styles = StyleSheet.create({
   editFieldLabel: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
+    fontFamily: FontFamily.semiBold,
     marginBottom: Spacing.xs,
     marginTop: Spacing.md,
   },

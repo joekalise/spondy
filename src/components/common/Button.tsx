@@ -9,7 +9,7 @@ import {
   useColorScheme,
 } from 'react-native';
 import { Colors } from '@/constants/colors';
-import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
+import { FontSize, FontFamily, Spacing, BorderRadius } from '@/constants/theme';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
 
@@ -113,6 +113,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: FontSize.md,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   labelPrimary: {
     color: '#FFFFFF',

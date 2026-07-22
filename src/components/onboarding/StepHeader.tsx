@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, useColorScheme } from 'react-native';
 import { Colors } from '@/constants/colors';
-import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
+import { FontSize, FontFamily, Spacing, BorderRadius } from '@/constants/theme';
 
 interface StepHeaderProps {
   currentStep: number;
@@ -73,6 +73,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.textSecondary,
     fontWeight: '500',
+    fontFamily: FontFamily.medium,
     marginBottom: Spacing.sm,
   },
   stepCountDark: {
@@ -81,6 +82,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: FontSize.xxl,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
     lineHeight: 34,
     marginBottom: Spacing.xs,

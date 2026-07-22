@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { useRouter, useFocusEffect } from 'expo-router';
 import Svg, { Polyline, Circle } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
-import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
+import { FontSize, FontFamily, Spacing, BorderRadius } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useDailyLog } from '@/hooks/useDailyLog';
@@ -302,15 +302,15 @@ function SevenDayOverview({
         <View style={styles.weekLegendRow}>
           <View style={styles.weekLegendItem}>
             <View style={[styles.weekLegendDot, { backgroundColor: Colors.success }]} />
-            <Text style={[styles.weekLegendText, { color: textSec }]}>Low (0–3)</Text>
+            <Text style={[styles.weekLegendText, { color: textSec }]}>{t('home.legend_low')}</Text>
           </View>
           <View style={styles.weekLegendItem}>
             <View style={[styles.weekLegendDot, { backgroundColor: Colors.warning }]} />
-            <Text style={[styles.weekLegendText, { color: textSec }]}>Moderate (4–6)</Text>
+            <Text style={[styles.weekLegendText, { color: textSec }]}>{t('home.legend_moderate')}</Text>
           </View>
           <View style={styles.weekLegendItem}>
             <View style={[styles.weekLegendDot, { backgroundColor: Colors.error }]} />
-            <Text style={[styles.weekLegendText, { color: textSec }]}>High (7–10)</Text>
+            <Text style={[styles.weekLegendText, { color: textSec }]}>{t('home.legend_high')}</Text>
           </View>
         </View>
       )}
@@ -385,6 +385,7 @@ function FlareRiskCard({
   isPremium: boolean;
   onChatPress: () => void;
 }) {
+  const { t } = useTranslation();
   const isWarning = level === 'warning';
   const accentColor = isWarning ? Colors.error : Colors.warning;
   const bgColor = isWarning
@@ -418,10 +419,10 @@ function FlareRiskCard({
             style={[styles.flareChatBtn, { backgroundColor: accentColor }]}
             activeOpacity={0.8}
           >
-            <Text style={styles.flareChatBtnText}>Chat about this</Text>
+            <Text style={styles.flareChatBtnText}>{t('home.chat_about_this')}</Text>
           </TouchableOpacity>
           <View style={styles.flarePremiumBadge}>
-            <Text style={styles.flarePremiumBadgeText}>Premium</Text>
+            <Text style={styles.flarePremiumBadgeText}>{t('common.premium')}</Text>
           </View>
         </View>
       )}
@@ -440,6 +441,7 @@ function ReviewPromptCard({
   onReview: () => void;
   onDismiss: () => void;
 }) {
+  const { t } = useTranslation();
   const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
   const cardBorder = isDark ? Colors.borderDark : Colors.border;
   const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
@@ -447,7 +449,7 @@ function ReviewPromptCard({
 
   return (
     <View style={[styles.reviewCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-      <Text style={[styles.reviewTitle, { color: textPrimary }]}>Enjoying Spondy?</Text>
+      <Text style={[styles.reviewTitle, { color: textPrimary }]}>{t('home.review_title')}</Text>
       <Text style={[styles.reviewBody, { color: textSec }]}>
         Your review helps more people with AS find the app. It only takes a moment.
       </Text>
@@ -457,10 +459,10 @@ function ReviewPromptCard({
           onPress={onReview}
           activeOpacity={0.8}
         >
-          <Text style={styles.reviewBtnPrimaryText}>Leave a review ⭐</Text>
+          <Text style={styles.reviewBtnPrimaryText}>{t('home.review_cta')}</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={onDismiss} activeOpacity={0.7} style={styles.reviewBtnDismiss}>
-          <Text style={[styles.reviewBtnDismissText, { color: textSec }]}>Not now</Text>
+          <Text style={[styles.reviewBtnDismissText, { color: textSec }]}>{t('home.review_dismiss')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -623,16 +625,16 @@ export default function HomeScreen() {
               <Text style={styles.checkInHeroTitle}>{t('home.check_in_card_title')}</Text>
               <Text style={styles.checkInHeroSubtitle}>{t('home.check_in_card_subtitle')}</Text>
               <View style={styles.checkInHeroButton}>
-                <Text style={styles.checkInHeroButtonText}>Start check-in →</Text>
+                <Text style={styles.checkInHeroButtonText}>{t('home.start_checkin')}</Text>
               </View>
             </View>
           </TouchableOpacity>
         ) : todayLog ? (
           <View style={[styles.todaySummaryCard, isDark && styles.todaySummaryCardDark]}>
             <View style={styles.todaySummaryHeader}>
-              <Text style={[styles.sectionTitle, isDark && styles.textPrimaryDark]}>Today's log</Text>
+              <Text style={[styles.sectionTitle, isDark && styles.textPrimaryDark]}>{t('home.todays_log')}</Text>
               <TouchableOpacity onPress={() => router.push('/(tabs)/track')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Text style={[styles.todaySummaryEdit, { color: Colors.primary }]}>Edit</Text>
+                <Text style={[styles.todaySummaryEdit, { color: Colors.primary }]}>{t('common.edit')}</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.todaySummaryRow}>
@@ -640,7 +642,7 @@ export default function HomeScreen() {
                 <Text style={[styles.todaySummaryValue, { color: painDotColor(todayLog.pain_score) }]}>
                   {todayLog.pain_score}
                 </Text>
-                <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>Pain</Text>
+                <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>{t('home.pain')}</Text>
               </View>
               <View style={[styles.todaySummaryDivider, isDark && styles.todaySummaryDividerDark]} />
               <View style={styles.todaySummaryItem}>
@@ -649,14 +651,14 @@ export default function HomeScreen() {
                 }]}>
                   {todayLog.fatigue_score}
                 </Text>
-                <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>Fatigue</Text>
+                <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>{t('home.fatigue')}</Text>
               </View>
               <View style={[styles.todaySummaryDivider, isDark && styles.todaySummaryDividerDark]} />
               <View style={styles.todaySummaryItem}>
                 <Text style={styles.todaySummaryMoodEmoji}>
                   {todayLog.mood === 'great' ? '😄' : todayLog.mood === 'good' ? '🙂' : todayLog.mood === 'okay' ? '😐' : todayLog.mood === 'low' ? '😔' : todayLog.mood === 'very_low' ? '😞' : '—'}
                 </Text>
-                <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>Mood</Text>
+                <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>{t('home.mood')}</Text>
               </View>
               {tracksMeds && (
                 <>
@@ -667,7 +669,7 @@ export default function HomeScreen() {
                     }]}>
                       {todayLog.medications_taken === 'yes' ? '✓' : todayLog.medications_taken === 'partial' ? '~' : '✗'}
                     </Text>
-                    <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>Meds</Text>
+                    <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>{t('home.meds')}</Text>
                   </View>
                 </>
               )}
@@ -688,7 +690,7 @@ export default function HomeScreen() {
                     <Text style={[styles.healthStatValue, { color: stepsColor(healthData.steps) }]}>
                       {(healthData.steps / 1000).toFixed(1)}k
                     </Text>
-                    <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>Steps</Text>
+                    <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>{t('home.steps')}</Text>
                   </View>
                   {(healthData.sleep_duration !== null || healthData.hrv !== null) && (
                     <View style={[styles.todaySummaryDivider, isDark && styles.todaySummaryDividerDark]} />
@@ -701,7 +703,7 @@ export default function HomeScreen() {
                     <Text style={[styles.healthStatValue, { color: sleepColor(healthData.sleep_duration) }]}>
                       {healthData.sleep_duration}h
                     </Text>
-                    <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>Sleep</Text>
+                    <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>{t('home.sleep')}</Text>
                   </View>
                   {healthData.hrv !== null && (
                     <View style={[styles.todaySummaryDivider, isDark && styles.todaySummaryDividerDark]} />
@@ -713,7 +715,7 @@ export default function HomeScreen() {
                   <Text style={[styles.healthStatValue, { color: hrvColor(healthData.hrv) }]}>
                     {healthData.hrv}
                   </Text>
-                  <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>HRV</Text>
+                  <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>{t('home.hrv')}</Text>
                 </View>
               )}
             </View>
@@ -776,6 +778,7 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: FontSize.xl,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
     color: Colors.textPrimary,
     flex: 1,
     marginRight: Spacing.sm,
@@ -797,6 +800,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
 
   // Active flare card — red
@@ -815,6 +819,7 @@ const styles = StyleSheet.create({
   activeFlareBadge: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.error,
   },
   activeFlareDate: {
@@ -838,6 +843,7 @@ const styles = StyleSheet.create({
   checkInHeroTitle: {
     fontSize: FontSize.xxl,
     fontWeight: '900',
+    fontFamily: FontFamily.extraBold,
     color: '#FFFFFF',
     lineHeight: 30,
   },
@@ -857,6 +863,7 @@ const styles = StyleSheet.create({
   checkInHeroButtonText: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: '#FFFFFF',
   },
 
@@ -881,11 +888,13 @@ const styles = StyleSheet.create({
   todaySummaryLabel: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
   },
   todaySummaryEdit: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   todaySummaryRow: {
     flexDirection: 'row',
@@ -900,6 +909,7 @@ const styles = StyleSheet.create({
   todaySummaryValue: {
     fontSize: FontSize.xxl,
     fontWeight: '900',
+    fontFamily: FontFamily.extraBold,
     lineHeight: 30,
   },
   todaySummaryMoodEmoji: {
@@ -910,6 +920,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.textSecondary,
     fontWeight: '500',
+    fontFamily: FontFamily.medium,
   },
   todaySummaryDivider: {
     width: 1,
@@ -935,6 +946,7 @@ const styles = StyleSheet.create({
   checkInTitle: {
     fontSize: FontSize.md,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
     color: '#FFFFFF',
     marginBottom: 2,
   },
@@ -946,6 +958,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xl,
     color: '#FFFFFF',
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
 
   // Generic card
@@ -964,6 +977,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
   },
 
@@ -989,11 +1003,13 @@ const styles = StyleSheet.create({
   scoreNumberLarge: {
     fontSize: 48,
     fontWeight: '900',
+    fontFamily: FontFamily.extraBold,
     lineHeight: 52,
   },
   scoreOutOf: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     paddingBottom: 6,
   },
   scoreBarBlock: {
@@ -1016,6 +1032,7 @@ const styles = StyleSheet.create({
   scoreBarLabel: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     marginTop: 2,
   },
   scoreHint: {
@@ -1035,11 +1052,13 @@ const styles = StyleSheet.create({
   scoreNumber: {
     fontSize: FontSize.xxxl,
     fontWeight: '900',
+    fontFamily: FontFamily.extraBold,
     lineHeight: 40,
   },
   scoreLabel: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   scoreRight: {
     flex: 1,
@@ -1063,6 +1082,7 @@ const styles = StyleSheet.create({
   breakdownTitle: {
     fontSize: FontSize.xs,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     marginBottom: 4,
   },
   factorRow: {
@@ -1076,6 +1096,7 @@ const styles = StyleSheet.create({
   factorValue: {
     fontSize: FontSize.xs,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
 
   // No data
@@ -1106,10 +1127,12 @@ const styles = StyleSheet.create({
   weekDotNumber: {
     fontSize: FontSize.sm,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
   },
   weekDotDay: {
     fontSize: 10,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     textAlign: 'center',
   },
   weekLegendRow: {
@@ -1146,6 +1169,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.textSecondary,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   miniChartEmpty: {
     alignItems: 'center',
@@ -1171,6 +1195,7 @@ const styles = StyleSheet.create({
   flareRecoveryText: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     color: Colors.success,
   },
 
@@ -1184,6 +1209,7 @@ const styles = StyleSheet.create({
   flareRiskTitle: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   flareRiskBody: {
     fontSize: FontSize.sm,
@@ -1205,6 +1231,7 @@ const styles = StyleSheet.create({
   flareRiskChipText: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   reviewCard: {
     borderRadius: BorderRadius.lg,
@@ -1215,6 +1242,7 @@ const styles = StyleSheet.create({
   reviewTitle: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   reviewBody: {
     fontSize: FontSize.sm,
@@ -1235,6 +1263,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   reviewBtnDismiss: {
     paddingVertical: Spacing.xs,
@@ -1258,6 +1287,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   flarePremiumBadge: {
     backgroundColor: Colors.primary,
@@ -1269,6 +1299,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: '#FFFFFF',
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
 
   // Unused flare info card styles kept for unused component compatibility
@@ -1287,6 +1318,7 @@ const styles = StyleSheet.create({
   flareInfoBadge: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.error,
   },
   flareInfoText: {
@@ -1314,6 +1346,7 @@ const styles = StyleSheet.create({
   healthStatValue: {
     fontSize: FontSize.xxl,
     fontWeight: '900',
+    fontFamily: FontFamily.extraBold,
     lineHeight: 30,
     color: Colors.textPrimary,
   },
@@ -1336,10 +1369,12 @@ const styles = StyleSheet.create({
   biologicTitle: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     color: Colors.textPrimary,
   },
   biologicCountdown: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
 });

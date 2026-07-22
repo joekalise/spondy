@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { Colors } from '@/constants/colors';
-import { FontSize, BorderRadius } from '@/constants/theme';
+import { FontSize, FontFamily, BorderRadius } from '@/constants/theme';
 
 export function ProfileButton() {
   const router = useRouter();
@@ -36,6 +36,7 @@ const styles = StyleSheet.create({
   initials: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: '#FFFFFF',
     lineHeight: 18,
   },

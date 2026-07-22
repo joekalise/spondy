@@ -7,7 +7,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Colors } from '@/constants/colors';
-import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
+import { FontSize, FontFamily, Spacing, BorderRadius } from '@/constants/theme';
 
 interface OptionCardProps {
   label: string;
@@ -78,5 +78,6 @@ const styles = StyleSheet.create({
   labelSelected: {
     color: Colors.primaryDark,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
 });

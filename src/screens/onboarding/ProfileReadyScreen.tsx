@@ -17,7 +17,7 @@ import { Button } from '@/components/common/Button';
 import { DragSlider } from '@/components/common/DragSlider';
 import { SpondyMark } from '@/components/common/SpondyMark';
 import { Colors } from '@/constants/colors';
-import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
+import { FontSize, FontFamily, Spacing, BorderRadius } from '@/constants/theme';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { saveDailyLog } from '@/services/database';
@@ -166,10 +166,10 @@ export function ProfileReadyScreen() {
               Pre-filled from your answers — adjust if needed.
             </Text>
 
-            <Text style={[styles.logLabel, { color: textSecondary }]}>Pain  <Text style={{ color: textPrimary, fontWeight: '700' }}>{painScore}/10</Text></Text>
+            <Text style={[styles.logLabel, { color: textSecondary }]}>Pain  <Text style={{ color: textPrimary, fontWeight: '700', fontFamily: FontFamily.bold }}>{painScore}/10</Text></Text>
             <DragSlider value={painScore} onChange={setPainScore} isDark={isDark} minLabel="None" maxLabel="Severe" />
 
-            <Text style={[styles.logLabel, { color: textSecondary, marginTop: Spacing.md }]}>Fatigue  <Text style={{ color: textPrimary, fontWeight: '700' }}>{fatigueScore}/10</Text></Text>
+            <Text style={[styles.logLabel, { color: textSecondary, marginTop: Spacing.md }]}>Fatigue  <Text style={{ color: textPrimary, fontWeight: '700', fontFamily: FontFamily.bold }}>{fatigueScore}/10</Text></Text>
             <DragSlider value={fatigueScore} onChange={setFatigueScore} isDark={isDark} minLabel="None" maxLabel="Severe" />
           </View>
         ) : (
@@ -233,6 +233,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: FontSize.xxl,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
     color: Colors.textPrimary,
     textAlign: 'center',
   },
@@ -250,6 +251,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     lineHeight: 24,
     fontWeight: '500',
+    fontFamily: FontFamily.medium,
   },
 
   // Day-one log
@@ -265,10 +267,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.xs,
   },
-  logTitle: { fontSize: FontSize.md, fontWeight: '700' },
+  logTitle: { fontSize: FontSize.md, fontWeight: '700', fontFamily: FontFamily.bold },
   logHint: { fontSize: FontSize.xs, marginBottom: Spacing.md },
   logLabel: { fontSize: FontSize.sm, marginBottom: Spacing.xs },
-  skipLink: { fontSize: FontSize.sm, fontWeight: '600' },
+  skipLink: { fontSize: FontSize.sm, fontWeight: '600', fontFamily: FontFamily.semiBold },
   undoSkip: { marginBottom: Spacing.xl, alignItems: 'center', paddingVertical: Spacing.sm },
 
   // Insights
@@ -276,6 +278,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: FontSize.xs,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     marginBottom: Spacing.sm,

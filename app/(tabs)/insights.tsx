@@ -19,7 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { useRouter, useFocusEffect } from 'expo-router';
 
 import { Colors } from '@/constants/colors';
-import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
+import { FontSize, FontFamily, Spacing, BorderRadius } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { getDailyLogs, getFlares, getStreak } from '@/services/database';
@@ -295,7 +295,7 @@ function AIInsightCard({ logs, flares, profile, healthHistory, isDark }: AIInsig
             {t('insights.ai_insight_card_title')}
           </Text>
           <View style={styles.premiumBadge}>
-            <Text style={styles.premiumBadgeText}>Premium</Text>
+            <Text style={styles.premiumBadgeText}>{t('common.premium')}</Text>
           </View>
         </View>
         <TouchableOpacity
@@ -389,6 +389,7 @@ interface TrialPromptCardProps {
 }
 
 function TrialPromptCard({ isDark, onStartTrial }: TrialPromptCardProps) {
+  const { t } = useTranslation();
   const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
   const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
   const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
@@ -407,7 +408,7 @@ function TrialPromptCard({ isDark, onStartTrial }: TrialPromptCardProps) {
       <Text style={[styles.teaserText, { color: textSecondary }]}>
         Your data is ready for its first AI analysis. See what patterns are driving your symptoms.
       </Text>
-      <Text style={[styles.teaserLink, { color: Colors.primary }]}>See what's included →</Text>
+      <Text style={[styles.teaserLink, { color: Colors.primary }]}>{t('premium_teaser.see_whats_included')}</Text>
     </TouchableOpacity>
   );
 }
@@ -482,9 +483,9 @@ function ChatDataCard({ isDark, onPress }: { isDark: boolean; onPress: () => voi
     >
       <View style={styles.chatCardHeader}>
         <View style={styles.aiTitleRow}>
-          <Text style={[styles.cardTitle, { color: textPrimary }]}>Chat with your data</Text>
+          <Text style={[styles.cardTitle, { color: textPrimary }]}>{t('insights.chat_with_data')}</Text>
           <View style={styles.premiumBadge}>
-            <Text style={styles.premiumBadgeText}>Premium</Text>
+            <Text style={styles.premiumBadgeText}>{t('common.premium')}</Text>
           </View>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -531,6 +532,7 @@ interface BasdaiModalProps {
 }
 
 function BasdaiModal({ visible, onClose, onSave, isDark }: BasdaiModalProps) {
+  const { t } = useTranslation();
   const [q1, setQ1] = useState(5);
   const [q2, setQ2] = useState(5);
   const [q3, setQ3] = useState(5);
@@ -578,9 +580,9 @@ function BasdaiModal({ visible, onClose, onSave, isDark }: BasdaiModalProps) {
       <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? Colors.backgroundDark : Colors.background }}>
         <View style={[styles.basdaiHeader, { borderBottomColor: border }]}>
           <TouchableOpacity onPress={onClose} style={{ width: 64 }}>
-            <Text style={[styles.basdaiCancelText, { color: textSecondary }]}>Cancel</Text>
+            <Text style={[styles.basdaiCancelText, { color: textSecondary }]}>{t('common.cancel')}</Text>
           </TouchableOpacity>
-          <Text style={[styles.basdaiTitle, { color: textPrimary }]}>BASDAI Assessment</Text>
+          <Text style={[styles.basdaiTitle, { color: textPrimary }]}>{t('insights.basdai_modal_title')}</Text>
           <View style={{ width: 64 }} />
         </View>
         <ScrollView contentContainerStyle={{ padding: Spacing.lg, gap: Spacing.md }} showsVerticalScrollIndicator={false}>
@@ -594,7 +596,7 @@ function BasdaiModal({ visible, onClose, onSave, isDark }: BasdaiModalProps) {
 
           {/* Score preview */}
           <View style={[styles.basdaiScoreCard, { backgroundColor: cardBg, borderColor: interp.color + '50' }]}>
-            <Text style={[styles.basdaiScoreLabel, { color: textSecondary }]}>Your BASDAI score</Text>
+            <Text style={[styles.basdaiScoreLabel, { color: textSecondary }]}>{t('insights.basdai_score_label')}</Text>
             <Text style={[styles.basdaiScoreLarge, { color: interp.color }]}>{computedScore.toFixed(1)}<Text style={{ fontSize: FontSize.sm }}>/10</Text></Text>
             <Text style={[styles.basdaiInterpText, { color: interp.color }]}>{interp.label}</Text>
             {computedScore >= 4 && (
@@ -613,7 +615,7 @@ function BasdaiModal({ visible, onClose, onSave, isDark }: BasdaiModalProps) {
             {isSaving ? (
               <ActivityIndicator color="#FFFFFF" size="small" />
             ) : (
-              <Text style={styles.basdaiSaveBtnText}>Save assessment</Text>
+              <Text style={styles.basdaiSaveBtnText}>{t('insights.basdai_save')}</Text>
             )}
           </TouchableOpacity>
           <View style={{ height: Spacing.xl }} />
@@ -638,6 +640,7 @@ function BasdaiPromptCard({
   onPress: () => void;
   isDark: boolean;
 }) {
+  const { t } = useTranslation();
   const [showInfo, setShowInfo] = useState(false);
   const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
   const cardBorder = isDark ? Colors.borderDark : Colors.border;
@@ -648,7 +651,7 @@ function BasdaiPromptCard({
     return (
       <View style={[styles.basdaiPromptCard, { backgroundColor: isDark ? '#2D1A0E' : '#FFF7ED', borderColor: Colors.primary + '40' }]}>
         <View style={styles.basdaiPromptTitleRow}>
-          <Text style={[styles.basdaiPromptTitle, { color: textPrimary, flex: 1 }]}>Monthly clinical assessment</Text>
+          <Text style={[styles.basdaiPromptTitle, { color: textPrimary, flex: 1 }]}>{t('insights.basdai_prompt')}</Text>
           <TouchableOpacity onPress={() => setShowInfo(v => !v)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
             <Text style={[styles.basdaiInfoIcon, { color: showInfo ? Colors.primary : textSecondary }]}>ⓘ</Text>
           </TouchableOpacity>
@@ -657,7 +660,7 @@ function BasdaiPromptCard({
           <Text style={[styles.basdaiInfoText, { color: textSecondary }]}>{BASDAI_INFO}</Text>
         )}
         <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.basdaiTakeBtn}>
-          <Text style={styles.basdaiTakeBtnText}>Take assessment</Text>
+          <Text style={styles.basdaiTakeBtnText}>{t('insights.basdai_take')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -671,7 +674,7 @@ function BasdaiPromptCard({
       <View style={[styles.basdaiCompactRow, { backgroundColor: cardBg, borderColor: cardBorder }]}>
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs }}>
-            <Text style={[styles.basdaiCompactLabel, { color: textSecondary }]}>BASDAI</Text>
+            <Text style={[styles.basdaiCompactLabel, { color: textSecondary }]}>{t('insights.basdai_label')}</Text>
             <TouchableOpacity onPress={() => setShowInfo(v => !v)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
               <Text style={[styles.basdaiInfoIcon, { color: showInfo ? Colors.primary : textSecondary, fontSize: FontSize.xs }]}>ⓘ</Text>
             </TouchableOpacity>
@@ -686,7 +689,7 @@ function BasdaiPromptCard({
           <Text style={[styles.basdaiCompactDate, { color: textSecondary }]}>{daysSince} days ago</Text>
         </View>
         <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.basdaiRetakeBtn}>
-          <Text style={[styles.basdaiRetakeBtnText, { color: Colors.primary }]}>Retake</Text>
+          <Text style={[styles.basdaiRetakeBtnText, { color: Colors.primary }]}>{t('insights.basdai_retake')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -695,7 +698,7 @@ function BasdaiPromptCard({
   return (
     <View style={[styles.basdaiPromptCard, { backgroundColor: isDark ? '#2D1A0E' : '#FFF7ED', borderColor: Colors.warning + '50' }]}>
       <View style={styles.basdaiPromptTitleRow}>
-        <Text style={[styles.basdaiPromptTitle, { color: textPrimary, flex: 1 }]}>Monthly reassessment due</Text>
+        <Text style={[styles.basdaiPromptTitle, { color: textPrimary, flex: 1 }]}>{t('insights.basdai_reassessment_due')}</Text>
         <TouchableOpacity onPress={() => setShowInfo(v => !v)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
           <Text style={[styles.basdaiInfoIcon, { color: showInfo ? Colors.primary : textSecondary }]}>ⓘ</Text>
         </TouchableOpacity>
@@ -704,10 +707,10 @@ function BasdaiPromptCard({
         <Text style={[styles.basdaiInfoText, { color: textSecondary }]}>{BASDAI_INFO}</Text>
       )}
       <Text style={[styles.basdaiPromptBody, { color: textSecondary }]}>
-        Your last BASDAI was {latestScore.score.toFixed(1)} ({interp.label}), {daysSince} days ago. Time to reassess.
+        {t('insights.basdai_last_score', { score: latestScore.score.toFixed(1), label: interp.label, days: daysSince })}
       </Text>
       <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.basdaiTakeBtn}>
-        <Text style={styles.basdaiTakeBtnText}>Take assessment</Text>
+        <Text style={styles.basdaiTakeBtnText}>{t('insights.basdai_take')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -1087,7 +1090,7 @@ export default function InsightsScreen() {
                 {t('insights.ai_insight_title')}
               </Text>
               <View style={styles.premiumBadge}>
-                <Text style={styles.premiumBadgeText}>Premium</Text>
+                <Text style={styles.premiumBadgeText}>{t('common.premium')}</Text>
               </View>
             </View>
             <Text style={[styles.teaserText, { color: textSecondary }]}>
@@ -1167,6 +1170,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: FontSize.xxl,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
     flex: 1,
     marginRight: Spacing.sm,
   },
@@ -1185,6 +1189,7 @@ const styles = StyleSheet.create({
   periodBtnText: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
 
   // Section divider
@@ -1210,6 +1215,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     marginBottom: Spacing.sm,
   },
   emptyText: {
@@ -1271,6 +1277,7 @@ const styles = StyleSheet.create({
   flareDate: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   flareDays: {
     fontSize: FontSize.xs,
@@ -1286,6 +1293,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: '#FFFFFF',
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     textTransform: 'capitalize',
   },
   statsGrid: {
@@ -1302,6 +1310,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
 
   // Chat card — full card matching aiCard style
@@ -1329,6 +1338,7 @@ const styles = StyleSheet.create({
   chatRowArrow: {
     fontSize: FontSize.lg,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
 
   // AI card styles
@@ -1354,6 +1364,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: '#FFFFFF',
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   refreshBtn: {
     borderWidth: 1.5,
@@ -1365,6 +1376,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.primary,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   generatingRow: {
     flexDirection: 'row',
@@ -1392,6 +1404,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.error,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   insightText: {
     fontSize: FontSize.sm,
@@ -1423,11 +1436,13 @@ const styles = StyleSheet.create({
   insightPointTitle: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     flex: 1,
   },
   insightPointChevron: {
     fontSize: FontSize.xs,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   insightPointDetail: {
     width: '100%',
@@ -1442,11 +1457,13 @@ const styles = StyleSheet.create({
   showMoreText: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   welcomeMessageText: {
     fontSize: FontSize.md,
     lineHeight: 24,
     fontWeight: '400',
+    fontFamily: FontFamily.regular,
     marginBottom: Spacing.xs,
   },
   teaserText: {
@@ -1457,6 +1474,7 @@ const styles = StyleSheet.create({
   teaserLink: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   ctaBtn: {
     backgroundColor: Colors.primary,
@@ -1469,10 +1487,12 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   infoIconBtn: {
     fontSize: FontSize.lg,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   chatInfoText: {
     fontSize: FontSize.sm,
@@ -1489,6 +1509,7 @@ const styles = StyleSheet.create({
   chatNavText: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   aiHeader: {
     flexDirection: 'row',
@@ -1509,6 +1530,7 @@ const styles = StyleSheet.create({
   basdaiTitle: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   basdaiCancelText: {
     fontSize: FontSize.md,
@@ -1522,11 +1544,13 @@ const styles = StyleSheet.create({
   basdaiQuestionNum: {
     fontSize: FontSize.xs,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   basdaiQuestionText: {
     fontSize: FontSize.sm,
     lineHeight: 20,
     fontWeight: '500',
+    fontFamily: FontFamily.medium,
   },
   basdaiStepBtn: {
     width: 52,
@@ -1539,11 +1563,13 @@ const styles = StyleSheet.create({
   basdaiStepBtnText: {
     fontSize: 24,
     fontWeight: '300',
+    fontFamily: FontFamily.regular,
     lineHeight: 30,
   },
   basdaiScore: {
     fontSize: 36,
     fontWeight: '900',
+    fontFamily: FontFamily.extraBold,
     lineHeight: 42,
   },
   basdaiHint: {
@@ -1559,15 +1585,18 @@ const styles = StyleSheet.create({
   basdaiScoreLabel: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   basdaiScoreLarge: {
     fontSize: 48,
     fontWeight: '900',
+    fontFamily: FontFamily.extraBold,
     lineHeight: 56,
   },
   basdaiInterpText: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   basdaiThresholdNote: {
     fontSize: FontSize.xs,
@@ -1585,6 +1614,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
 
   // BASDAI prompt card
@@ -1602,6 +1632,7 @@ const styles = StyleSheet.create({
   basdaiPromptTitle: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   basdaiInfoIcon: {
     fontSize: FontSize.md,
@@ -1625,6 +1656,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   basdaiCompactRow: {
     flexDirection: 'row',
@@ -1636,14 +1668,17 @@ const styles = StyleSheet.create({
   basdaiCompactLabel: {
     fontSize: FontSize.xs,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   basdaiCompactScore: {
     fontSize: FontSize.xl,
     fontWeight: '900',
+    fontFamily: FontFamily.extraBold,
   },
   basdaiCompactInterp: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   basdaiCompactDate: {
     fontSize: FontSize.xs,
@@ -1656,5 +1691,6 @@ const styles = StyleSheet.create({
   basdaiRetakeBtnText: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
 });

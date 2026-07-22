@@ -9,11 +9,13 @@ import {
   TextInput,
   Alert,
   useColorScheme,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Colors } from '@/constants/colors';
-import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
+import { FontSize, FontFamily, Spacing, BorderRadius } from '@/constants/theme';
 import { useFlares } from '@/hooks/useFlares';
 import { useUveitisEpisodes } from '@/hooks/useUveitisEpisodes';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -161,10 +163,12 @@ function EditFlareModal({ visible, flare, onClose, onSave, onDelete, isDark, loc
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
       <View style={styles.modalOverlay}>
         <View style={[styles.modalSheet, isDark && styles.modalSheetDark]}>
           <View style={styles.modalHandle} />
-          <Text style={[styles.modalTitle, isDark && styles.textPrimaryDark]}>Edit flare</Text>
+          <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <Text style={[styles.modalTitle, isDark && styles.textPrimaryDark]}>{t('flares.edit_flare')}</Text>
 
           <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>
             {t('flares.flare_severity')}
@@ -180,7 +184,7 @@ function EditFlareModal({ visible, flare, onClose, onSave, onDelete, isDark, loc
                   style={[styles.chip, isDark && styles.chipDark, selected && { backgroundColor: color + '22', borderColor: color }]}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.chipText, isDark && styles.textSecDark, selected && { color, fontWeight: '700' }]}>
+                  <Text style={[styles.chipText, isDark && styles.textSecDark, selected && { color, fontWeight: '700', fontFamily: FontFamily.bold }]}>
                     {t(`flares.severity_${sev}`)}
                   </Text>
                 </TouchableOpacity>
@@ -188,7 +192,7 @@ function EditFlareModal({ visible, flare, onClose, onSave, onDelete, isDark, loc
             })}
           </View>
 
-          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>Location</Text>
+          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>{t('flares.location')}</Text>
           <View style={styles.chipRow}>
             {locationOptions.map(loc => {
               const selected = areas.includes(loc.value);
@@ -207,10 +211,10 @@ function EditFlareModal({ visible, flare, onClose, onSave, onDelete, isDark, loc
             })}
           </View>
 
-          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>Dates</Text>
+          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>{t('flares.dates')}</Text>
           <View style={styles.dateRow}>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.dateInputLabel, isDark && styles.textSecDark]}>Start</Text>
+              <Text style={[styles.dateInputLabel, isDark && styles.textSecDark]}>{t('flares.start_label')}</Text>
               <TextInput
                 style={[styles.dateInput, isDark && styles.notesInputDark]}
                 value={startDate}
@@ -221,7 +225,7 @@ function EditFlareModal({ visible, flare, onClose, onSave, onDelete, isDark, loc
               />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.dateInputLabel, isDark && styles.textSecDark]}>End (leave blank if ongoing)</Text>
+              <Text style={[styles.dateInputLabel, isDark && styles.textSecDark]}>{t('flares.end_label')}</Text>
               <TextInput
                 style={[styles.dateInput, isDark && styles.notesInputDark]}
                 value={endDate}
@@ -255,8 +259,10 @@ function EditFlareModal({ visible, flare, onClose, onSave, onDelete, isDark, loc
             textStyle={{ color: Colors.error }}
           />
           <Button label={t('common.cancel')} onPress={onClose} variant="ghost" />
+          </ScrollView>
         </View>
       </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -338,9 +344,11 @@ function StartFlareModal({ visible, onClose, onConfirm, isDark, title, locationO
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
       <View style={styles.modalOverlay}>
         <View style={[styles.modalSheet, isDark && styles.modalSheetDark]}>
           <View style={styles.modalHandle} />
+          <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <Text style={[styles.modalTitle, isDark && styles.textPrimaryDark]}>{title}</Text>
 
           <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>
@@ -357,7 +365,7 @@ function StartFlareModal({ visible, onClose, onConfirm, isDark, title, locationO
                   style={[styles.chip, isDark && styles.chipDark, selected && { backgroundColor: color + '22', borderColor: color }]}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.chipText, isDark && styles.textSecDark, selected && { color, fontWeight: '700' }]}>
+                  <Text style={[styles.chipText, isDark && styles.textSecDark, selected && { color, fontWeight: '700', fontFamily: FontFamily.bold }]}>
                     {t(`flares.severity_${sev}`)}
                   </Text>
                 </TouchableOpacity>
@@ -402,8 +410,10 @@ function StartFlareModal({ visible, onClose, onConfirm, isDark, title, locationO
 
           <Button label={t('flares.log_flare_button')} onPress={handleConfirm} isLoading={isSaving} style={styles.modalConfirmButton} />
           <Button label={t('common.cancel')} onPress={onClose} variant="ghost" />
+          </ScrollView>
         </View>
       </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -479,9 +489,9 @@ function EditUveitisModal({ visible, episode, onClose, onSave, onDelete, isDark 
       <View style={styles.modalOverlay}>
         <View style={[styles.modalSheet, isDark && styles.modalSheetDark]}>
           <View style={styles.modalHandle} />
-          <Text style={[styles.modalTitle, isDark && styles.textPrimaryDark]}>Edit uveitis episode</Text>
+          <Text style={[styles.modalTitle, isDark && styles.textPrimaryDark]}>{t('flares.edit_uveitis')}</Text>
 
-          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>Severity</Text>
+          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>{t('flares.severity_label')}</Text>
           <View style={styles.chipRow}>
             {SEVERITIES.map(sev => {
               const selected = severity === sev;
@@ -490,7 +500,7 @@ function EditUveitisModal({ visible, episode, onClose, onSave, onDelete, isDark 
                 <TouchableOpacity key={sev} onPress={() => setSeverity(sev)}
                   style={[styles.chip, isDark && styles.chipDark, selected && { backgroundColor: color + '22', borderColor: color }]}
                   activeOpacity={0.7}>
-                  <Text style={[styles.chipText, isDark && styles.textSecDark, selected && { color, fontWeight: '700' }]}>
+                  <Text style={[styles.chipText, isDark && styles.textSecDark, selected && { color, fontWeight: '700', fontFamily: FontFamily.bold }]}>
                     {t(`flares.severity_${sev}`)}
                   </Text>
                 </TouchableOpacity>
@@ -498,7 +508,7 @@ function EditUveitisModal({ visible, episode, onClose, onSave, onDelete, isDark 
             })}
           </View>
 
-          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>Affected eye</Text>
+          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>{t('flares.affected_eye')}</Text>
           <View style={styles.chipRow}>
             {EYES.map(eye => (
               <TouchableOpacity key={eye.value} onPress={() => setAffectedEye(eye.value)}
@@ -511,7 +521,7 @@ function EditUveitisModal({ visible, episode, onClose, onSave, onDelete, isDark 
             ))}
           </View>
 
-          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>Symptoms</Text>
+          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>{t('flares.symptoms_label')}</Text>
           <View style={styles.chipRow}>
             {SYMPTOMS_LIST.map(sym => (
               <TouchableOpacity key={sym.value} onPress={() => toggleSymptom(sym.value)}
@@ -524,17 +534,17 @@ function EditUveitisModal({ visible, episode, onClose, onSave, onDelete, isDark 
             ))}
           </View>
 
-          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>Dates</Text>
+          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>{t('flares.dates')}</Text>
           <View style={styles.dateRow}>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.dateInputLabel, isDark && styles.textSecDark]}>Start</Text>
+              <Text style={[styles.dateInputLabel, isDark && styles.textSecDark]}>{t('flares.start_label')}</Text>
               <TextInput style={[styles.dateInput, isDark && styles.notesInputDark]}
                 value={startDate} onChangeText={setStartDate} placeholder="YYYY-MM-DD"
                 placeholderTextColor={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
                 keyboardType="numbers-and-punctuation" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.dateInputLabel, isDark && styles.textSecDark]}>End</Text>
+              <Text style={[styles.dateInputLabel, isDark && styles.textSecDark]}>{t('flares.end_label')}</Text>
               <TextInput style={[styles.dateInput, isDark && styles.notesInputDark]}
                 value={endDate} onChangeText={setEndDate} placeholder="YYYY-MM-DD"
                 placeholderTextColor={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
@@ -679,7 +689,7 @@ function StartUveitisModal({ visible, onClose, onConfirm, isDark }: StartUveitis
                   style={[styles.chip, isDark && styles.chipDark, selected && { backgroundColor: color + '22', borderColor: color }]}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.chipText, isDark && styles.textSecDark, selected && { color, fontWeight: '700' }]}>
+                  <Text style={[styles.chipText, isDark && styles.textSecDark, selected && { color, fontWeight: '700', fontFamily: FontFamily.bold }]}>
                     {t(`flares.severity_${sev}`)}
                   </Text>
                 </TouchableOpacity>
@@ -688,7 +698,7 @@ function StartUveitisModal({ visible, onClose, onConfirm, isDark }: StartUveitis
           </View>
 
           {/* Affected eye */}
-          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>Affected eye</Text>
+          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>{t('flares.affected_eye')}</Text>
           <View style={styles.chipRow}>
             {EYES.map((eye) => {
               const selected = affectedEye === eye.value;
@@ -708,7 +718,7 @@ function StartUveitisModal({ visible, onClose, onConfirm, isDark }: StartUveitis
           </View>
 
           {/* Symptoms */}
-          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>Symptoms</Text>
+          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>{t('flares.symptoms_label')}</Text>
           <View style={styles.chipRow}>
             {SYMPTOMS.map((sym) => {
               const selected = symptoms.includes(sym.value);
@@ -829,7 +839,7 @@ export default function FlaresScreen() {
 
         {/* ── AS Flare card — status + history grouped ─── */}
         <View style={[styles.groupCard, isDark && styles.groupCardDark]}>
-          <Text style={[styles.groupCardTitle, isDark && styles.textPrimaryDark]}>AS Flare</Text>
+          <Text style={[styles.groupCardTitle, isDark && styles.textPrimaryDark]}>{t('flares.as_flare')}</Text>
 
           {activeFlare ? (
             <View style={[styles.activeFlareInner, isDark && styles.activeFlareInnerDark]}>
@@ -849,6 +859,9 @@ export default function FlaresScreen() {
                   {activeFlare.areas_affected.map(a => a.replace(/_/g, ' ')).join(', ')}
                 </Text>
               )}
+              <TouchableOpacity onPress={() => setEditingFlare(activeFlare)} style={styles.activeFlareEditLink} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Text style={styles.historyEditLink}>Edit</Text>
+              </TouchableOpacity>
               <Button
                 label={t('flares.end_flare')}
                 onPress={handleEndFlare}
@@ -904,6 +917,9 @@ export default function FlaresScreen() {
                     {activeEnthesitis.areas_affected.map(a => a.replace(/_/g, ' ')).join(', ')}
                   </Text>
                 )}
+                <TouchableOpacity onPress={() => setEditingFlare(activeEnthesitis)} style={styles.activeFlareEditLink} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <Text style={styles.historyEditLink}>Edit</Text>
+                </TouchableOpacity>
                 <Button
                   label={t('common.mark_resolved')}
                   onPress={() => Alert.alert(t('flares.resolve_flare_title'), t('flares.resolve_enthesitis'), [
@@ -919,7 +935,7 @@ export default function FlaresScreen() {
               <>
                 <View style={styles.statusRow}>
                   <View style={styles.statusDot} />
-                  <Text style={[styles.statusText, isDark && styles.textPrimaryDark]}>No current enthesitis flare</Text>
+                  <Text style={[styles.statusText, isDark && styles.textPrimaryDark]}>{t('flares.no_current_enthesitis')}</Text>
                 </View>
                 <Button label={t('flares.log_a_flare')} onPress={() => setShowEnthesitisModal(true)} variant="outline" style={styles.logFlareBtn} />
               </>
@@ -929,7 +945,7 @@ export default function FlaresScreen() {
             <Text style={[styles.historySubLabel, isDark && styles.textSecDark]}>{t('common.history')}</Text>
 
             {enthesitisFlares.filter(f => f.end_date !== null).length === 0 ? (
-              <Text style={[styles.emptyStateText, isDark && styles.textSecDark]}>No past enthesitis flares recorded.</Text>
+              <Text style={[styles.emptyStateText, isDark && styles.textSecDark]}>{t('flares.no_past_enthesitis')}</Text>
             ) : enthesitisFlares.filter(f => f.end_date !== null).map(f => (
               <FlareHistoryItem key={f.id ?? f.start_date} flare={f} isDark={isDark} onEdit={() => setEditingFlare(f)} />
             ))}
@@ -956,6 +972,9 @@ export default function FlaresScreen() {
                     {activePeripheral.areas_affected.map(a => a.replace(/_/g, ' ')).join(', ')}
                   </Text>
                 )}
+                <TouchableOpacity onPress={() => setEditingFlare(activePeripheral)} style={styles.activeFlareEditLink} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <Text style={styles.historyEditLink}>Edit</Text>
+                </TouchableOpacity>
                 <Button
                   label={t('common.mark_resolved')}
                   onPress={() => Alert.alert(t('flares.resolve_flare_title'), t('flares.resolve_peripheral'), [
@@ -1008,6 +1027,9 @@ export default function FlaresScreen() {
                     {activeUveitis.symptoms.map(s => s.replace(/_/g, ' ')).join(', ')}
                   </Text>
                 )}
+                <TouchableOpacity onPress={() => setEditingUveitis(activeUveitis)} style={styles.activeFlareEditLink} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <Text style={styles.historyEditLink}>Edit</Text>
+                </TouchableOpacity>
                 <Button
                   label={t('common.mark_resolved')}
                   onPress={() => {
@@ -1025,7 +1047,7 @@ export default function FlaresScreen() {
               <>
                 <View style={styles.statusRow}>
                   <View style={styles.statusDot} />
-                  <Text style={[styles.statusText, isDark && styles.textPrimaryDark]}>No current episode</Text>
+                  <Text style={[styles.statusText, isDark && styles.textPrimaryDark]}>{t('flares.no_current_episode')}</Text>
                 </View>
                 <Button
                   label="Log an episode"
@@ -1040,7 +1062,7 @@ export default function FlaresScreen() {
             <Text style={[styles.historySubLabel, isDark && styles.textSecDark]}>{t('common.history')}</Text>
 
             {uveitisEpisodes.filter(e => e.end_date !== null).length === 0 ? (
-              <Text style={[styles.emptyStateText, isDark && styles.textSecDark]}>No past episodes recorded.</Text>
+              <Text style={[styles.emptyStateText, isDark && styles.textSecDark]}>{t('flares.no_past_episodes')}</Text>
             ) : uveitisEpisodes.filter(e => e.end_date !== null).map((ep) => (
               <UveitisHistoryItem key={ep.id ?? ep.start_date} episode={ep} onEnd={() => endEpisode(ep.id!)} onEdit={() => setEditingUveitis(ep)} isDark={isDark} />
             ))}
@@ -1151,6 +1173,7 @@ const styles = StyleSheet.create({
   groupCardTitle: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
   },
   activeFlareInner: {
@@ -1176,6 +1199,7 @@ const styles = StyleSheet.create({
   historySubLabel: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.textSecondary,
   },
 
@@ -1206,6 +1230,7 @@ const styles = StyleSheet.create({
   activeFlareTitle: {
     fontSize: FontSize.md,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
     color: Colors.error,
     flex: 1,
   },
@@ -1236,6 +1261,7 @@ const styles = StyleSheet.create({
   screenTitle: {
     fontSize: FontSize.xxl,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
     color: Colors.textPrimary,
     flex: 1,
     marginRight: Spacing.sm,
@@ -1268,6 +1294,7 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: FontSize.md,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     color: Colors.textPrimary,
   },
   logFlareBtn: {
@@ -1285,11 +1312,13 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: FontSize.xs,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.textSecondary,
   },
   sectionActionLink: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   emptyStateText: {
     fontSize: FontSize.sm,
@@ -1326,16 +1355,24 @@ const styles = StyleSheet.create({
   historyEditLink: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
+    color: Colors.primary,
+  },
+  activeFlareEditLink: {
+    alignSelf: 'flex-end',
+    marginBottom: 8,
   },
   historyDateRange: {
     fontSize: FontSize.md,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     color: Colors.textPrimary,
     flex: 1,
   },
   historyDuration: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
   },
   historyAreas: {
@@ -1354,6 +1391,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: FontSize.xs,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
 
   // Empty state
@@ -1403,10 +1441,12 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.textPrimary,
     fontWeight: '500',
+    fontFamily: FontFamily.medium,
   },
   chipTextSelected: {
     color: '#FFFFFF',
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
 
   // Modal
@@ -1437,12 +1477,14 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: FontSize.xl,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
     color: Colors.textPrimary,
     marginBottom: Spacing.sm,
   },
   modalSectionLabel: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
     marginTop: Spacing.xs,
   },
@@ -1474,6 +1516,7 @@ const styles = StyleSheet.create({
   dateInputLabel: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     marginBottom: 4,
     color: Colors.textSecondary,
   },
@@ -1502,6 +1545,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.error,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     lineHeight: 18,
   },
 });

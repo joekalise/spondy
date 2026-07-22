@@ -15,7 +15,7 @@ import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/services/supabase';
 import { Colors } from '@/constants/colors';
-import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
+import { FontSize, FontFamily, Spacing, BorderRadius } from '@/constants/theme';
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
@@ -188,10 +188,12 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xxl,
     color: '#FFFFFF',
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
   },
   title: {
     fontSize: FontSize.xxl,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
     textAlign: 'center',
     marginBottom: Spacing.xs,
   },
@@ -223,6 +225,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   errorText: {
     fontSize: FontSize.sm,
@@ -245,6 +248,7 @@ const styles = StyleSheet.create({
   doneText: {
     fontSize: FontSize.lg,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.success,
   },
   doneSubtext: {
@@ -257,5 +261,6 @@ const styles = StyleSheet.create({
   backText: {
     fontSize: FontSize.sm,
     fontWeight: '500',
+    fontFamily: FontFamily.medium,
   },
 });

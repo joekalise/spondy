@@ -20,7 +20,7 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 import { Button } from '@/components/common/Button';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { Colors } from '@/constants/colors';
-import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
+import { FontSize, FontFamily, Spacing, BorderRadius } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { logEvent, Events } from '@/services/analytics';
 
@@ -326,10 +326,12 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xxl,
     color: '#FFFFFF',
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
   },
   title: {
     fontSize: FontSize.xxl,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
     color: Colors.textPrimary,
     textAlign: 'center',
     marginBottom: Spacing.xs,
@@ -372,6 +374,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.primary,
     fontWeight: '500',
+    fontFamily: FontFamily.medium,
   },
   resetSentText: {
     fontSize: FontSize.md,
@@ -430,6 +433,7 @@ const styles = StyleSheet.create({
   googleLabel: {
     fontSize: FontSize.md,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     color: '#3C4043',
   },
   googleLabelDark: {
@@ -451,6 +455,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.primary,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   terms: {
     fontSize: FontSize.xs,
@@ -461,6 +466,7 @@ const styles = StyleSheet.create({
   termsLink: {
     color: Colors.primary,
     fontWeight: '500',
+    fontFamily: FontFamily.medium,
   },
   termsDark: {
     color: Colors.textSecondaryDark,

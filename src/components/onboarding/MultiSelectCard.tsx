@@ -8,7 +8,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Colors } from '@/constants/colors';
-import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
+import { FontSize, FontFamily, Spacing, BorderRadius } from '@/constants/theme';
 
 interface MultiSelectCardProps {
   label: string;
@@ -107,6 +107,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     lineHeight: 16,
   },
   label: {
@@ -123,5 +124,6 @@ const styles = StyleSheet.create({
   labelSelected: {
     color: Colors.primaryDark,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
 });

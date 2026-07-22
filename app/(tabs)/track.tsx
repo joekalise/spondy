@@ -11,12 +11,14 @@ import {
   Alert,
   Modal,
   Switch,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { DragSlider } from '@/components/common/DragSlider';
 import { useTranslation } from 'react-i18next';
 import { Colors } from '@/constants/colors';
-import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
+import { FontSize, FontFamily, Spacing, BorderRadius } from '@/constants/theme';
 import { useDailyLog } from '@/hooks/useDailyLog';
 import { useHealthData } from '@/hooks/useHealthData';
 import { useMedicationTracking } from '@/hooks/useMedicationTracking';
@@ -109,7 +111,7 @@ function OptionRow({ options, selected, onSelect, isDark, accentColor = Colors.p
             <Text style={[
               styles.optionLabel,
               isDark && styles.textSecDark,
-              isSelected && { color: accentColor, fontWeight: '700' },
+              isSelected && { color: accentColor, fontWeight: '700', fontFamily: FontFamily.bold },
             ]}>
               {opt.label}
             </Text>
@@ -261,7 +263,7 @@ function DayLogForm({
     <>
       {/* Symptoms card — pain + fatigue merged into ONE section */}
       <View style={[styles.section, isDark && styles.sectionDark]}>
-        <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>Symptoms today</Text>
+        <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>{t('tracker.symptoms_today')}</Text>
 
         {/* Pain subsection */}
         <View style={styles.symptomSubSection}>
@@ -307,7 +309,7 @@ function DayLogForm({
                 activeOpacity={0.7}
               >
                 <Text style={styles.moodEmoji}>{opt.emoji}</Text>
-                <Text style={[styles.moodLabel, isDark && styles.textSecDark, selected && { color: opt.color, fontWeight: '700' }]}>
+                <Text style={[styles.moodLabel, isDark && styles.textSecDark, selected && { color: opt.color, fontWeight: '700', fontFamily: FontFamily.bold }]}>
                   {t(opt.labelKey)}
                 </Text>
               </TouchableOpacity>
@@ -361,7 +363,7 @@ function DayLogForm({
 
       {/* Nutrition */}
       <View style={[styles.section, isDark && styles.sectionDark]}>
-        <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>Nutrition today</Text>
+        <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>{t('tracker.nutrition_today')}</Text>
         <View style={styles.dietQualityRow}>
           {DIET_QUALITY_OPTIONS.map((opt) => {
             const selected = dietQuality === opt.value;
@@ -379,7 +381,7 @@ function DayLogForm({
                 <Text style={[
                   styles.chipText,
                   isDark && !selected && styles.chipTextDark,
-                  selected && { color: opt.color, fontWeight: '700' },
+                  selected && { color: opt.color, fontWeight: '700', fontFamily: FontFamily.bold },
                 ]}>
                   {opt.label}
                 </Text>
@@ -387,7 +389,7 @@ function DayLogForm({
             );
           })}
         </View>
-        <Text style={[styles.sectionSubLabel, isDark && styles.textSecDark]}>Notable today</Text>
+        <Text style={[styles.sectionSubLabel, isDark && styles.textSecDark]}>{t('tracker.notable_today')}</Text>
         <View style={styles.chipRow}>
           {DIET_TRIGGER_OPTIONS.map((opt) => {
             const selected = dietTriggers.includes(opt.value);
@@ -409,7 +411,7 @@ function DayLogForm({
                 <Text style={[
                   styles.chipText,
                   isDark && !selected && styles.chipTextDark,
-                  selected && { color: '#DC2626', fontWeight: '700' },
+                  selected && { color: '#DC2626', fontWeight: '700', fontFamily: FontFamily.bold },
                 ]}>
                   {opt.label}
                 </Text>
@@ -425,7 +427,7 @@ function DayLogForm({
       {/* Exercise */}
       <View style={[styles.section, isDark && styles.sectionDark]}>
         <View style={styles.exerciseHeaderRow}>
-          <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>Exercise today</Text>
+          <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>{t('tracker.exercise_today')}</Text>
           <Switch
             value={exerciseDone}
             onValueChange={setExerciseDone}
@@ -453,7 +455,7 @@ function DayLogForm({
               })}
             </View>
             <View style={styles.exerciseMinutesRow}>
-              <Text style={[styles.sectionSubLabel, isDark && styles.textSecDark, { marginTop: 0 }]}>Duration (minutes)</Text>
+              <Text style={[styles.sectionSubLabel, isDark && styles.textSecDark, { marginTop: 0 }]}>{t('tracker.exercise_duration')}</Text>
               <View style={styles.minutesBtns}>
                 {[15, 30, 45, 60, 90].map((m) => {
                   const sel = exerciseMinutes === m;
@@ -562,13 +564,17 @@ function DayLogModal({ date, initialLog, userId, tracksMedication, prnMedNames, 
       <SafeAreaView style={[styles.modalScreen, isDark && styles.screenDark]}>
         <View style={[styles.modalHeader, isDark && styles.modalHeaderDark]}>
           <TouchableOpacity onPress={onClose} style={styles.modalCancel}>
-            <Text style={[styles.modalCancelText, isDark && styles.textSecDark]}>Cancel</Text>
+            <Text style={[styles.modalCancelText, isDark && styles.textSecDark]}>{t('common.cancel')}</Text>
           </TouchableOpacity>
           <Text style={[styles.modalTitle, isDark && styles.textPrimaryDark]}>
             {dateLabelFull(date)}
           </Text>
           <View style={styles.modalCancel} />
         </View>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={[styles.scrollContent, { paddingTop: Spacing.md }]}
@@ -595,6 +601,7 @@ function DayLogModal({ date, initialLog, userId, tracksMedication, prnMedNames, 
           />
           <View style={styles.bottomPad} />
         </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </Modal>
   );
@@ -610,6 +617,7 @@ interface DatePickerModalProps {
 }
 
 function DatePickerModal({ isDark, maxDate, onSelect, onClose }: DatePickerModalProps) {
+  const { t } = useTranslation();
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
@@ -656,9 +664,9 @@ function DatePickerModal({ isDark, maxDate, onSelect, onClose }: DatePickerModal
       <SafeAreaView style={[styles.modalScreen, isDark && styles.screenDark]}>
         <View style={[styles.modalHeader, isDark && styles.modalHeaderDark]}>
           <TouchableOpacity onPress={onClose} style={styles.modalCancel}>
-            <Text style={[styles.modalCancelText, isDark && styles.textSecDark]}>Cancel</Text>
+            <Text style={[styles.modalCancelText, isDark && styles.textSecDark]}>{t('common.cancel')}</Text>
           </TouchableOpacity>
-          <Text style={[styles.modalTitle, isDark && styles.textPrimaryDark]}>Browse entries</Text>
+          <Text style={[styles.modalTitle, isDark && styles.textPrimaryDark]}>{t('tracker.browse_entries')}</Text>
           <View style={styles.modalCancel} />
         </View>
 
@@ -715,9 +723,10 @@ interface RecentLogsCardProps {
 }
 
 function RecentLogsCard({ recentDays, logsByDate, isDark, hasOlderLogs, onOpenDay, onBrowseOlder }: RecentLogsCardProps) {
+  const { t } = useTranslation();
   return (
     <View style={[styles.recentCard, isDark && styles.recentCardDark]}>
-      <Text style={[styles.recentCardTitle, isDark && styles.textPrimaryDark]}>Recent check-ins</Text>
+      <Text style={[styles.recentCardTitle, isDark && styles.textPrimaryDark]}>{t('tracker.recent_checkins')}</Text>
 
       {recentDays.map((date) => {
         const log = logsByDate[date];
@@ -746,7 +755,7 @@ function RecentLogsCard({ recentDays, logsByDate, isDark, hasOlderLogs, onOpenDa
 
       {hasOlderLogs && (
         <TouchableOpacity style={styles.browseOlderBtn} onPress={onBrowseOlder} activeOpacity={0.7}>
-          <Text style={styles.browseOlderText}>Browse older entries</Text>
+          <Text style={styles.browseOlderText}>{t('tracker.browse_older')}</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -922,6 +931,10 @@ export default function TrackScreen() {
 
   return (
     <SafeAreaView style={[styles.screen, isDark && styles.screenDark]}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
@@ -1008,6 +1021,7 @@ export default function TrackScreen() {
 
         <View style={styles.bottomPad} />
       </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Edit modal for past entries */}
       {modalDate && user && (
@@ -1075,6 +1089,8 @@ const styles = StyleSheet.create({
   healthStripLabel: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
+    fontFamily: FontFamily.semiBold,
     color: Colors.textSecondary,
   },
   healthStripStats: {
@@ -1101,12 +1117,16 @@ const styles = StyleSheet.create({
   logHeaderDate: {
     fontSize: FontSize.xl,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
+    fontFamily: FontFamily.extraBold,
     color: Colors.textPrimary,
   },
   logHeaderSubtitle: {
     fontSize: FontSize.sm,
     color: Colors.textSecondary,
     fontWeight: '500',
+    fontFamily: FontFamily.medium,
+    fontFamily: FontFamily.medium,
   },
   logHeaderYesterday: {
     fontSize: FontSize.xs,
@@ -1142,6 +1162,8 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xl,
     color: Colors.success,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.bold,
   },
   loggedCardTextGroup: {
     flex: 1,
@@ -1149,6 +1171,8 @@ const styles = StyleSheet.create({
   loggedTitle: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
   },
   loggedSubtitle: {
@@ -1166,6 +1190,8 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.bold,
   },
   summaryRow: {
     flexDirection: 'row',
@@ -1189,6 +1215,8 @@ const styles = StyleSheet.create({
   summaryValue: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
     marginTop: 2,
   },
@@ -1211,6 +1239,8 @@ const styles = StyleSheet.create({
   successText: {
     fontSize: FontSize.md,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
+    fontFamily: FontFamily.semiBold,
     color: Colors.success,
     textAlign: 'center',
   },
@@ -1231,6 +1261,8 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
   },
   hint: {
@@ -1254,6 +1286,8 @@ const styles = StyleSheet.create({
   symptomSubLabel: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
+    fontFamily: FontFamily.semiBold,
     color: Colors.textSecondary,
   },
   symptomDivider: {
@@ -1295,6 +1329,8 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.textPrimary,
     fontWeight: '500',
+    fontFamily: FontFamily.medium,
+    fontFamily: FontFamily.medium,
     textAlign: 'center',
   },
   chipTextDark: {
@@ -1303,6 +1339,8 @@ const styles = StyleSheet.create({
   chipTextSelected: {
     color: '#FFFFFF',
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.bold,
   },
 
   // Mood
@@ -1338,6 +1376,8 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     textAlign: 'center',
     fontWeight: '500',
+    fontFamily: FontFamily.medium,
+    fontFamily: FontFamily.medium,
   },
 
   // Notes
@@ -1384,6 +1424,8 @@ const styles = StyleSheet.create({
   minutesPillText: {
     fontSize: FontSize.xs,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.bold,
   },
   dietQualityRow: {
     flexDirection: 'row',
@@ -1405,6 +1447,8 @@ const styles = StyleSheet.create({
   sectionSubLabel: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
+    fontFamily: FontFamily.semiBold,
     color: Colors.textSecondary,
     marginTop: Spacing.sm,
   },
@@ -1427,6 +1471,8 @@ const styles = StyleSheet.create({
   recentCardTitle: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
     paddingHorizontal: Spacing.md,
     paddingTop: Spacing.md,
@@ -1450,6 +1496,8 @@ const styles = StyleSheet.create({
   recentDate: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
+    fontFamily: FontFamily.semiBold,
     color: Colors.textPrimary,
   },
   recentStats: {
@@ -1465,6 +1513,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: Colors.textSecondary,
     fontWeight: '300',
+    fontFamily: FontFamily.regular,
   },
   browseOlderBtn: {
     borderTopWidth: 1,
@@ -1475,6 +1524,8 @@ const styles = StyleSheet.create({
   browseOlderText: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
+    fontFamily: FontFamily.semiBold,
     color: Colors.primary,
   },
 
@@ -1505,6 +1556,8 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
     textAlign: 'center',
   },
@@ -1525,12 +1578,15 @@ const styles = StyleSheet.create({
   calNavText: {
     fontSize: 28,
     fontWeight: '300',
+    fontFamily: FontFamily.regular,
     color: Colors.textPrimary,
     lineHeight: 28,
   },
   calMonthLabel: {
     fontSize: FontSize.lg,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
   },
   calDayHeaders: {
@@ -1542,6 +1598,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
+    fontFamily: FontFamily.semiBold,
     color: Colors.textSecondary,
     paddingVertical: Spacing.xs,
   },
@@ -1565,6 +1623,8 @@ const styles = StyleSheet.create({
   calDayText: {
     fontSize: FontSize.md,
     fontWeight: '500',
+    fontFamily: FontFamily.medium,
+    fontFamily: FontFamily.medium,
     color: Colors.textPrimary,
   },
   calDayTextDisabled: {

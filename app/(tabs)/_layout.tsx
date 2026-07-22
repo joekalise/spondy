@@ -3,7 +3,7 @@ import { useColorScheme } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
-import { FontSize } from '@/constants/theme';
+import { FontSize, FontFamily } from '@/constants/theme';
 
 export default function TabsLayout() {
   const colorScheme = useColorScheme();
@@ -29,6 +29,7 @@ export default function TabsLayout() {
         tabBarLabelStyle: {
           fontSize: FontSize.xs,
           fontWeight: '500',
+          fontFamily: FontFamily.medium,
         },
       }}
     >

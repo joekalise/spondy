@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, PanResponder } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '@/constants/colors';
-import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
+import { FontSize, FontFamily, Spacing, BorderRadius } from '@/constants/theme';
 
 const THUMB_SIZE = 32;
 const TRACK_HEIGHT = 12;
@@ -112,11 +112,12 @@ export function DragSlider({
 const styles = StyleSheet.create({
   wrapper: { gap: Spacing.xs },
   valueRow: { flexDirection: 'row', alignItems: 'flex-end' },
-  number: { fontSize: 48, fontWeight: '900', lineHeight: 54 },
+  number: { fontSize: 48, fontWeight: '900', fontFamily: FontFamily.extraBold, lineHeight: 54 },
   denom: {
     fontSize: FontSize.sm,
     color: Colors.textSecondary,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     paddingBottom: 6,
     marginLeft: 2,
   },

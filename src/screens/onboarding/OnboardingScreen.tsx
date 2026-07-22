@@ -24,7 +24,7 @@ import { Button } from '@/components/common/Button';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 import { Colors } from '@/constants/colors';
-import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
+import { FontSize, FontFamily, Spacing, BorderRadius } from '@/constants/theme';
 import { generateWelcomeContent } from '@/services/claude';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -995,6 +995,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.md,
     color: Colors.textSecondary,
     fontWeight: '500',
+    fontFamily: FontFamily.medium,
   },
   nextButton: {
     flex: 1,
@@ -1012,6 +1013,7 @@ const styles = StyleSheet.create({
   completingTitle: {
     fontSize: FontSize.xl,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
     textAlign: 'center',
   },
@@ -1034,6 +1036,7 @@ const styles = StyleSheet.create({
   consentTitle: {
     fontSize: FontSize.xxl,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
     textAlign: 'center',
     marginBottom: Spacing.sm,
   },
@@ -1053,6 +1056,7 @@ const styles = StyleSheet.create({
   consentSectionTitle: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     marginBottom: 2,
   },
   consentBulletRow: {
@@ -1092,6 +1096,7 @@ const styles = StyleSheet.create({
   consentDeclineText: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   timePickerContainer: {
     alignItems: 'center',
@@ -1121,10 +1126,12 @@ const styles = StyleSheet.create({
   androidTimeArrow: {
     fontSize: FontSize.lg,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   androidTimeValue: {
     fontSize: 52,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     textAlign: 'center',
     minWidth: 80,
   },
@@ -1135,6 +1142,7 @@ const styles = StyleSheet.create({
   androidTimeColon: {
     fontSize: 52,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     alignSelf: 'center',
     paddingBottom: 28,
   },
@@ -1159,6 +1167,7 @@ const styles = StyleSheet.create({
   previewTitle: {
     fontSize: FontSize.xxl,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
     color: Colors.textPrimary,
     marginBottom: Spacing.sm,
   },
@@ -1181,6 +1190,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.textSecondary,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
 
   // Mock cards
@@ -1199,6 +1209,7 @@ const styles = StyleSheet.create({
   mockCardTitle: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
   },
   mockCardTitleDark: {
@@ -1223,11 +1234,13 @@ const styles = StyleSheet.create({
   mockScoreNum: {
     fontSize: FontSize.xl,
     fontWeight: '900',
+    fontFamily: FontFamily.extraBold,
     lineHeight: 28,
   },
   mockScoreOut: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     opacity: 0.7,
   },
   mockScoreRight: {
@@ -1237,6 +1250,7 @@ const styles = StyleSheet.create({
   mockScoreLabel: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   mockScoreHint: {
     fontSize: FontSize.xs,
@@ -1253,6 +1267,7 @@ const styles = StyleSheet.create({
   mockFactorVal: {
     fontSize: FontSize.xs,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   mockWarningCard: {
     backgroundColor: Colors.warning + '12',
@@ -1268,6 +1283,7 @@ const styles = StyleSheet.create({
   mockWarningTitle: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.warning,
   },
   mockWarningBody: {
@@ -1290,6 +1306,7 @@ const styles = StyleSheet.create({
   mockChipText: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     color: Colors.warning,
   },
   mockAIHeader: {
@@ -1307,6 +1324,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: '#FFFFFF',
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   mockInsightSummary: {
     fontSize: FontSize.sm,
@@ -1327,6 +1345,7 @@ const styles = StyleSheet.create({
   mockInsightTitle: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     color: Colors.textPrimary,
     flex: 1,
   },
@@ -1415,6 +1434,7 @@ const styles = StyleSheet.create({
   welcomeTitle: {
     fontSize: 32,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
     color: Colors.textPrimary,
     textAlign: 'center',
     lineHeight: 38,
