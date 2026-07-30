@@ -386,10 +386,12 @@ function AIInsightCard({ logs, flares, profile, healthHistory, isDark }: AIInsig
 
 interface TrialPromptCardProps {
   isDark: boolean;
+  hasEnoughData: boolean;
+  readyThresholdDays: number;
   onStartTrial: () => void;
 }
 
-function TrialPromptCard({ isDark, onStartTrial }: TrialPromptCardProps) {
+function TrialPromptCard({ isDark, hasEnoughData, readyThresholdDays, onStartTrial }: TrialPromptCardProps) {
   const { t } = useTranslation();
   const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
   const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
@@ -403,11 +405,13 @@ function TrialPromptCard({ isDark, onStartTrial }: TrialPromptCardProps) {
     >
       <View style={styles.aiTitleRow}>
         <Text style={[styles.cardTitle, { color: textPrimary }]}>
-          {t('insights.trial_ready_title')}
+          {hasEnoughData ? t('insights.trial_ready_title') : t('insights.trial_start_title')}
         </Text>
       </View>
       <Text style={[styles.teaserText, { color: textSecondary }]}>
-        {t('insights.trial_ready_body')}
+        {hasEnoughData
+          ? t('insights.trial_ready_body')
+          : t('insights.trial_start_body', { days: readyThresholdDays })}
       </Text>
       <Text style={[styles.teaserLink, { color: Colors.primary }]}>{t('premium_teaser.see_whats_included')}</Text>
     </TouchableOpacity>
@@ -799,8 +803,10 @@ export default function InsightsScreen() {
     if (w > 0) setChartWidth(w);
   }
 
-  // Determine if user has enough data for trial prompt (5 days is enough for meaningful patterns)
-  const hasEnoughDataForTrialPrompt = allLogs.length >= 5;
+  // 5 days is enough for meaningful patterns — this only controls which trial CTA copy
+  // is shown (ready vs. not-yet), the CTA itself always renders for non-subscribers.
+  const TRIAL_READY_LOG_THRESHOLD = 5;
+  const hasEnoughDataForTrialPrompt = allLogs.length >= TRIAL_READY_LOG_THRESHOLD;
 
   const handlePurchase = useCallback(async () => {
     setIsPurchasing(true);
@@ -916,12 +922,14 @@ export default function InsightsScreen() {
             ) : aiConsented !== null ? (
               <AiOffCard isDark={isDark} onPress={() => router.push('/(tabs)/profile')} />
             ) : null
-          ) : hasEnoughDataForTrialPrompt ? (
+          ) : (
             <TrialPromptCard
               isDark={isDark}
+              hasEnoughData={hasEnoughDataForTrialPrompt}
+              readyThresholdDays={TRIAL_READY_LOG_THRESHOLD}
               onStartTrial={() => setShowPremiumModal(true)}
             />
-          ) : null
+          )
         )}
 
         {/* Section divider before period selector */}
@@ -1079,7 +1087,7 @@ export default function InsightsScreen() {
           </>
         )}
 
-        {/* Chat CTA for non-subscribers — shown below when not subscribed */}
+        {/* Chat teaser for non-subscribers — distinct from the insight-report pitch above */}
         {!subLoading && !isSubscribed && (
           <TouchableOpacity
             onPress={() => setShowPremiumModal(true)}
@@ -1088,14 +1096,14 @@ export default function InsightsScreen() {
           >
             <View style={styles.aiTitleRow}>
               <Text style={[styles.cardTitle, { color: textPrimary }]}>
-                {t('insights.ai_insight_title')}
+                {t('insights.chat_with_data')}
               </Text>
               <View style={styles.premiumBadge}>
                 <Text style={styles.premiumBadgeText}>{t('common.premium')}</Text>
               </View>
             </View>
             <Text style={[styles.teaserText, { color: textSecondary }]}>
-              {t('premium_teaser.insights_body')}
+              {t('premium_teaser.chat_body')}
             </Text>
             <Text style={[styles.teaserLink, { color: Colors.primary }]}>{t('premium_teaser.see_whats_included')}</Text>
           </TouchableOpacity>

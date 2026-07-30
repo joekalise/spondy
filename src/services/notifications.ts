@@ -276,12 +276,27 @@ export async function sendNudge(title: string, body: string): Promise<void> {
 
 // ─── Nudge evaluation ─────────────────────────────────────────────────────────
 
+let nudgeCheckInFlight = false;
+
 export async function evaluateAndSendNudges(
   userId: string,
   logs: DailyLog[]
 ): Promise<void> {
   if (logs.length < 3) return;
+  if (nudgeCheckInFlight) return;
 
+  nudgeCheckInFlight = true;
+  try {
+    await evaluateAndSendNudgesInternal(userId, logs);
+  } finally {
+    nudgeCheckInFlight = false;
+  }
+}
+
+async function evaluateAndSendNudgesInternal(
+  userId: string,
+  logs: DailyLog[]
+): Promise<void> {
   // Check max 1 nudge per day
   const todayCount = await getTodayNudgeCount(userId);
   if (todayCount > 0) return;

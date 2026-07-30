@@ -252,7 +252,7 @@ export function PremiumModal({
             {isPurchasing ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.primaryBtnText}>Start free trial</Text>
+              <Text style={styles.primaryBtnText}>{t('subscription.start_trial_cta')}</Text>
             )}
           </TouchableOpacity>
 

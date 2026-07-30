@@ -7,11 +7,9 @@
     }
   },
   "insights": {
-    "ai_insight_generating": "Analyzing your data...",
-    "trial_prompt_body": "Unlock your personalized insight report, free for 14 days."
+    "ai_insight_generating": "Analyzing your data..."
   },
   "subscription": {
-    "trial_prompt_subtitle": "Unlock your personalized insight report, free for 14 days",
     "feature_ai_context": "Extended personalization"
   },
   "profile": {

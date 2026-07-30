@@ -912,6 +912,9 @@ export default function FlaresScreen() {
                 <Text style={[styles.activeFlareDate, isDark && styles.textSecDark]}>
                   Started: {formatDate(activeEnthesitis.start_date)}
                 </Text>
+                <Text style={[styles.activeFlareDuration, isDark && styles.textSecDark]}>
+                  {t('flares.duration_ongoing')} · {daysBetween(activeEnthesitis.start_date, null)} days
+                </Text>
                 {activeEnthesitis.areas_affected.length > 0 && (
                   <Text style={[styles.activeFlareAreas, isDark && styles.textSecDark]}>
                     {activeEnthesitis.areas_affected.map(a => a.replace(/_/g, ' ')).join(', ')}
@@ -967,6 +970,9 @@ export default function FlaresScreen() {
                 <Text style={[styles.activeFlareDate, isDark && styles.textSecDark]}>
                   Started: {formatDate(activePeripheral.start_date)}
                 </Text>
+                <Text style={[styles.activeFlareDuration, isDark && styles.textSecDark]}>
+                  {t('flares.duration_ongoing')} · {daysBetween(activePeripheral.start_date, null)} days
+                </Text>
                 {activePeripheral.areas_affected.length > 0 && (
                   <Text style={[styles.activeFlareAreas, isDark && styles.textSecDark]}>
                     {activePeripheral.areas_affected.map(a => a.replace(/_/g, ' ')).join(', ')}
@@ -1021,6 +1027,9 @@ export default function FlaresScreen() {
                 </View>
                 <Text style={[styles.activeFlareDate, isDark && styles.textSecDark]}>
                   Started: {formatDate(activeUveitis.start_date)} · {activeUveitis.affected_eye} eye
+                </Text>
+                <Text style={[styles.activeFlareDuration, isDark && styles.textSecDark]}>
+                  {t('flares.duration_ongoing')} · {daysBetween(activeUveitis.start_date, null)} days
                 </Text>
                 {activeUveitis.symptoms.length > 0 && (
                   <Text style={[styles.activeFlareAreas, isDark && styles.textSecDark]}>

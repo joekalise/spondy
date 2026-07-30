@@ -1441,8 +1441,8 @@ export default function ProfileScreen() {
                     {t('premium_teaser.ai_title')}
                   </Text>
                   <Text style={[styles.premiumTeaserBody, { color: textSecondary }]}>
-                    {monthlyPrice
-                      ? t('premium_teaser.profile_body_with_price', { price: monthlyPrice })
+                    {monthlyPrice && trialDays
+                      ? t('premium_teaser.profile_body_with_price', { price: monthlyPrice, days: trialDays })
                       : t('premium_teaser.profile_body')}
                   </Text>
                 </View>
