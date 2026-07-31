@@ -1495,7 +1495,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
-    marginTop: Spacing.xs,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.sm,
   },
   notesInput: {
     minHeight: 80,
