@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Polyline, Line, Text as SvgText, Circle } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 
 import { Colors } from '@/constants/colors';
 import { FontSize, FontFamily, Spacing, BorderRadius } from '@/constants/theme';
@@ -740,6 +740,13 @@ export default function InsightsScreen() {
 
   const { latestScore: latestBasdaiScore, daysSinceLastScore: daysSinceLastBasdai, saveScore: saveBasdaiScore } = useBasdai();
   const [showBasdai, setShowBasdai] = useState(false);
+  const { openBasdai } = useLocalSearchParams<{ openBasdai?: string }>();
+  useEffect(() => {
+    if (openBasdai) {
+      setShowBasdai(true);
+      router.setParams({ openBasdai: '' });
+    }
+  }, [openBasdai]);
 
   const [aiConsented, setAiConsented] = useState<boolean | null>(null);
   useFocusEffect(useCallback(() => {

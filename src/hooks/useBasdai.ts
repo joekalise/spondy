@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/services/supabase';
+import { scheduleBasdaiReminder } from '@/services/notifications';
 import { BasdaiScore } from '@/types';
 
 export function useBasdai() {
@@ -33,6 +34,7 @@ export function useBasdai() {
       .from('basdai_scores')
       .upsert({ user_id: user.id, date: today, ...answers, score }, { onConflict: 'user_id,date' });
     if (error) throw error;
+    await scheduleBasdaiReminder().catch(() => {});
     await load();
   }, [user, load]);
 

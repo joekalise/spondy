@@ -68,6 +68,7 @@ function RootNavigator() {
   // so we must not show the Stack until we confirm arrival at the right place.
   const [isReady, setIsReady] = useState(false);
   const isFirstNavRef = useRef(true);
+  const pendingNotificationScreenRef = useRef<string | null>(null);
 
   const inAuthGroup = segments[0] === '(auth)';
   const inOnboardingGroup = segments[0] === '(onboarding)';
@@ -89,6 +90,39 @@ function RootNavigator() {
   useEffect(() => {
     registerBackgroundHealthSync();
   }, []);
+
+  // Route to the screen a notification points at (via its `screen` data field),
+  // whether it was tapped while the app was running/backgrounded, or the tap is
+  // what cold-started the app.
+  useEffect(() => {
+    function handleResponse(response: Notifications.NotificationResponse) {
+      const screen = response.notification.request.content.data?.screen as string | undefined;
+      if (!screen) return;
+      if (isReady) {
+        router.push(screen);
+      } else {
+        pendingNotificationScreenRef.current = screen;
+      }
+    }
+
+    // Clear after reading so a normal reopen days later doesn't re-trigger
+    // navigation based on a stale cached tap.
+    Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (response) {
+        handleResponse(response);
+        Notifications.clearLastNotificationResponseAsync().catch(() => {});
+      }
+    });
+    const subscription = Notifications.addNotificationResponseReceivedListener(handleResponse);
+    return () => subscription.remove();
+  }, [isReady, router]);
+
+  // Flush a notification tap that arrived before routing settled (cold start).
+  useEffect(() => {
+    if (!isReady || !pendingNotificationScreenRef.current) return;
+    router.push(pendingNotificationScreenRef.current);
+    pendingNotificationScreenRef.current = null;
+  }, [isReady, router]);
 
   // Reschedule daily check-in for existing users if not already scheduled
   useEffect(() => {

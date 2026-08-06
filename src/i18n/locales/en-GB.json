@@ -681,6 +681,8 @@
     "lapse_title": "Haven't seen you in a couple of days",
     "lapse_body": "What's your stiffness like this morning? A quick log helps Spondy spot the pattern.",
     "med_title": "Time for {{name}}",
-    "med_body": "Don't forget your {{dose}} dose of {{name}}."
+    "med_body": "Don't forget your {{dose}} dose of {{name}}.",
+    "basdai_reminder_title": "Monthly BASDAI check-in",
+    "basdai_reminder_body": "It's been a month since your last assessment. Take a minute to retake it and track your progress."
   }
 }

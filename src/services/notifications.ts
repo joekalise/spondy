@@ -38,6 +38,7 @@ export async function scheduleDailyCheckIn(timeString: string): Promise<void> {
       title: i18n.t('notifications.checkin_title') as string,
       body: i18n.t('notifications.checkin_body') as string,
       sound: true,
+      data: { screen: '/(tabs)/track' },
       ...androidChannel(),
     },
     trigger: {
@@ -125,7 +126,7 @@ export async function scheduleDailyCheckInFromTomorrow(
 
   await Notifications.scheduleNotificationAsync({
     identifier: 'daily-checkin',
-    content: { ...content, sound: true, ...androidChannel() },
+    content: { ...content, sound: true, data: { screen: '/(tabs)/track' }, ...androidChannel() },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DATE,
       date: tomorrow,
@@ -144,6 +145,7 @@ export async function scheduleLapseNotification(): Promise<void> {
       title: i18n.t('notifications.lapse_title') as string,
       body: i18n.t('notifications.lapse_body') as string,
       sound: true,
+      data: { screen: '/(tabs)/track' },
       ...androidChannel(),
     },
     trigger: {
@@ -155,6 +157,29 @@ export async function scheduleLapseNotification(): Promise<void> {
 
 export async function cancelLapseNotification(): Promise<void> {
   await cancelNotification('lapse-reengagement');
+}
+
+// ─── BASDAI monthly reassessment reminder ─────────────────────────────────────
+
+// Fires 30 days after the score being saved, matching the in-app "due" threshold
+// (see isDue = daysSince >= 30 in insights.tsx). Re-saving cancels and reschedules.
+export async function scheduleBasdaiReminder(): Promise<void> {
+  await cancelNotification('basdai-reminder');
+  const fireAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  await Notifications.scheduleNotificationAsync({
+    identifier: 'basdai-reminder',
+    content: {
+      title: i18n.t('notifications.basdai_reminder_title') as string,
+      body: i18n.t('notifications.basdai_reminder_body') as string,
+      sound: true,
+      data: { screen: '/(tabs)/insights?openBasdai=1' },
+      ...androidChannel(),
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      date: fireAt,
+    },
+  });
 }
 
 // ─── Cancel notifications by identifier prefix ────────────────────────────────
@@ -198,6 +223,7 @@ export async function scheduleMedicationReminder(med: MedicationReminder): Promi
         title: i18n.t('notifications.med_title', { name: med.name }) as string,
         body: i18n.t('notifications.med_body', { dose: med.dose, name: med.name }) as string,
         sound: true,
+        data: { screen: '/(tabs)/track' },
         ...androidChannel(),
       },
       trigger: {
@@ -213,6 +239,7 @@ export async function scheduleMedicationReminder(med: MedicationReminder): Promi
         title: i18n.t('notifications.med_title', { name: med.name }) as string,
         body: i18n.t('notifications.med_body', { dose: med.dose, name: med.name }) as string,
         sound: true,
+        data: { screen: '/(tabs)/track' },
         ...androidChannel(),
       },
       trigger: {
@@ -230,6 +257,7 @@ export async function scheduleMedicationReminder(med: MedicationReminder): Promi
         title: i18n.t('notifications.med_title', { name: med.name }) as string,
         body: i18n.t('notifications.med_body', { dose: med.dose, name: med.name }) as string,
         sound: true,
+        data: { screen: '/(tabs)/track' },
         ...androidChannel(),
       },
       trigger: {
@@ -261,15 +289,15 @@ export async function sendFlareWarningIfNeeded(
       ? 'Several patterns suggest a flare may be building. Consider resting and reviewing your medications.'
       : 'A couple of signals suggest your body might be under stress. Keep a close eye on your symptoms.';
 
-  await sendNudge(title, body);
+  await sendNudge(title, body, '/(tabs)/flares');
   await AsyncStorage.setItem(key, level);
 }
 
 // ─── Nudge ────────────────────────────────────────────────────────────────────
 
-export async function sendNudge(title: string, body: string): Promise<void> {
+export async function sendNudge(title: string, body: string, screen: string = '/(tabs)/insights'): Promise<void> {
   await Notifications.scheduleNotificationAsync({
-    content: { title, body, sound: true, ...androidChannel() },
+    content: { title, body, sound: true, data: { screen }, ...androidChannel() },
     trigger: null, // fire immediately
   });
 }
