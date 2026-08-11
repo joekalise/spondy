@@ -93,7 +93,13 @@ function buildHealthSummary(healthHistory: HealthData[]): string {
   return lines.join('\n');
 }
 
-function buildDataSummary(logs: DailyLog[], flares: Flare[], healthHistory?: HealthData[], basdaiScores?: BasdaiScore[]): string {
+function buildDataSummary(
+  logs: DailyLog[],
+  flares: Flare[],
+  healthHistory?: HealthData[],
+  basdaiScores?: BasdaiScore[],
+  humidityData?: { humidity: number; trend: string } | null
+): string {
   if (logs.length === 0) {
     return 'No tracking data available for this period.';
   }
@@ -221,6 +227,13 @@ ${topTriggers ? `- Most frequent triggers: ${topTriggers}` : '- No specific trig
     }
   }
 
+  // Humidity context
+  let humiditySection = '';
+  if (humidityData) {
+    const level = humidityData.humidity > 70 ? 'high (linked to worse AS symptoms in research)' : humidityData.humidity >= 40 ? 'moderate' : 'low';
+    humiditySection = `\n\nHUMIDITY: ${humidityData.humidity}% — ${level}, trend: ${humidityData.trend}. Note: both a dedicated ankylosing spondylitis study and a large general chronic-pain study found humid days linked to more reported pain, with barometric pressure alone not holding up once temperature was accounted for.`;
+  }
+
   return `
 TRACKING DATA SUMMARY (${logs.length} days logged):
 - Average pain score: ${avgPain}/10
@@ -232,7 +245,7 @@ FLARES:
 ${flareSummary}
 
 USER NOTES (free text from check-ins):
-${notes || '  None'}${dietSection}${healthSection}${exerciseSection}${periodSection}${basdaiSection}
+${notes || '  None'}${dietSection}${healthSection}${exerciseSection}${periodSection}${basdaiSection}${humiditySection}
 `.trim();
 }
 
@@ -240,9 +253,12 @@ function buildProfileSummary(profile: UserProfile): string {
   const sexLine = profile.biological_sex && profile.biological_sex !== 'prefer_not_to_say'
     ? `- Biological sex: ${profile.biological_sex}${profile.biological_sex === 'female' ? ' (period tracking enabled — menstrual cycle data may be present in logs)' : ''}\n`
     : '';
+  const smokingLine = profile.smoking_status
+    ? `- Smoking status: ${profile.smoking_status} (research links current smoking to higher AS disease activity and radiographic progression — mention only if directly relevant to a pattern in the data, never as unsolicited advice to quit)\n`
+    : '';
   return `
 USER PROFILE:
-${sexLine}- Age range: ${profile.age_range ?? 'not specified'}
+${sexLine}${smokingLine}- Age range: ${profile.age_range ?? 'not specified'}
 - Years diagnosed: ${profile.diagnosis_years ?? 'not specified'}
 - Disease activity: ${profile.severity ?? 'not specified'}
 - Medications: ${profile.medications.join(', ') || 'none'}
@@ -263,10 +279,11 @@ export async function generateWeeklyInsight(params: {
   profile: UserProfile;
   healthHistory?: HealthData[];
   basdaiScores?: BasdaiScore[];
+  humidityData?: { humidity: number; trend: string } | null;
   aiContext?: string;
   language?: string;
 }): Promise<WeeklyInsight> {
-  const { logs, flares, profile, healthHistory, basdaiScores, aiContext, language } = params;
+  const { logs, flares, profile, healthHistory, basdaiScores, humidityData, aiContext, language } = params;
 
   const isEarlyData = logs.length < 7;
 
@@ -299,7 +316,7 @@ Rules:
 
 ${buildProfileSummary(profile)}
 
-${buildDataSummary(logs, flares, healthHistory, basdaiScores)}
+${buildDataSummary(logs, flares, healthHistory, basdaiScores, humidityData)}
 ${aiContext ? `\nAdditional context: ${aiContext}` : ''}`;
 
   try {
@@ -329,10 +346,11 @@ export async function sendChatMessage(params: {
   profile: UserProfile;
   healthHistory?: HealthData[];
   basdaiScores?: BasdaiScore[];
+  humidityData?: { humidity: number; trend: string } | null;
   aiContext?: string;
   language?: string;
 }): Promise<string> {
-  const { messages, logs, flares, profile, healthHistory, basdaiScores, aiContext, language } = params;
+  const { messages, logs, flares, profile, healthHistory, basdaiScores, humidityData, aiContext, language } = params;
 
   const systemPrompt = `${language && language !== 'en-GB' ? `Respond in ${language}.\n\n` : ''}You are Spondy, an AI built specifically for people with Ankylosing Spondylitis. You have full access to this user's tracking data — their symptoms, flares, health metrics, medications, and patterns over time.
 
@@ -340,7 +358,7 @@ Here is the user's profile and recent data:
 
 ${buildProfileSummary(profile)}
 
-${buildDataSummary(logs, flares, healthHistory, basdaiScores)}
+${buildDataSummary(logs, flares, healthHistory, basdaiScores, humidityData)}
 ${aiContext ? `\nAdditional context from user: ${aiContext}` : ''}
 
 How to respond:

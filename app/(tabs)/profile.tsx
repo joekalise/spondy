@@ -47,6 +47,7 @@ import {
   BiologicInjection,
   AgeRange,
   BiologicalSex,
+  SmokingStatus,
   DiagnosisYears,
   Severity,
   Medication,
@@ -106,6 +107,12 @@ const BIOLOGICAL_SEX_LABELS: Record<string, string> = {
   male: 'Male',
   female: 'Female',
   prefer_not_to_say: 'Prefer not to say',
+};
+
+const SMOKING_STATUS_LABELS: Record<string, string> = {
+  never: 'Never smoked',
+  former: 'Former smoker',
+  current: 'Current smoker',
 };
 
 const AGE_RANGE_LABELS: Record<string, string> = {
@@ -257,9 +264,10 @@ function ChipGroup({
 interface ProfileEditModalProps {
   visible: boolean;
   onClose: () => void;
-  profile: { biological_sex?: BiologicalSex | null; age_range: AgeRange | null; diagnosis_years: DiagnosisYears | null; severity: Severity | null; medications: Medication[]; pain_locations: PainLocation[]; pain_types: PainType[]; conditions: AssociatedCondition[]; morning_stiffness: MorningStiffness | null; challenges: LifestyleChallenge[] } | null;
+  profile: { biological_sex?: BiologicalSex | null; smoking_status?: SmokingStatus | null; age_range: AgeRange | null; diagnosis_years: DiagnosisYears | null; severity: Severity | null; medications: Medication[]; pain_locations: PainLocation[]; pain_types: PainType[]; conditions: AssociatedCondition[]; morning_stiffness: MorningStiffness | null; challenges: LifestyleChallenge[] } | null;
   onSave: (updates: {
     biological_sex: BiologicalSex | null;
+    smoking_status: SmokingStatus | null;
     age_range: AgeRange | null;
     diagnosis_years: DiagnosisYears | null;
     severity: Severity | null;
@@ -290,6 +298,7 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
   const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
 
   const [biologicalSex, setBiologicalSex] = useState<BiologicalSex | null>(null);
+  const [smokingStatus, setSmokingStatus] = useState<SmokingStatus | null>(null);
   const [ageRange, setAgeRange] = useState<AgeRange | null>(null);
   const [diagnosisYears, setDiagnosisYears] = useState<DiagnosisYears | null>(null);
   const [severity, setSeverity] = useState<Severity | null>(null);
@@ -304,6 +313,7 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
   useEffect(() => {
     if (profile && visible) {
       setBiologicalSex(profile.biological_sex ?? null);
+      setSmokingStatus(profile.smoking_status ?? null);
       setAgeRange(profile.age_range);
       setDiagnosisYears(profile.diagnosis_years);
       setSeverity(profile.severity);
@@ -325,6 +335,7 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
     try {
       await onSave({
         biological_sex: biologicalSex,
+        smoking_status: smokingStatus,
         age_range: ageRange,
         diagnosis_years: diagnosisYears,
         severity,
@@ -366,6 +377,18 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
           <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_alerts.biological_sex')}</Text>
           {(['male', 'female', 'prefer_not_to_say'] as BiologicalSex[]).map(v => (
             <OptionCard key={v} style={compactCard} label={BIOLOGICAL_SEX_LABELS[v]} isSelected={biologicalSex === v} onPress={() => setBiologicalSex(v)} />
+          ))}
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs }}>
+            <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_alerts.smoking_status')}</Text>
+            <InfoButton
+              title={t('profile_alerts.smoking_info_title')}
+              message={t('profile_alerts.smoking_info_message')}
+              color={textSecondary}
+            />
+          </View>
+          {(['never', 'former', 'current'] as SmokingStatus[]).map(v => (
+            <OptionCard key={v} style={compactCard} label={SMOKING_STATUS_LABELS[v]} isSelected={smokingStatus === v} onPress={() => setSmokingStatus(v)} />
           ))}
 
           <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('onboarding.age_range')}</Text>

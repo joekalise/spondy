@@ -28,9 +28,12 @@ import { useMedicationTracking } from '@/hooks/useMedicationTracking';
 import { useMedications } from '@/hooks/useMedications';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useReviewPrompt } from '@/hooks/useReviewPrompt';
+import { useWeatherHumidity } from '@/hooks/useWeatherHumidity';
+import { HumidityData } from '@/services/weather';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { SpondyMark } from '@/components/common/SpondyMark';
 import { ProfileButton } from '@/components/common/ProfileButton';
+import { InfoButton } from '@/components/common/InfoButton';
 import { sendFlareWarningIfNeeded, evaluateAndSendNudges } from '@/services/notifications';
 import { DailyLog, Flare, Mood } from '@/types';
 
@@ -471,6 +474,75 @@ function ReviewPromptCard({
   );
 }
 
+// ─── Humidity card ──────────────────────────────────────────────────────────
+
+function HumidityCard({
+  humidity,
+  isFetching,
+  fetchError,
+  onRefresh,
+  isDark,
+}: {
+  humidity: HumidityData | null;
+  isFetching: boolean;
+  fetchError: boolean;
+  onRefresh: () => void;
+  isDark: boolean;
+}) {
+  const { t } = useTranslation();
+  const textSec = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
+
+  if (!humidity) {
+    return (
+      <TouchableOpacity
+        onPress={onRefresh}
+        disabled={isFetching}
+        style={[styles.card, isDark && styles.cardDark, styles.humidityPromptRow]}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.humidityIcon}>💧</Text>
+        <View style={styles.humidityPromptText}>
+          <Text style={[styles.sectionTitle, isDark && styles.textPrimaryDark]}>{t('health.humidity_load_title')}</Text>
+          <Text style={[styles.humidityHint, { color: fetchError ? Colors.error : textSec }]}>
+            {fetchError ? t('health.humidity_error_hint') : t('health.humidity_load_hint')}
+          </Text>
+        </View>
+        <Text style={[styles.humidityEnableLink, fetchError && { color: Colors.error }]}>
+          {isFetching ? t('health.humidity_fetching') : fetchError ? t('health.humidity_retry_btn') : t('health.humidity_load_btn')}
+        </Text>
+      </TouchableOpacity>
+    );
+  }
+
+  const { humidity: pct, trend } = humidity;
+
+  const levelLabel = pct > 70 ? t('health.humidity_level_high') : pct >= 40 ? t('health.humidity_level_moderate') : t('health.humidity_level_low');
+  const levelColor = pct > 70 ? Colors.error : pct >= 40 ? Colors.warning : Colors.success;
+  const trendIcon = trend === 'falling' ? '⬇' : trend === 'rising' ? '⬆' : '→';
+  const trendLabel = trend === 'falling' ? t('health.humidity_trend_falling') : trend === 'rising' ? t('health.humidity_trend_rising') : t('health.humidity_trend_stable');
+
+  return (
+    <View style={[styles.card, isDark && styles.cardDark]}>
+      <View style={styles.humidityHeaderRow}>
+        <View style={styles.humidityTitleRow}>
+          <Text style={styles.humidityIcon}>💧</Text>
+          <Text style={[styles.sectionTitle, isDark && styles.textPrimaryDark]}>{t('health.humidity_title')}</Text>
+          <InfoButton
+            title={t('health.humidity_info_title')}
+            message={t('health.humidity_info_message')}
+            color={textSec}
+          />
+        </View>
+        <Text style={[styles.humidityValue, { color: levelColor }]}>{pct}%</Text>
+      </View>
+      <View style={styles.humiditySubRow}>
+        <Text style={[styles.humidityLevel, { color: levelColor }]}>{levelLabel}</Text>
+        <Text style={[styles.humidityTrend, { color: textSec }]}>{trendIcon}{t('health.humidity_trend_prefix')}{trendLabel}</Text>
+      </View>
+    </View>
+  );
+}
+
 // ─── Main screen ──────────────────────────────────────────────────────────────
 
 export default function HomeScreen() {
@@ -493,6 +565,7 @@ export default function HomeScreen() {
   const { isConnected: healthConnected, todayData: healthData, recheck: recheckHealth } = useHealthData();
   const flareRisk = useFlareRisk(logs, activeFlare, healthHistory, tracksScheduledMeds);
   const { injections: biologicInjections } = useBiologicInjections();
+  const { humidity, isLoading: humidityLoading, isFetching: humidityFetching, fetchError: humidityError, refresh: refreshHumidity } = useWeatherHumidity();
 
   const nextBiologicDue = useMemo(() => {
     if (biologicInjections.length === 0) return null;
@@ -722,6 +795,17 @@ export default function HomeScreen() {
               )}
             </View>
           </View>
+        )}
+
+        {/* Humidity */}
+        {!humidityLoading && (
+          <HumidityCard
+            humidity={humidity}
+            isFetching={humidityFetching}
+            fetchError={humidityError}
+            onRefresh={refreshHumidity}
+            isDark={isDark}
+          />
         )}
 
         {/* 4. Spondy score — horizontal design */}
@@ -1378,5 +1462,56 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     fontWeight: '700',
     fontFamily: FontFamily.bold,
+  },
+
+  // Humidity card
+  humidityPromptRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  humidityIcon: {
+    fontSize: 22,
+  },
+  humidityPromptText: {
+    flex: 1,
+  },
+  humidityHint: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  humidityEnableLink: {
+    color: Colors.primary,
+    fontSize: 13,
+    fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
+  },
+  humidityHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  humidityTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  humidityValue: {
+    fontSize: FontSize.lg,
+    fontWeight: '700',
+    fontFamily: FontFamily.bold,
+  },
+  humiditySubRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  humidityLevel: {
+    fontSize: 13,
+    fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
+  },
+  humidityTrend: {
+    fontSize: 13,
   },
 });

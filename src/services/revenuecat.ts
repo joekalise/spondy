@@ -4,15 +4,18 @@ import { Platform } from 'react-native';
 const IOS_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY ?? 'appl_FDnYALlJtpZOVLglvgPEmWBxlHx';
 const ANDROID_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ?? '';
 
+let _configured = false;
 let _configureError: string | null = null;
 
 export function configureRevenueCat(): void {
   if (__DEV__) return; // dev builds mock subscription
+  if (_configured) return;
   const apiKey = Platform.OS === 'ios' ? IOS_KEY : ANDROID_KEY;
   if (!apiKey) return;
   try {
     Purchases.configure({ apiKey });
     if (__DEV__) Purchases.setLogLevel(LOG_LEVEL.DEBUG);
+    _configured = true;
     _configureError = null;
   } catch (e) {
     _configureError = e instanceof Error ? e.message : String(e);
@@ -92,7 +95,7 @@ export async function getMonthlyPriceString(): Promise<{
     if (!pkg) return { price: null, trialDays: null };
 
     const price = pkg.product.priceString ?? null;
-    const intro = pkg.product.introductoryPrice;
+    const intro = pkg.product.introPrice;
     let trialDays: number | null = null;
     if (intro && intro.price === 0) {
       // Convert intro period to days

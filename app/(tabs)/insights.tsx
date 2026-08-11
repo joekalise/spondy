@@ -22,7 +22,8 @@ import { Colors } from '@/constants/colors';
 import { FontSize, FontFamily, Spacing, BorderRadius } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
-import { getDailyLogs, getFlares, getStreak } from '@/services/database';
+import { getDailyLogs, getFlares, getStreak, getBasdaiScores } from '@/services/database';
+import { getCachedHumidity } from '@/services/weather';
 import { generateWeeklyInsight, WeeklyInsight } from '@/services/aiInsights';
 import { getAiConsent } from '@/services/aiConsent';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -236,10 +237,16 @@ function AIInsightCard({ logs, flares, profile, healthHistory, isDark }: AIInsig
     setError(null);
     setExpandedIdx(null);
     try {
+      const [basdaiScores, humidityData] = await Promise.all([
+        getBasdaiScores(user.id).catch(() => []),
+        getCachedHumidity().catch(() => null),
+      ]);
       const result = await generateWeeklyInsight({
         logs,
         flares,
         healthHistory,
+        basdaiScores,
+        humidityData,
         language: i18n.language,
         profile: profile ?? {
           user_id: user.id,
