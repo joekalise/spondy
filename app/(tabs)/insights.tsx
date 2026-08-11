@@ -529,6 +529,12 @@ function basdaiInterpretation(score: number): { label: string; color: string } {
   return { label: 'Very high', color: Colors.error };
 }
 
+function daysAgoLabel(t: (key: string, opts?: Record<string, unknown>) => string, days: number): string {
+  if (days === 0) return t('insights.basdai_today');
+  if (days === 1) return t('insights.basdai_yesterday');
+  return t('insights.basdai_days_ago', { days });
+}
+
 // ─── BasdaiModal ──────────────────────────────────────────────────────────────
 
 const BASDAI_QUESTIONS = [
@@ -702,7 +708,7 @@ function BasdaiPromptCard({
           {showInfo && (
             <Text style={[styles.basdaiInfoText, { color: textSecondary, marginTop: Spacing.xs }]}>{BASDAI_INFO}</Text>
           )}
-          <Text style={[styles.basdaiCompactDate, { color: textSecondary }]}>{daysSince} days ago</Text>
+          <Text style={[styles.basdaiCompactDate, { color: textSecondary }]}>{daysAgoLabel(t, daysSince ?? 0)}</Text>
         </View>
         <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.basdaiRetakeBtn}>
           <Text style={[styles.basdaiRetakeBtnText, { color: Colors.primary }]}>{t('insights.basdai_retake')}</Text>
