@@ -169,6 +169,26 @@ export async function getActiveFlares(userId: string): Promise<Flare[]> {
   }
 }
 
+// Active flares plus ones that ended on or after sinceDate — feeds the Spondy
+// score's taper window so the flare penalty/cap relax gradually after a flare
+// ends instead of vanishing the instant it's marked resolved.
+export async function getRecentFlares(userId: string, sinceDate: string): Promise<Flare[]> {
+  try {
+    const { data, error } = await supabase
+      .from('flares')
+      .select('*')
+      .eq('user_id', userId)
+      .or(`end_date.is.null,end_date.gte.${sinceDate}`)
+      .order('start_date', { ascending: false });
+
+    if (error) throw error;
+    return (data ?? []) as Flare[];
+  } catch (err) {
+    console.error('getRecentFlares error:', err);
+    return [];
+  }
+}
+
 // ─── Medications ─────────────────────────────────────────────────────────────
 
 export async function getMedications(userId: string): Promise<MedicationReminder[]> {
@@ -399,6 +419,18 @@ export async function getActiveUveitisEpisode(userId: string): Promise<UveitisEp
     .maybeSingle();
   if (error) { console.error('getActiveUveitisEpisode error:', error); return null; }
   return data as UveitisEpisode | null;
+}
+
+// Active episodes plus ones that ended on or after sinceDate — see getRecentFlares.
+export async function getRecentUveitisEpisodes(userId: string, sinceDate: string): Promise<UveitisEpisode[]> {
+  const { data, error } = await supabase
+    .from('uveitis_episodes')
+    .select('*')
+    .eq('user_id', userId)
+    .or(`end_date.is.null,end_date.gte.${sinceDate}`)
+    .order('start_date', { ascending: false });
+  if (error) { console.error('getRecentUveitisEpisodes error:', error); return []; }
+  return (data ?? []) as UveitisEpisode[];
 }
 
 export async function getUveitisEpisodes(userId: string): Promise<UveitisEpisode[]> {

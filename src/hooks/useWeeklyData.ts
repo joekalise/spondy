@@ -1,9 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { getDailyLogs, getActiveFlares, getActiveUveitisEpisode } from '@/services/database';
+import { getDailyLogs, getRecentFlares, getRecentUveitisEpisodes } from '@/services/database';
 
 import { DailyLog, Flare, Mood, UveitisEpisode, UserProfile } from '@/types';
 import { useProfile } from '@/contexts/ProfileContext';
+
+// How many days after a flare/episode ends its score penalty and cap keep
+// relaxing, instead of vanishing the instant it's marked resolved.
+const FLARE_TAPER_DAYS = 10;
+
+// 1.0 while still active, tapering linearly to 0 by FLARE_TAPER_DAYS after end_date.
+function flareRecencyWeight(endDate: string | null): number {
+  if (!endDate) return 1;
+  const daysSinceEnd = Math.floor((Date.now() - new Date(endDate).getTime()) / (1000 * 60 * 60 * 24));
+  if (daysSinceEnd <= 0) return 1;
+  if (daysSinceEnd >= FLARE_TAPER_DAYS) return 0;
+  return 1 - daysSinceEnd / FLARE_TAPER_DAYS;
+}
 
 export interface ScoreBreakdown {
   base: number;
@@ -50,22 +63,19 @@ function fatigueContribution(avgFatigue: number): number {
 function flarePenaltyForType(flare: Flare): number {
   const severityPenalty = flare.severity === 'severe' ? 45 : flare.severity === 'moderate' ? 32 : 20;
   const typeMultiplier = flare.flare_type === 'as' ? 1.0 : flare.flare_type === 'enthesitis' ? 0.7 : 0.6;
-  return Math.round(severityPenalty * typeMultiplier);
+  return Math.round(severityPenalty * typeMultiplier * flareRecencyWeight(flare.end_date));
 }
 
-function activeFlaresPenalty(flares: Flare[], uveitisEpisode: UveitisEpisode | null, profile: UserProfile | null): number {
+function recentFlaresPenalty(flares: Flare[], uveitisEpisodes: UveitisEpisode[], profile: UserProfile | null): number {
   let penalty = 0;
 
   for (const flare of flares) {
     penalty += flarePenaltyForType(flare);
   }
 
-  if (uveitisEpisode) {
-    switch (uveitisEpisode.severity) {
-      case 'severe': penalty += 30; break;
-      case 'moderate': penalty += 20; break;
-      default: penalty += 12;
-    }
+  for (const episode of uveitisEpisodes) {
+    const basePenalty = episode.severity === 'severe' ? 30 : episode.severity === 'moderate' ? 20 : 12;
+    penalty += Math.round(basePenalty * flareRecencyWeight(episode.end_date));
   }
 
   // Passive penalty for conditions without dedicated flare tracking
@@ -75,29 +85,45 @@ function activeFlaresPenalty(flares: Flare[], uveitisEpisode: UveitisEpisode | n
   return penalty;
 }
 
-function scoreUpperCap(flares: Flare[], uveitisEpisode: UveitisEpisode | null): number {
-  const activeCount = flares.length + (uveitisEpisode ? 1 : 0);
+// Caps the score while a flare is active or recently ended, blending back to
+// 100 as its recency weight tapers to 0 rather than releasing all at once.
+function scoreUpperCap(flares: Flare[], uveitisEpisodes: UveitisEpisode[]): number {
+  const weightedFlares = flares
+    .map((f) => ({ flare: f, weight: flareRecencyWeight(f.end_date) }))
+    .filter((x) => x.weight > 0);
+  const weightedUveitis = uveitisEpisodes
+    .map((u) => ({ episode: u, weight: flareRecencyWeight(u.end_date) }))
+    .filter((x) => x.weight > 0);
+
+  const activeCount = weightedFlares.length + weightedUveitis.length;
   if (activeCount === 0) return 100;
 
-  const hasAS = flares.some(f => f.flare_type === 'as');
-  const hasSevere = flares.some(f => f.severity === 'severe') || uveitisEpisode?.severity === 'severe';
+  const hasAS = weightedFlares.some((x) => x.flare.flare_type === 'as');
+  const hasSevere =
+    weightedFlares.some((x) => x.flare.severity === 'severe') ||
+    weightedUveitis.some((x) => x.episode.severity === 'severe');
 
-  if (activeCount >= 2) return hasSevere ? 38 : 45;
-  if (hasSevere) return hasAS ? 50 : 58;
+  let rawCap: number;
+  if (activeCount >= 2) {
+    rawCap = hasSevere ? 38 : 45;
+  } else if (hasSevere) {
+    rawCap = hasAS ? 50 : 58;
+  } else {
+    const worst = [...weightedFlares.map((x) => x.flare)].sort((a, b) => {
+      const order = { severe: 0, moderate: 1, mild: 2 };
+      return order[a.severity] - order[b.severity];
+    })[0];
+    rawCap = worst?.severity === 'moderate' ? (hasAS ? 62 : 68) : 78;
+  }
 
-  const worst = [...flares].sort((a, b) => {
-    const order = { severe: 0, moderate: 1, mild: 2 };
-    return order[a.severity] - order[b.severity];
-  })[0];
-
-  if (worst?.severity === 'moderate') return hasAS ? 62 : 68;
-  return 78;
+  const maxWeight = Math.max(0, ...weightedFlares.map((x) => x.weight), ...weightedUveitis.map((x) => x.weight));
+  return Math.round(100 - (100 - rawCap) * maxWeight);
 }
 
 function computeScore(
   logs: DailyLog[],
-  activeFlares: Flare[],
-  uveitisEpisode: UveitisEpisode | null,
+  recentFlares: Flare[],
+  recentUveitisEpisodes: UveitisEpisode[],
   profile: UserProfile | null,
   tracksMedication: boolean,
 ): { score: number | null; breakdown: ScoreBreakdown | null } {
@@ -114,11 +140,11 @@ function computeScore(
   const base = 75;
   const painPts = painContribution(avgPain);
   const fatiguePts = fatigueContribution(avgFatigue);
-  const flarePen = activeFlaresPenalty(activeFlares, uveitisEpisode, profile);
+  const flarePen = recentFlaresPenalty(recentFlares, recentUveitisEpisodes, profile);
   const consistencyBonus = Math.round((count / 7) * 8);
   const moodPts = Math.round(avgMoodRaw * 0.5);
   const medPts = Math.round(avgMedRaw * 0.5);
-  const cap = scoreUpperCap(activeFlares, uveitisEpisode);
+  const cap = scoreUpperCap(recentFlares, recentUveitisEpisodes);
 
   const score = Math.round(
     Math.min(cap, Math.max(0, base + painPts + fatiguePts - flarePen + consistencyBonus + moodPts + medPts))
@@ -160,13 +186,16 @@ export function useWeeklyData(tracksMedication = true): {
 
     setIsLoading(true);
     try {
-      const [weekLogs, activeFlares, activeUveitis] = await Promise.all([
+      const taperSince = new Date(Date.now() - FLARE_TAPER_DAYS * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split('T')[0];
+      const [weekLogs, recentFlares, recentUveitis] = await Promise.all([
         getDailyLogs(user.id, 7),
-        getActiveFlares(user.id),
-        getActiveUveitisEpisode(user.id),
+        getRecentFlares(user.id, taperSince),
+        getRecentUveitisEpisodes(user.id, taperSince),
       ]);
       setLogs(weekLogs);
-      const { score, breakdown } = computeScore(weekLogs, activeFlares, activeUveitis, profile, tracksMedication);
+      const { score, breakdown } = computeScore(weekLogs, recentFlares, recentUveitis, profile, tracksMedication);
       setSpondyScore(score);
       setScoreBreakdown(breakdown);
     } catch (err) {
