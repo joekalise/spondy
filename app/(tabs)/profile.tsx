@@ -391,7 +391,7 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
             <OptionCard key={v} style={compactCard} label={SMOKING_STATUS_LABELS[v]} isSelected={smokingStatus === v} onPress={() => setSmokingStatus(v)} />
           ))}
 
-          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('onboarding.age_range')}</Text>
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_alerts.age_range')}</Text>
           {(['under_25', '25_35', '35_45', '45_55', '55_plus'] as AgeRange[]).map(v => (
             <OptionCard key={v} style={compactCard} label={AGE_RANGE_LABELS[v]} isSelected={ageRange === v} onPress={() => setAgeRange(v)} />
           ))}
@@ -401,7 +401,7 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
             <OptionCard key={v} style={compactCard} label={DIAGNOSIS_YEARS_LABELS[v]} isSelected={diagnosisYears === v} onPress={() => setDiagnosisYears(v)} />
           ))}
 
-          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('onboarding.disease_activity')}</Text>
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_alerts.disease_activity')}</Text>
           {(['mild', 'moderate', 'severe'] as Severity[]).map(v => (
             <OptionCard key={v} style={compactCard} label={SEVERITY_LABELS[v]} isSelected={severity === v} onPress={() => setSeverity(v)} />
           ))}

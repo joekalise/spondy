@@ -29,6 +29,7 @@ import { sendChatMessage } from '@/services/aiInsights';
 import { getAiConsent } from '@/services/aiConsent';
 import { getDailyLogs, getBasdaiScores } from '@/services/database';
 import { getCachedHumidity } from '@/services/weather';
+import { fetchTodayRecoveryData } from '@/services/healthKit';
 import { logEvent, Events } from '@/services/analytics';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -332,9 +333,11 @@ export default function AIChatScreen() {
         ? [{ role: 'user' as const, content: trimmed }]
         : history;
 
-      const [basdaiScores, humidityData] = await Promise.all([
+      const today = new Date().toISOString().split('T')[0];
+      const [basdaiScores, humidityData, recoveryData] = await Promise.all([
         user ? getBasdaiScores(user.id).catch(() => []) : Promise.resolve([]),
         getCachedHumidity().catch(() => null),
+        fetchTodayRecoveryData(today).catch(() => null),
       ]);
 
       const response = await sendChatMessage({
@@ -344,6 +347,7 @@ export default function AIChatScreen() {
         healthHistory,
         basdaiScores,
         humidityData,
+        recoveryData,
         profile: profile ?? {
           user_id: user?.id ?? '',
           age_range: null,

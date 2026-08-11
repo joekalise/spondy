@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/services/supabase';
 import { scheduleBasdaiReminder } from '@/services/notifications';
@@ -19,12 +20,18 @@ export function useBasdai() {
         .eq('user_id', user.id)
         .order('date', { ascending: false })
         .limit(12);
-      if (!error) setScores((data ?? []) as BasdaiScore[]);
+      if (!error) {
+        const loaded = (data ?? []) as BasdaiScore[];
+        setScores(loaded);
+        // Reschedule on every focus so the reminder self-heals if the OS
+        // ever drops the underlying scheduled notification.
+        if (loaded[0]) scheduleBasdaiReminder(loaded[0].date).catch(() => {});
+      }
     } catch {}
     finally { setIsLoading(false); }
   }, [user]);
 
-  useEffect(() => { load(); }, [load]);
+  useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const saveScore = useCallback(async (answers: { q1: number; q2: number; q3: number; q4: number; q5: number; q6: number }) => {
     if (!user) return;
@@ -34,7 +41,7 @@ export function useBasdai() {
       .from('basdai_scores')
       .upsert({ user_id: user.id, date: today, ...answers, score }, { onConflict: 'user_id,date' });
     if (error) throw error;
-    await scheduleBasdaiReminder().catch(() => {});
+    await scheduleBasdaiReminder(today).catch(() => {});
     await load();
   }, [user, load]);
 

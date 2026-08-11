@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { DailyLog, Flare, HealthData, Mood, DietTrigger } from '@/types';
+import { DailyLog, Flare, HealthData, Mood, DietTrigger, RecoverySnapshot } from '@/types';
 
 export type FlareRiskLevel = 'none' | 'watch' | 'warning';
 
@@ -28,6 +28,7 @@ export function computeFlareRisk(
   logs: DailyLog[],
   activeFlare: Flare | null,
   healthHistory?: HealthData[],
+  recovery?: RecoverySnapshot | null,
   tracksMedication = true
 ): FlareRisk {
   // Already in a flare — no separate warning needed
@@ -139,6 +140,19 @@ export function computeFlareRisk(
     if (lowStepDays >= 2) signals.push('low_activity');
   }
 
+  // ── Recovery signals (today's HealthKit data) ─────────────────────────────
+
+  // 10. Low overnight SpO₂ — hypoxia during sleep is linked to sleep apnea,
+  // a documented AS comorbidity, and worsens inflammatory pain/fatigue
+  if (recovery?.oxygen_saturation !== null && recovery?.oxygen_saturation !== undefined) {
+    if (recovery.oxygen_saturation < 94) signals.push('low_spo2');
+  }
+
+  // 11. Elevated respiratory rate during sleep — autonomic arousal / poor recovery
+  if (recovery?.respiratory_rate !== null && recovery?.respiratory_rate !== undefined) {
+    if (recovery.respiratory_rate > 18) signals.push('elevated_resp_rate');
+  }
+
   if (signals.length >= 3) return { level: 'warning', signals };
   if (signals.length >= 2) return { level: 'watch', signals };
   return { level: 'none', signals };
@@ -148,10 +162,11 @@ export function useFlareRisk(
   logs: DailyLog[],
   activeFlare: Flare | null,
   healthHistory?: HealthData[],
+  recovery?: RecoverySnapshot | null,
   tracksMedication = true
 ): FlareRisk {
   return useMemo(
-    () => computeFlareRisk(logs, activeFlare, healthHistory, tracksMedication),
-    [logs, activeFlare, healthHistory, tracksMedication]
+    () => computeFlareRisk(logs, activeFlare, healthHistory, recovery, tracksMedication),
+    [logs, activeFlare, healthHistory, recovery, tracksMedication]
   );
 }

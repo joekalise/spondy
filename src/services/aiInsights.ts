@@ -1,5 +1,5 @@
 import { supabase } from '@/services/supabase';
-import { BasdaiScore, DailyLog, Flare, HealthData, UserProfile } from '@/types';
+import { BasdaiScore, DailyLog, Flare, HealthData, RecoverySnapshot, UserProfile } from '@/types';
 
 export interface WeeklyInsight {
   summary: string;
@@ -98,7 +98,8 @@ function buildDataSummary(
   flares: Flare[],
   healthHistory?: HealthData[],
   basdaiScores?: BasdaiScore[],
-  humidityData?: { humidity: number; trend: string } | null
+  humidityData?: { humidity: number; trend: string } | null,
+  recoveryData?: RecoverySnapshot | null
 ): string {
   if (logs.length === 0) {
     return 'No tracking data available for this period.';
@@ -234,6 +235,24 @@ ${topTriggers ? `- Most frequent triggers: ${topTriggers}` : '- No specific trig
     humiditySection = `\n\nHUMIDITY: ${humidityData.humidity}% — ${level}, trend: ${humidityData.trend}. Note: both a dedicated ankylosing spondylitis study and a large general chronic-pain study found humid days linked to more reported pain, with barometric pressure alone not holding up once temperature was accounted for.`;
   }
 
+  // Recovery context (today's overnight HealthKit data)
+  let recoverySection = '';
+  if (recoveryData) {
+    const lines: string[] = [];
+    if (recoveryData.oxygen_saturation !== null) {
+      const flag = recoveryData.oxygen_saturation < 94 ? ' ⚠️ below normal — sleep apnea is a documented AS comorbidity and can worsen pain/fatigue' : ' (normal range)';
+      lines.push(`SpO₂: ${recoveryData.oxygen_saturation}%${flag}`);
+    }
+    if (recoveryData.respiratory_rate !== null) {
+      const flag = recoveryData.respiratory_rate > 18 ? ' ⚠️ elevated — indicates autonomic arousal/poor recovery' : ' (normal range)';
+      lines.push(`Sleep respiratory rate: ${recoveryData.respiratory_rate} breaths/min${flag}`);
+    }
+    if (recoveryData.mindful_minutes !== null && recoveryData.mindful_minutes > 0) {
+      lines.push(`Mindfulness today: ${recoveryData.mindful_minutes} min`);
+    }
+    if (lines.length > 0) recoverySection = `\n\nRECOVERY (overnight, from HealthKit):\n${lines.join('\n')}`;
+  }
+
   return `
 TRACKING DATA SUMMARY (${logs.length} days logged):
 - Average pain score: ${avgPain}/10
@@ -245,7 +264,7 @@ FLARES:
 ${flareSummary}
 
 USER NOTES (free text from check-ins):
-${notes || '  None'}${dietSection}${healthSection}${exerciseSection}${periodSection}${basdaiSection}${humiditySection}
+${notes || '  None'}${dietSection}${healthSection}${exerciseSection}${periodSection}${basdaiSection}${humiditySection}${recoverySection}
 `.trim();
 }
 
@@ -280,10 +299,11 @@ export async function generateWeeklyInsight(params: {
   healthHistory?: HealthData[];
   basdaiScores?: BasdaiScore[];
   humidityData?: { humidity: number; trend: string } | null;
+  recoveryData?: RecoverySnapshot | null;
   aiContext?: string;
   language?: string;
 }): Promise<WeeklyInsight> {
-  const { logs, flares, profile, healthHistory, basdaiScores, humidityData, aiContext, language } = params;
+  const { logs, flares, profile, healthHistory, basdaiScores, humidityData, recoveryData, aiContext, language } = params;
 
   const isEarlyData = logs.length < 7;
 
@@ -316,7 +336,7 @@ Rules:
 
 ${buildProfileSummary(profile)}
 
-${buildDataSummary(logs, flares, healthHistory, basdaiScores, humidityData)}
+${buildDataSummary(logs, flares, healthHistory, basdaiScores, humidityData, recoveryData)}
 ${aiContext ? `\nAdditional context: ${aiContext}` : ''}`;
 
   try {
@@ -347,10 +367,11 @@ export async function sendChatMessage(params: {
   healthHistory?: HealthData[];
   basdaiScores?: BasdaiScore[];
   humidityData?: { humidity: number; trend: string } | null;
+  recoveryData?: RecoverySnapshot | null;
   aiContext?: string;
   language?: string;
 }): Promise<string> {
-  const { messages, logs, flares, profile, healthHistory, basdaiScores, humidityData, aiContext, language } = params;
+  const { messages, logs, flares, profile, healthHistory, basdaiScores, humidityData, recoveryData, aiContext, language } = params;
 
   const systemPrompt = `${language && language !== 'en-GB' ? `Respond in ${language}.\n\n` : ''}You are Spondy, an AI built specifically for people with Ankylosing Spondylitis. You have full access to this user's tracking data — their symptoms, flares, health metrics, medications, and patterns over time.
 
@@ -358,7 +379,7 @@ Here is the user's profile and recent data:
 
 ${buildProfileSummary(profile)}
 
-${buildDataSummary(logs, flares, healthHistory, basdaiScores, humidityData)}
+${buildDataSummary(logs, flares, healthHistory, basdaiScores, humidityData, recoveryData)}
 ${aiContext ? `\nAdditional context from user: ${aiContext}` : ''}
 
 How to respond:

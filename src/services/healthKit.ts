@@ -1,8 +1,11 @@
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { HealthData } from '@/types';
+import { HealthData, RecoverySnapshot } from '@/types';
 
 const HEALTH_CONNECTED_KEY = '@spondy_health_connected';
+// Bump this when new permission types are added so existing users get re-prompted.
+const HEALTH_PERMISSIONS_VERSION = 2;
+const HEALTH_PERMISSIONS_VERSION_KEY = '@spondy_health_permissions_version';
 
 function getHK(): any | null {
   if (Platform.OS !== 'ios') return null;
@@ -45,6 +48,9 @@ export async function requestHealthPermissions(): Promise<boolean> {
         hk.Constants.Permissions.HeartRateVariability,
         hk.Constants.Permissions.ActiveEnergyBurned,
         hk.Constants.Permissions.Workout,
+        hk.Constants.Permissions.OxygenSaturation,
+        hk.Constants.Permissions.RespiratoryRate,
+        hk.Constants.Permissions.MindfulSession,
       ],
       write: [],
     },
@@ -53,6 +59,7 @@ export async function requestHealthPermissions(): Promise<boolean> {
   try {
     await p<void>((cb) => hk.initHealthKit(permissions, cb));
     await AsyncStorage.setItem(HEALTH_CONNECTED_KEY, 'true');
+    await AsyncStorage.setItem(HEALTH_PERMISSIONS_VERSION_KEY, String(HEALTH_PERMISSIONS_VERSION));
     return true;
   } catch {
     return false;
@@ -61,30 +68,19 @@ export async function requestHealthPermissions(): Promise<boolean> {
 
 export async function disconnectHealth(): Promise<void> {
   await AsyncStorage.removeItem(HEALTH_CONNECTED_KEY);
+  await AsyncStorage.removeItem(HEALTH_PERMISSIONS_VERSION_KEY);
 }
 
-export async function reinitHealthKit(): Promise<boolean> {
-  const hk = getHK();
-  if (!hk) return false;
-  const permissions = {
-    permissions: {
-      read: [
-        hk.Constants.Permissions.Steps,
-        hk.Constants.Permissions.SleepAnalysis,
-        hk.Constants.Permissions.HeartRate,
-        hk.Constants.Permissions.HeartRateVariability,
-        hk.Constants.Permissions.ActiveEnergyBurned,
-        hk.Constants.Permissions.Workout,
-      ],
-      write: [],
-    },
-  };
+// Silently re-runs initHealthKit when new permission types have been added.
+// iOS will only show a dialog for types not yet granted — already-granted ones pass silently.
+export async function ensureLatestHealthPermissions(): Promise<void> {
+  const connected = await isHealthConnected();
+  if (!connected) return;
   try {
-    await p<void>((cb) => hk.initHealthKit(permissions, cb));
-    return true;
-  } catch {
-    return false;
-  }
+    const stored = await AsyncStorage.getItem(HEALTH_PERMISSIONS_VERSION_KEY);
+    if (Number(stored) >= HEALTH_PERMISSIONS_VERSION) return;
+    await requestHealthPermissions();
+  } catch {}
 }
 
 export type HealthSnapshot = Omit<HealthData, 'id'>;
@@ -206,6 +202,73 @@ export async function fetchTodayHealthData(
   try {
     const ws = await p<Array<unknown>>((cb) => hk.getWorkouts(opts, cb));
     base.workouts = ws.length;
+  } catch {}
+
+  return base;
+}
+
+export async function fetchTodayRecoveryData(date: string): Promise<RecoverySnapshot> {
+  const hk = getHK();
+  const base: RecoverySnapshot = {
+    oxygen_saturation: null,
+    respiratory_rate: null,
+    mindful_minutes: null,
+  };
+
+  if (!hk) return base;
+
+  // Sleep window: previous evening 20:00 → current morning 10:00
+  // SpO2 and respiratory rate are most meaningful during sleep
+  const sleepStart = new Date(`${date}T00:00:00`);
+  sleepStart.setDate(sleepStart.getDate() - 1);
+  sleepStart.setHours(20, 0, 0, 0);
+  const sleepEnd = new Date(`${date}T10:00:00`);
+  const sleepOpts = {
+    startDate: sleepStart.toISOString(),
+    endDate: sleepEnd.toISOString(),
+    ascending: false,
+    limit: 100,
+  };
+
+  // SpO2 — average overnight reading
+  try {
+    const samples = await p<Array<{ value: number }>>((cb) =>
+      hk.getOxygenSaturationSamples(sleepOpts, cb)
+    );
+    if (samples.length > 0) {
+      const avg = samples.reduce((sum, s) => sum + s.value, 0) / samples.length;
+      // HealthKit stores as 0-1 fraction; convert to percentage
+      base.oxygen_saturation = Math.round(avg > 1 ? avg : avg * 100);
+    }
+  } catch {}
+
+  // Respiratory rate — average overnight reading
+  try {
+    const samples = await p<Array<{ value: number }>>((cb) =>
+      hk.getRespiratoryRateSamples(sleepOpts, cb)
+    );
+    if (samples.length > 0) {
+      const avg = samples.reduce((sum, s) => sum + s.value, 0) / samples.length;
+      base.respiratory_rate = Math.round(avg * 10) / 10;
+    }
+  } catch {}
+
+  // Mindful minutes — total sessions today
+  try {
+    const dayStart = new Date(`${date}T00:00:00`).toISOString();
+    const dayEnd = new Date(`${date}T23:59:59`).toISOString();
+    const result = await p<{ value: number } | Array<{ startDate: string; endDate: string }>>((cb) =>
+      hk.getMindfulSession({ startDate: dayStart, endDate: dayEnd }, cb)
+    );
+    if (Array.isArray(result)) {
+      // Sum durations if library returns an array of sessions
+      const totalMs = result.reduce((sum, s) => {
+        return sum + (new Date(s.endDate).getTime() - new Date(s.startDate).getTime());
+      }, 0);
+      base.mindful_minutes = Math.round(totalMs / 60000) || null;
+    } else if (result && typeof result.value === 'number') {
+      base.mindful_minutes = Math.round(result.value) || null;
+    }
   } catch {}
 
   return base;

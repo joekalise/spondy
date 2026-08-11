@@ -1,17 +1,20 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import i18n from '@/i18n';
 import { BasdaiScore, BiologicInjection, DailyLog, Flare, MedicationReminder, UveitisEpisode, UserProfile } from '@/types';
+
+const t = i18n.t.bind(i18n);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmtDate(dateStr: string): string {
   const d = new Date(dateStr + 'T12:00:00');
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString(i18n.language, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 function fmtDateShort(dateStr: string): string {
   const d = new Date(dateStr + 'T12:00:00');
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  return d.toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' });
 }
 
 function flareDays(start: string, end: string | null): number {
@@ -20,41 +23,27 @@ function flareDays(start: string, end: string | null): number {
   return Math.max(1, Math.ceil((e.getTime() - s.getTime()) / 86400000));
 }
 
-function labelAgeRange(v: string | null): string {
-  if (!v) return '—';
-  const map: Record<string, string> = {
-    under_25: 'Under 25', '25_35': '25–35', '35_45': '35–45',
-    '45_55': '45–55', '55_plus': '55+',
-  };
-  return map[v] ?? v;
-}
-
-function labelDiagnosisYears(v: string | null): string {
-  if (!v) return '—';
-  const map: Record<string, string> = {
-    under_1: 'Less than 1 year', '1_3': '1–3 years', '3_5': '3–5 years',
-    '5_10': '5–10 years', '10_plus': 'More than 10 years',
-  };
-  return map[v] ?? v;
+function labelList(values: string[], namespace: string): string {
+  return values.map((v) => t(`${namespace}.${v}`)).join(', ');
 }
 
 function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function moodLabel(mood: string | null): string {
-  const map: Record<string, string> = {
-    great: 'Great', good: 'Good', okay: 'Okay', low: 'Low', very_low: 'Very Low',
-  };
-  return mood ? (map[mood] ?? mood) : '—';
+// Picks the _one/_other key directly instead of relying on i18next's
+// automatic count-based suffix resolution, which silently falls back to
+// v3-style keys and fails to resolve on devices without a working
+// Intl.PluralRules (see app/(tabs)/flares.tsx for the same fix).
+function tPlural(key: string, count: number): string {
+  return count === 1 ? t(`${key}_one`, { count }) : t(`${key}_other`, { count });
 }
 
-function stiffnessLabel(v: string | null): string {
-  const map: Record<string, string> = {
-    none: 'None', under_30: '<30 min', '30_60': '30–60 min',
-    '1_2_hours': '1–2 h', over_2_hours: '>2 h',
-  };
-  return v ? (map[v] ?? v) : '—';
+function basdaiInterpretation(score: number): { label: string; color: string } {
+  if (score < 2) return { label: t('pdf_export.basdai_low'), color: '#22C55E' };
+  if (score < 4) return { label: t('pdf_export.basdai_moderate'), color: '#EAB308' };
+  if (score < 6) return { label: t('pdf_export.basdai_high'), color: '#EF4444' };
+  return { label: t('pdf_export.basdai_very_high'), color: '#EF4444' };
 }
 
 // ─── HTML builder ─────────────────────────────────────────────────────────────
@@ -78,7 +67,7 @@ function buildReportHTML(params: {
 
   const reportFromDate = fmtDate(reportStart.toISOString().split('T')[0]);
   const reportToDate = fmtDate(now.toISOString().split('T')[0]);
-  const generatedAt = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const generatedAt = now.toLocaleDateString(i18n.language, { day: 'numeric', month: 'long', year: 'numeric' });
 
   // ── Stats ──────────────────────────────────────────────────────────────────
   const avgPain = logs.length > 0
@@ -110,13 +99,9 @@ function buildReportHTML(params: {
   const exercisePct = logs.length > 0 ? Math.round((exerciseDays / logs.length) * 100) : 0;
 
   // ── Diet ──────────────────────────────────────────────────────────────────
-  const TRIGGER_LABELS: Record<string, string> = {
-    alcohol: 'Alcohol', processed: 'Processed food', high_sugar: 'High sugar',
-    high_starch: 'High starch/wheat', dairy: 'Dairy', red_meat: 'Red meat', nightshades: 'Nightshades',
-  };
   const dietLogs = logs.filter(l => l.diet_quality !== null);
   const triggerCounts: Record<string, number> = {};
-  dietLogs.forEach(l => { (l.diet_triggers ?? []).forEach(t => { triggerCounts[t] = (triggerCounts[t] ?? 0) + 1; }); });
+  dietLogs.forEach(l => { (l.diet_triggers ?? []).forEach(trigger => { triggerCounts[trigger] = (triggerCounts[trigger] ?? 0) + 1; }); });
   const topTriggers = Object.entries(triggerCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
   // ── All notes ─────────────────────────────────────────────────────────────
@@ -128,31 +113,31 @@ function buildReportHTML(params: {
   // ── Flare rows ────────────────────────────────────────────────────────────
   const asFlares = flares.filter(f => !(f as any).flare_type || (f as any).flare_type === 'as');
   const flareRowsHTML = asFlares.length === 0
-    ? `<tr><td colspan="5" style="text-align:center;color:#78716C;font-style:italic;">No AS flares recorded in this period</td></tr>`
+    ? `<tr><td colspan="5" style="text-align:center;color:#78716C;font-style:italic;">${t('pdf_export.flare_none')}</td></tr>`
     : asFlares.map(f => `
         <tr>
           <td>${fmtDateShort(f.start_date)}</td>
-          <td>${f.end_date ? fmtDateShort(f.end_date) : '<em>Ongoing</em>'}</td>
-          <td>${flareDays(f.start_date, f.end_date)} days</td>
-          <td style="text-transform:capitalize;">${f.severity}</td>
+          <td>${f.end_date ? fmtDateShort(f.end_date) : `<em>${t('pdf_export.flare_ongoing')}</em>`}</td>
+          <td>${tPlural('pdf_export.flare_days', flareDays(f.start_date, f.end_date))}</td>
+          <td style="text-transform:capitalize;">${t(`onboarding.severity.${f.severity}`) || f.severity}</td>
           <td>${f.areas_affected.map(a => a.replace(/_/g, ' ')).join(', ')}</td>
         </tr>`).join('');
 
   // ── Uveitis rows ──────────────────────────────────────────────────────────
   const uveitisRowsHTML = uveitisEpisodes.length === 0
-    ? `<tr><td colspan="5" style="text-align:center;color:#78716C;font-style:italic;">No uveitis episodes recorded in this period</td></tr>`
+    ? `<tr><td colspan="5" style="text-align:center;color:#78716C;font-style:italic;">${t('pdf_export.uveitis_none')}</td></tr>`
     : uveitisEpisodes.map(e => `
         <tr>
           <td>${fmtDateShort(e.start_date)}</td>
-          <td>${e.end_date ? fmtDateShort(e.end_date) : '<em>Ongoing</em>'}</td>
-          <td>${flareDays(e.start_date, e.end_date)} days</td>
-          <td style="text-transform:capitalize;">${e.severity}</td>
-          <td>${capitalize(e.affected_eye)} eye${e.treatment_received ? ', treated' : ''}</td>
+          <td>${e.end_date ? fmtDateShort(e.end_date) : `<em>${t('pdf_export.flare_ongoing')}</em>`}</td>
+          <td>${tPlural('pdf_export.flare_days', flareDays(e.start_date, e.end_date))}</td>
+          <td style="text-transform:capitalize;">${t(`onboarding.severity.${e.severity}`) || e.severity}</td>
+          <td>${capitalize(e.affected_eye)}${t('pdf_export.eye_suffix')}${e.treatment_received ? t('pdf_export.uveitis_treated_suffix') : ''}</td>
         </tr>`).join('');
 
   // ── Biologic injections ───────────────────────────────────────────────────
   const injectionRowsHTML = biologicInjections.length === 0
-    ? `<tr><td colspan="3" style="text-align:center;color:#78716C;font-style:italic;">No injections recorded</td></tr>`
+    ? `<tr><td colspan="3" style="text-align:center;color:#78716C;font-style:italic;">${t('pdf_export.biologic_none')}</td></tr>`
     : biologicInjections.map(i => `
         <tr>
           <td>${fmtDateShort(i.injected_at.split('T')[0])}</td>
@@ -162,7 +147,7 @@ function buildReportHTML(params: {
 
   // ── Notes HTML ────────────────────────────────────────────────────────────
   const notesHTML = notesWithContent.length === 0
-    ? `<p style="color:#78716C;font-style:italic;">No free-text notes recorded.</p>`
+    ? `<p style="color:#78716C;font-style:italic;">${t('pdf_export.notes_none')}</p>`
     : notesWithContent.map(l => `
         <div class="note-entry">
           <span class="note-date">${fmtDateShort(l.date)}</span>
@@ -170,11 +155,11 @@ function buildReportHTML(params: {
         </div>`).join('');
 
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="${i18n.language}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Spondy Health Summary</title>
+  <title>${t('pdf_export.title')}</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -242,133 +227,132 @@ function buildReportHTML(params: {
 <body>
   <div class="header">
     <div class="header-left">
-      <h1>Spondy Health Summary</h1>
-      <p class="subtitle">Ankylosing Spondylitis Tracking Report, for your rheumatologist</p>
+      <h1>${t('pdf_export.title')}</h1>
+      <p class="subtitle">${t('pdf_export.subtitle')}</p>
     </div>
     <div class="header-right">
-      <div>Generated: ${generatedAt}</div>
-      <div>Period: ${reportFromDate} – ${reportToDate}</div>
-      <div style="margin-top:4px;">${logs.length} days tracked</div>
+      <div>${t('pdf_export.generated_label')}: ${generatedAt}</div>
+      <div>${t('pdf_export.period_label')}: ${t('pdf_export.period_range', { from: reportFromDate, to: reportToDate })}</div>
+      <div style="margin-top:4px;">${tPlural('pdf_export.days_tracked', logs.length)}</div>
     </div>
   </div>
 
   <!-- Patient info -->
-  <h2>Patient Profile</h2>
+  <h2>${t('pdf_export.section_patient_profile')}</h2>
   <div class="profile-grid">
     <div class="profile-row">
-      <span class="profile-label">Age range</span>
-      <span class="profile-value">${labelAgeRange(profile.age_range)}</span>
+      <span class="profile-label">${t('pdf_export.field_age_range')}</span>
+      <span class="profile-value">${profile.age_range ? t(`onboarding.age_range.${profile.age_range}`) : '—'}</span>
     </div>
     <div class="profile-row">
-      <span class="profile-label">Years since diagnosis</span>
-      <span class="profile-value">${labelDiagnosisYears(profile.diagnosis_years)}</span>
+      <span class="profile-label">${t('pdf_export.field_years_since_diagnosis')}</span>
+      <span class="profile-value">${profile.diagnosis_years ? t(`onboarding.diagnosis_years.${profile.diagnosis_years}`) : '—'}</span>
     </div>
     <div class="profile-row">
-      <span class="profile-label">Self-reported activity</span>
-      <span class="profile-value">${profile.severity ? capitalize(profile.severity) : '—'}</span>
+      <span class="profile-label">${t('pdf_export.field_self_reported_activity')}</span>
+      <span class="profile-value">${profile.severity ? t(`onboarding.severity.${profile.severity}`) : '—'}</span>
     </div>
     <div class="profile-row">
-      <span class="profile-label">Active medications</span>
-      <span class="profile-value">${medList || '—'}</span>
+      <span class="profile-label">${t('pdf_export.field_active_medications')}</span>
+      <span class="profile-value">${medList || t('pdf_export.none_reported')}</span>
     </div>
     <div class="profile-row">
-      <span class="profile-label">Primary pain locations</span>
-      <span class="profile-value">${profile.pain_locations.map(p => p.replace(/_/g, ' ')).join(', ') || '—'}</span>
+      <span class="profile-label">${t('pdf_export.field_primary_pain_locations')}</span>
+      <span class="profile-value">${profile.pain_locations.length > 0 ? labelList(profile.pain_locations, 'onboarding.pain_locations') : t('pdf_export.none_reported')}</span>
     </div>
     <div class="profile-row">
-      <span class="profile-label">Associated conditions</span>
-      <span class="profile-value">${profile.conditions.map(c => c.replace(/_/g, ' ')).join(', ') || '—'}</span>
+      <span class="profile-label">${t('pdf_export.field_associated_conditions')}</span>
+      <span class="profile-value">${profile.conditions.length > 0 ? labelList(profile.conditions, 'onboarding.conditions') : t('pdf_export.none_reported')}</span>
     </div>
   </div>
 
   <!-- Pain & Fatigue -->
-  <h2>Pain &amp; Fatigue</h2>
+  <h2>${t('pdf_export.section_pain_fatigue')}</h2>
   <div class="stat-grid">
     <div class="stat-box">
       <div class="stat-value">${avgPain}</div>
-      <div class="stat-label">Avg Pain (0–10)</div>
+      <div class="stat-label">${t('pdf_export.stat_avg_pain')}</div>
     </div>
     <div class="stat-box">
       <div class="stat-value">${avgFatigue}</div>
-      <div class="stat-label">Avg Fatigue (0–10)</div>
+      <div class="stat-label">${t('pdf_export.stat_avg_fatigue')}</div>
     </div>
     <div class="stat-box">
       <div class="stat-value">${highPainDays}</div>
-      <div class="stat-label">High Pain Days (≥7)</div>
+      <div class="stat-label">${t('pdf_export.stat_high_pain_days')}</div>
     </div>
     <div class="stat-box">
       <div class="stat-value">${highFatigueDays}</div>
-      <div class="stat-label">High Fatigue Days (≥7)</div>
+      <div class="stat-label">${t('pdf_export.stat_high_fatigue_days')}</div>
     </div>
   </div>
 
   <!-- Morning Stiffness -->
-  <h2>Morning Stiffness</h2>
+  <h2>${t('pdf_export.section_morning_stiffness')}</h2>
   <div class="stiff-grid">
     <div class="stiff-box">
       <div class="stiff-count">${stiffnessCounts.none ?? 0}</div>
-      <div class="stiff-label">None</div>
+      <div class="stiff-label">${t('onboarding.morning_stiffness.none')}</div>
     </div>
     <div class="stiff-box">
       <div class="stiff-count">${stiffnessCounts.under_30 ?? 0}</div>
-      <div class="stiff-label">&lt;30 min</div>
+      <div class="stiff-label">${t('onboarding.morning_stiffness.under_30')}</div>
     </div>
     <div class="stiff-box">
       <div class="stiff-count">${stiffnessCounts['30_60'] ?? 0}</div>
-      <div class="stiff-label">30–60 min</div>
+      <div class="stiff-label">${t('onboarding.morning_stiffness.30_60')}</div>
     </div>
     <div class="stiff-box">
       <div class="stiff-count">${stiffnessCounts['1_2_hours'] ?? 0}</div>
-      <div class="stiff-label">1–2 hours</div>
+      <div class="stiff-label">${t('onboarding.morning_stiffness.1_2_hours')}</div>
     </div>
     <div class="stiff-box">
       <div class="stiff-count" style="color:${prolongedStiffnessDays > 0 ? '#EF4444' : '#1C1917'}">${stiffnessCounts.over_2_hours ?? 0}</div>
-      <div class="stiff-label">&gt;2 hours</div>
+      <div class="stiff-label">${t('onboarding.morning_stiffness.over_2_hours')}</div>
     </div>
   </div>
-  ${prolongedStiffnessDays > 0 ? `<p class="callout">⚠ ${prolongedStiffnessDays} day${prolongedStiffnessDays > 1 ? 's' : ''} with stiffness lasting over 1 hour. A key indicator of active disease (BASDAI Q5/Q6).</p>` : ''}
+  ${prolongedStiffnessDays > 0 ? `<p class="callout">⚠ ${tPlural('pdf_export.stiffness_callout', prolongedStiffnessDays)}</p>` : ''}
 
   <!-- Mood -->
-  <h2>Mood Distribution</h2>
+  <h2>${t('pdf_export.section_mood')}</h2>
   <div class="mood-grid">
-    <div class="mood-box"><div class="mood-count">${moodCounts.great}</div><div class="mood-name">Great</div></div>
-    <div class="mood-box"><div class="mood-count">${moodCounts.good}</div><div class="mood-name">Good</div></div>
-    <div class="mood-box"><div class="mood-count">${moodCounts.okay}</div><div class="mood-name">Okay</div></div>
-    <div class="mood-box"><div class="mood-count">${moodCounts.low}</div><div class="mood-name">Low</div></div>
-    <div class="mood-box"><div class="mood-count">${moodCounts.very_low}</div><div class="mood-name">Very Low</div></div>
+    <div class="mood-box"><div class="mood-count">${moodCounts.great}</div><div class="mood-name">${t('tracker.mood_great')}</div></div>
+    <div class="mood-box"><div class="mood-count">${moodCounts.good}</div><div class="mood-name">${t('tracker.mood_good')}</div></div>
+    <div class="mood-box"><div class="mood-count">${moodCounts.okay}</div><div class="mood-name">${t('tracker.mood_okay')}</div></div>
+    <div class="mood-box"><div class="mood-count">${moodCounts.low}</div><div class="mood-name">${t('tracker.mood_low')}</div></div>
+    <div class="mood-box"><div class="mood-count">${moodCounts.very_low}</div><div class="mood-name">${t('tracker.mood_very_low')}</div></div>
   </div>
 
   <!-- Exercise -->
-  <h2>Exercise &amp; Activity</h2>
-  <p style="font-size:13px;">Exercise logged on <strong>${exerciseDays} of ${logs.length} days</strong> (${exercisePct}%).
-    ${exercisePct >= 50 ? 'Good consistency. Regular movement is one of the best AS management tools.' : exercisePct === 0 ? 'No exercise logged in this period.' : 'Consider increasing frequency. Even short walks count.'}</p>
+  <h2>${t('pdf_export.section_exercise')}</h2>
+  <p style="font-size:13px;">${t('pdf_export.exercise_summary', { days: exerciseDays, total: logs.length, pct: exercisePct })}
+    ${exercisePct >= 50 ? t('pdf_export.exercise_good') : exercisePct === 0 ? t('pdf_export.exercise_none') : t('pdf_export.exercise_moderate')}</p>
 
   ${topTriggers.length > 0 ? `
   <!-- Diet -->
-  <h2>Diet &amp; Potential Triggers</h2>
+  <h2>${t('pdf_export.section_diet')}</h2>
   <table>
-    <thead><tr><th>Trigger food / drink</th><th>Days logged</th></tr></thead>
+    <thead><tr><th>${t('pdf_export.diet_trigger_header')}</th><th>${t('pdf_export.diet_days_logged_header')}</th></tr></thead>
     <tbody>
-      ${topTriggers.map(([t, n]) => `<tr><td>${TRIGGER_LABELS[t] ?? t}</td><td>${n}</td></tr>`).join('')}
+      ${topTriggers.map(([trigger, n]) => `<tr><td>${t(`pdf_export.diet_trigger_${trigger}`) || trigger}</td><td>${n}</td></tr>`).join('')}
     </tbody>
   </table>
-  <p class="callout">For AS, high starch/wheat, alcohol, processed food, and sugar are common inflammation drivers. Share any diet-pain patterns with your rheumatologist.</p>
+  <p class="callout">${t('pdf_export.diet_callout')}</p>
   ` : ''}
 
   <!-- BASDAI -->
   ${basdaiScores && basdaiScores.length > 0 ? `
-  <h2>BASDAI Scores</h2>
+  <h2>${t('pdf_export.section_basdai')}</h2>
   <table>
-    <thead><tr><th>Date</th><th>BASDAI Score</th><th>Interpretation</th><th>Q1 Fatigue</th><th>Q2 Spinal pain</th><th>Q5–6 Stiffness</th></tr></thead>
+    <thead><tr><th>${t('pdf_export.basdai_date_header')}</th><th>${t('pdf_export.basdai_score_header')}</th><th>${t('pdf_export.basdai_interpretation_header')}</th><th>${t('pdf_export.basdai_q1_header')}</th><th>${t('pdf_export.basdai_q2_header')}</th><th>${t('pdf_export.basdai_q56_header')}</th></tr></thead>
     <tbody>
       ${basdaiScores.map(s => {
-        const interp = s.score < 2 ? 'Low activity' : s.score < 4 ? 'Moderate' : s.score < 6 ? 'High' : 'Very high';
-        const color = s.score < 2 ? '#22C55E' : s.score < 4 ? '#EAB308' : '#EF4444';
+        const interp = basdaiInterpretation(s.score);
         const stiffAvg = ((s.q5 + s.q6) / 2).toFixed(1);
         return `<tr>
           <td>${fmtDateShort(s.date)}</td>
-          <td style="font-weight:700;color:${color};">${s.score.toFixed(1)}/10</td>
-          <td>${interp}</td>
+          <td style="font-weight:700;color:${interp.color};">${s.score.toFixed(1)}/10</td>
+          <td>${interp.label}</td>
           <td>${s.q1}/10</td>
           <td>${s.q2}/10</td>
           <td>${stiffAvg}/10</td>
@@ -376,68 +360,68 @@ function buildReportHTML(params: {
       }).join('')}
     </tbody>
   </table>
-  <p class="callout">BASDAI ≥4 indicates high disease activity. This is the threshold at which biologic therapy is typically considered. Scores trend from oldest to newest.</p>
+  <p class="callout">${t('pdf_export.basdai_callout')}</p>
   ` : ''}
 
   <!-- AS Flares -->
-  <h2>AS Flare History</h2>
+  <h2>${t('pdf_export.section_as_flares')}</h2>
   <table>
     <thead>
-      <tr><th>Start</th><th>End</th><th>Duration</th><th>Severity</th><th>Areas affected</th></tr>
+      <tr><th>${t('pdf_export.flare_start_header')}</th><th>${t('pdf_export.flare_end_header')}</th><th>${t('pdf_export.flare_duration_header')}</th><th>${t('pdf_export.flare_severity_header')}</th><th>${t('pdf_export.flare_areas_header')}</th></tr>
     </thead>
     <tbody>${flareRowsHTML}</tbody>
   </table>
 
   <!-- Uveitis -->
-  <h2>Uveitis Episodes</h2>
+  <h2>${t('pdf_export.section_uveitis')}</h2>
   <table>
     <thead>
-      <tr><th>Start</th><th>End</th><th>Duration</th><th>Severity</th><th>Eye / Treatment</th></tr>
+      <tr><th>${t('pdf_export.flare_start_header')}</th><th>${t('pdf_export.flare_end_header')}</th><th>${t('pdf_export.flare_duration_header')}</th><th>${t('pdf_export.flare_severity_header')}</th><th>${t('pdf_export.uveitis_eye_treatment_header')}</th></tr>
     </thead>
     <tbody>${uveitisRowsHTML}</tbody>
   </table>
 
   <!-- Biologic injections -->
   ${biologicInjections.length > 0 ? `
-  <h2>Biologic Injections</h2>
+  <h2>${t('pdf_export.section_biologic_injections')}</h2>
   <table>
-    <thead><tr><th>Date</th><th>Medication</th><th>Response / Notes</th></tr></thead>
+    <thead><tr><th>${t('pdf_export.biologic_date_header')}</th><th>${t('pdf_export.biologic_medication_header')}</th><th>${t('pdf_export.biologic_response_header')}</th></tr></thead>
     <tbody>${injectionRowsHTML}</tbody>
   </table>
   ` : ''}
 
   <!-- Medication adherence -->
-  <h2>Medication Adherence</h2>
+  <h2>${t('pdf_export.section_medication_adherence')}</h2>
   <div class="adherence-row">
     <div class="adh-box">
       <div class="adh-count" style="color:#22C55E;">${medYes}</div>
-      <div class="adh-label">Fully taken</div>
+      <div class="adh-label">${t('pdf_export.adherence_fully_taken')}</div>
     </div>
     <div class="adh-box">
       <div class="adh-count" style="color:#EAB308;">${medPartial}</div>
-      <div class="adh-label">Partial</div>
+      <div class="adh-label">${t('pdf_export.adherence_partial')}</div>
     </div>
     <div class="adh-box">
       <div class="adh-count" style="color:#EF4444;">${medNo}</div>
-      <div class="adh-label">Missed</div>
+      <div class="adh-label">${t('pdf_export.adherence_missed')}</div>
     </div>
     <div class="adh-box">
       <div class="adh-count" style="color:#78716C;">${totalCheckins}</div>
-      <div class="adh-label">Total check-ins</div>
+      <div class="adh-label">${t('pdf_export.adherence_total_checkins')}</div>
     </div>
     ${adherencePct !== null ? `
     <div class="adh-box">
       <div class="adh-count" style="color:${adherencePct >= 80 ? '#22C55E' : adherencePct >= 50 ? '#EAB308' : '#EF4444'};">${adherencePct}%</div>
-      <div class="adh-label">Adherence rate</div>
+      <div class="adh-label">${t('pdf_export.adherence_rate')}</div>
     </div>` : ''}
   </div>
 
   <!-- Patient notes -->
-  <h2>Patient Notes (all entries)</h2>
+  <h2>${t('pdf_export.section_notes')}</h2>
   ${notesHTML}
 
   <div class="footer">
-    Generated by Spondy &bull; ${generatedAt} &bull; This report is intended as a supplement to, not a replacement for, clinical assessment.
+    ${t('pdf_export.footer_text', { date: generatedAt })}
   </div>
 </body>
 </html>`;

@@ -7,7 +7,7 @@ import {
   requestHealthPermissions,
   fetchTodayHealthData,
   disconnectHealth,
-  reinitHealthKit,
+  ensureLatestHealthPermissions,
   HealthSnapshot,
 } from '@/services/healthKit';
 import { saveHealthData, getTodayHealthData } from '@/services/database';
@@ -85,7 +85,7 @@ export function useHealthData(): UseHealthDataResult {
         connectedRef.current = connected;
 
         if (!available || !connected || !user) return;
-        await reinitHealthKit();
+        await ensureLatestHealthPermissions();
         await loadData(user.id, () => cancelled);
       } finally {
         if (!cancelled) setIsLoading(false);

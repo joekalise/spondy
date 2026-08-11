@@ -23,6 +23,7 @@ import { useFlares } from '@/hooks/useFlares';
 import { useFlareRisk } from '@/hooks/useFlareRisk';
 import { useHealthHistory } from '@/hooks/useHealthHistory';
 import { useHealthData } from '@/hooks/useHealthData';
+import { useRecoveryData } from '@/hooks/useRecoveryData';
 import { useBiologicInjections } from '@/hooks/useBiologicInjections';
 import { useMedicationTracking } from '@/hooks/useMedicationTracking';
 import { useMedications } from '@/hooks/useMedications';
@@ -80,6 +81,18 @@ function hrvColor(hrv: number): string {
   if (hrv < 25) return Colors.error;
   if (hrv < 40) return Colors.warning;
   return Colors.success;
+}
+
+function spo2Color(v: number): string {
+  if (v >= 95) return Colors.success;
+  if (v >= 90) return Colors.warning;
+  return Colors.error;
+}
+
+function respColor(v: number): string {
+  if (v >= 12 && v <= 18) return Colors.success;
+  if (v > 18 && v <= 22) return Colors.warning;
+  return Colors.error;
 }
 
 function flareEndedLabel(endDate: string): string {
@@ -375,6 +388,8 @@ const SIGNAL_LABELS: Record<string, string> = {
   inflammatory_diet: '🍽️ Inflammatory diet',
   recent_alcohol: '🍷 Recent alcohol',
   high_starch_intake: '🌾 High starch intake',
+  low_spo2: '🫁 Low overnight SpO₂',
+  elevated_resp_rate: '😤 Elevated sleep resp rate',
 };
 
 function FlareRiskCard({
@@ -563,7 +578,8 @@ export default function HomeScreen() {
   const { activeFlare, flares, isLoading: flaresLoading } = useFlares();
   const { history: healthHistory } = useHealthHistory(7);
   const { isConnected: healthConnected, todayData: healthData, recheck: recheckHealth } = useHealthData();
-  const flareRisk = useFlareRisk(logs, activeFlare, healthHistory, tracksScheduledMeds);
+  const { data: recoveryData } = useRecoveryData();
+  const flareRisk = useFlareRisk(logs, activeFlare, healthHistory, recoveryData, tracksScheduledMeds);
   const { injections: biologicInjections } = useBiologicInjections();
   const { humidity, isLoading: humidityLoading, isFetching: humidityFetching, fetchError: humidityError, refresh: refreshHumidity } = useWeatherHumidity();
 
@@ -605,7 +621,7 @@ export default function HomeScreen() {
   // Proactive nudges — sleep, pain trend, fatigue, mood (once per day max)
   useEffect(() => {
     if (!user || logs.length < 3) return;
-    evaluateAndSendNudges(user.id, logs).catch(() => {});
+    evaluateAndSendNudges(user.id, logs, recoveryData).catch(() => {});
   }, [user, logs]);
 
   const greetingKey = getGreetingKey();
@@ -753,47 +769,77 @@ export default function HomeScreen() {
         ) : null}
 
         {/* Health data — shown after logging, when Apple Health is connected */}
-        {todayLogged && healthConnected && healthData && (
+        {todayLogged && healthConnected && (healthData || recoveryData) && (
           <View style={[styles.healthCard, isDark && styles.healthCardDark]}>
             <Text style={[styles.sectionTitle, isDark && styles.textPrimaryDark]}>
               {t('health.today_context')}
             </Text>
-            <View style={styles.todaySummaryRow}>
-              {healthData.steps !== null && (
-                <>
+            {healthData && (
+              <View style={styles.todaySummaryRow}>
+                {healthData.steps !== null && (
+                  <>
+                    <View style={styles.todaySummaryItem}>
+                      <Text style={[styles.healthStatValue, { color: stepsColor(healthData.steps) }]}>
+                        {(healthData.steps / 1000).toFixed(1)}k
+                      </Text>
+                      <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>{t('home.steps')}</Text>
+                    </View>
+                    {(healthData.sleep_duration !== null || healthData.hrv !== null) && (
+                      <View style={[styles.todaySummaryDivider, isDark && styles.todaySummaryDividerDark]} />
+                    )}
+                  </>
+                )}
+                {healthData.sleep_duration !== null && (
+                  <>
+                    <View style={styles.todaySummaryItem}>
+                      <Text style={[styles.healthStatValue, { color: sleepColor(healthData.sleep_duration) }]}>
+                        {healthData.sleep_duration}h
+                      </Text>
+                      <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>{t('home.sleep')}</Text>
+                    </View>
+                    {healthData.hrv !== null && (
+                      <View style={[styles.todaySummaryDivider, isDark && styles.todaySummaryDividerDark]} />
+                    )}
+                  </>
+                )}
+                {healthData.hrv !== null && (
                   <View style={styles.todaySummaryItem}>
-                    <Text style={[styles.healthStatValue, { color: stepsColor(healthData.steps) }]}>
-                      {(healthData.steps / 1000).toFixed(1)}k
+                    <Text style={[styles.healthStatValue, { color: hrvColor(healthData.hrv) }]}>
+                      {healthData.hrv}
                     </Text>
-                    <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>{t('home.steps')}</Text>
+                    <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>{t('home.hrv')}</Text>
                   </View>
-                  {(healthData.sleep_duration !== null || healthData.hrv !== null) && (
-                    <View style={[styles.todaySummaryDivider, isDark && styles.todaySummaryDividerDark]} />
-                  )}
-                </>
-              )}
-              {healthData.sleep_duration !== null && (
-                <>
-                  <View style={styles.todaySummaryItem}>
-                    <Text style={[styles.healthStatValue, { color: sleepColor(healthData.sleep_duration) }]}>
-                      {healthData.sleep_duration}h
-                    </Text>
-                    <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>{t('home.sleep')}</Text>
-                  </View>
-                  {healthData.hrv !== null && (
-                    <View style={[styles.todaySummaryDivider, isDark && styles.todaySummaryDividerDark]} />
-                  )}
-                </>
-              )}
-              {healthData.hrv !== null && (
-                <View style={styles.todaySummaryItem}>
-                  <Text style={[styles.healthStatValue, { color: hrvColor(healthData.hrv) }]}>
-                    {healthData.hrv}
-                  </Text>
-                  <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>{t('home.hrv')}</Text>
+                )}
+              </View>
+            )}
+            {healthData && recoveryData && (
+              <View style={[styles.healthRowDivider, isDark && styles.healthRowDividerDark]} />
+            )}
+            {recoveryData && (() => {
+              const items: { label: string; value: string; color: string }[] = [];
+              if (recoveryData.oxygen_saturation !== null)
+                items.push({ label: t('health.spo2'), value: `${recoveryData.oxygen_saturation}%`, color: spo2Color(recoveryData.oxygen_saturation) });
+              if (recoveryData.respiratory_rate !== null)
+                items.push({ label: t('health.resp_rate'), value: `${recoveryData.respiratory_rate}/min`, color: respColor(recoveryData.respiratory_rate) });
+              if (recoveryData.mindful_minutes !== null && recoveryData.mindful_minutes > 0)
+                items.push({ label: t('health.mindful'), value: `${recoveryData.mindful_minutes}m`, color: Colors.success });
+              if (items.length === 0) return null;
+              return (
+                <View style={styles.todaySummaryRow}>
+                  {items.map((item, i) => (
+                    <React.Fragment key={item.label}>
+                      <View style={styles.todaySummaryItem}>
+                        <Text style={[styles.healthStatValue, { color: item.color }]}>{item.value}</Text>
+                        <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>{item.label}</Text>
+                      </View>
+                      {i < items.length - 1 && (
+                        <View style={[styles.todaySummaryDivider, isDark && styles.todaySummaryDividerDark]} />
+                      )}
+                    </React.Fragment>
+                  ))}
                 </View>
-              )}
-            </View>
+              );
+            })()}
           </View>
         )}
 
@@ -1513,5 +1559,15 @@ const styles = StyleSheet.create({
   },
   humidityTrend: {
     fontSize: 13,
+  },
+
+  // Recovery data row divider
+  healthRowDivider: {
+    height: 1,
+    backgroundColor: Colors.border,
+    marginVertical: 4,
+  },
+  healthRowDividerDark: {
+    backgroundColor: Colors.borderDark,
   },
 });

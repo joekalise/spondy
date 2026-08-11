@@ -24,6 +24,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { getDailyLogs, getFlares, getStreak, getBasdaiScores } from '@/services/database';
 import { getCachedHumidity } from '@/services/weather';
+import { fetchTodayRecoveryData } from '@/services/healthKit';
 import { generateWeeklyInsight, WeeklyInsight } from '@/services/aiInsights';
 import { getAiConsent } from '@/services/aiConsent';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -237,9 +238,11 @@ function AIInsightCard({ logs, flares, profile, healthHistory, isDark }: AIInsig
     setError(null);
     setExpandedIdx(null);
     try {
-      const [basdaiScores, humidityData] = await Promise.all([
+      const today = new Date().toISOString().split('T')[0];
+      const [basdaiScores, humidityData, recoveryData] = await Promise.all([
         getBasdaiScores(user.id).catch(() => []),
         getCachedHumidity().catch(() => null),
+        fetchTodayRecoveryData(today).catch(() => null),
       ]);
       const result = await generateWeeklyInsight({
         logs,
@@ -247,6 +250,7 @@ function AIInsightCard({ logs, flares, profile, healthHistory, isDark }: AIInsig
         healthHistory,
         basdaiScores,
         humidityData,
+        recoveryData,
         language: i18n.language,
         profile: profile ?? {
           user_id: user.id,

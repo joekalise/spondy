@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
-import { DailyLog, MedicationReminder } from '@/types';
+import { DailyLog, MedicationReminder, RecoverySnapshot } from '@/types';
 import { supabase } from '@/services/supabase';
 import i18n from '@/i18n';
 
@@ -10,6 +10,15 @@ const ANDROID_CHANNEL = 'spondy-reminders';
 function androidChannel() {
   return Platform.OS === 'android' ? { channelId: ANDROID_CHANNEL } : {};
 }
+
+export const NOTIFICATION_SCREEN = {
+  dailyCheckin: '/(tabs)/track',
+  medication: '/(tabs)/track',
+  lapse: '/(tabs)/track',
+  flare: '/(tabs)/flares',
+  basdaiReminder: '/(tabs)/insights?openBasdai=1',
+  nudge: '/(tabs)/insights',
+} as const;
 
 // ─── Permissions ─────────────────────────────────────────────────────────────
 
@@ -38,7 +47,7 @@ export async function scheduleDailyCheckIn(timeString: string): Promise<void> {
       title: i18n.t('notifications.checkin_title') as string,
       body: i18n.t('notifications.checkin_body') as string,
       sound: true,
-      data: { screen: '/(tabs)/track' },
+      data: { screen: NOTIFICATION_SCREEN.dailyCheckin },
       ...androidChannel(),
     },
     trigger: {
@@ -126,7 +135,7 @@ export async function scheduleDailyCheckInFromTomorrow(
 
   await Notifications.scheduleNotificationAsync({
     identifier: 'daily-checkin',
-    content: { ...content, sound: true, data: { screen: '/(tabs)/track' }, ...androidChannel() },
+    content: { ...content, sound: true, data: { screen: NOTIFICATION_SCREEN.dailyCheckin }, ...androidChannel() },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DATE,
       date: tomorrow,
@@ -145,7 +154,7 @@ export async function scheduleLapseNotification(): Promise<void> {
       title: i18n.t('notifications.lapse_title') as string,
       body: i18n.t('notifications.lapse_body') as string,
       sound: true,
-      data: { screen: '/(tabs)/track' },
+      data: { screen: NOTIFICATION_SCREEN.lapse },
       ...androidChannel(),
     },
     trigger: {
@@ -161,18 +170,30 @@ export async function cancelLapseNotification(): Promise<void> {
 
 // ─── BASDAI monthly reassessment reminder ─────────────────────────────────────
 
-// Fires 30 days after the score being saved, matching the in-app "due" threshold
-// (see isDue = daysSince >= 30 in insights.tsx). Re-saving cancels and reschedules.
-export async function scheduleBasdaiReminder(): Promise<void> {
+// Fires 30 days after lastScoreDate, matching the in-app "due" threshold (see
+// isDue = daysSince >= 30 in insights.tsx). Anchored to the actual last score
+// date rather than "now" so it's safe to call repeatedly (e.g. on every app
+// open) — it cancels and reschedules each time, self-healing if the OS ever
+// drops the underlying scheduled notification.
+export async function scheduleBasdaiReminder(lastScoreDate: string): Promise<void> {
   await cancelNotification('basdai-reminder');
-  const fireAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+  const fireAt = new Date(lastScoreDate);
+  fireAt.setDate(fireAt.getDate() + 30);
+
+  const now = new Date();
+  if (fireAt <= now) {
+    // Already overdue — remind soon rather than scheduling in the past.
+    fireAt.setTime(now.getTime() + 24 * 60 * 60 * 1000);
+  }
+
   await Notifications.scheduleNotificationAsync({
     identifier: 'basdai-reminder',
     content: {
       title: i18n.t('notifications.basdai_reminder_title') as string,
       body: i18n.t('notifications.basdai_reminder_body') as string,
       sound: true,
-      data: { screen: '/(tabs)/insights?openBasdai=1' },
+      data: { screen: NOTIFICATION_SCREEN.basdaiReminder },
       ...androidChannel(),
     },
     trigger: {
@@ -223,7 +244,7 @@ export async function scheduleMedicationReminder(med: MedicationReminder): Promi
         title: i18n.t('notifications.med_title', { name: med.name }) as string,
         body: i18n.t('notifications.med_body', { dose: med.dose, name: med.name }) as string,
         sound: true,
-        data: { screen: '/(tabs)/track' },
+        data: { screen: NOTIFICATION_SCREEN.medication },
         ...androidChannel(),
       },
       trigger: {
@@ -239,7 +260,7 @@ export async function scheduleMedicationReminder(med: MedicationReminder): Promi
         title: i18n.t('notifications.med_title', { name: med.name }) as string,
         body: i18n.t('notifications.med_body', { dose: med.dose, name: med.name }) as string,
         sound: true,
-        data: { screen: '/(tabs)/track' },
+        data: { screen: NOTIFICATION_SCREEN.medication },
         ...androidChannel(),
       },
       trigger: {
@@ -257,7 +278,7 @@ export async function scheduleMedicationReminder(med: MedicationReminder): Promi
         title: i18n.t('notifications.med_title', { name: med.name }) as string,
         body: i18n.t('notifications.med_body', { dose: med.dose, name: med.name }) as string,
         sound: true,
-        data: { screen: '/(tabs)/track' },
+        data: { screen: NOTIFICATION_SCREEN.medication },
         ...androidChannel(),
       },
       trigger: {
@@ -289,13 +310,13 @@ export async function sendFlareWarningIfNeeded(
       ? 'Several patterns suggest a flare may be building. Consider resting and reviewing your medications.'
       : 'A couple of signals suggest your body might be under stress. Keep a close eye on your symptoms.';
 
-  await sendNudge(title, body, '/(tabs)/flares');
+  await sendNudge(title, body, NOTIFICATION_SCREEN.flare);
   await AsyncStorage.setItem(key, level);
 }
 
 // ─── Nudge ────────────────────────────────────────────────────────────────────
 
-export async function sendNudge(title: string, body: string, screen: string = '/(tabs)/insights'): Promise<void> {
+export async function sendNudge(title: string, body: string, screen: string = NOTIFICATION_SCREEN.nudge): Promise<void> {
   await Notifications.scheduleNotificationAsync({
     content: { title, body, sound: true, data: { screen }, ...androidChannel() },
     trigger: null, // fire immediately
@@ -308,14 +329,15 @@ let nudgeCheckInFlight = false;
 
 export async function evaluateAndSendNudges(
   userId: string,
-  logs: DailyLog[]
+  logs: DailyLog[],
+  recovery?: RecoverySnapshot | null
 ): Promise<void> {
   if (logs.length < 3) return;
   if (nudgeCheckInFlight) return;
 
   nudgeCheckInFlight = true;
   try {
-    await evaluateAndSendNudgesInternal(userId, logs);
+    await evaluateAndSendNudgesInternal(userId, logs, recovery);
   } finally {
     nudgeCheckInFlight = false;
   }
@@ -323,7 +345,8 @@ export async function evaluateAndSendNudges(
 
 async function evaluateAndSendNudgesInternal(
   userId: string,
-  logs: DailyLog[]
+  logs: DailyLog[],
+  recovery?: RecoverySnapshot | null
 ): Promise<void> {
   // Check max 1 nudge per day
   const todayCount = await getTodayNudgeCount(userId);
@@ -401,6 +424,26 @@ async function evaluateAndSendNudgesInternal(
     await sendNudge('Diet check', message);
     await saveNudgeToDb(userId, 'diet_alcohol', message);
     return;
+  }
+
+  // Rule 7: low overnight SpO₂ (from HealthKit)
+  if (recovery?.oxygen_saturation !== null && recovery?.oxygen_saturation !== undefined) {
+    if (recovery.oxygen_saturation < 94) {
+      const message = `Your overnight SpO₂ was ${recovery.oxygen_saturation}%, below the normal range. Poor sleep oxygenation is linked to sleep apnea, a known AS comorbidity, and can worsen pain and fatigue. It may be worth mentioning to your rheumatologist.`;
+      await sendNudge('Sleep oxygen check', message);
+      await saveNudgeToDb(userId, 'low_spo2', message);
+      return;
+    }
+  }
+
+  // Rule 8: elevated sleep respiratory rate (from HealthKit)
+  if (recovery?.respiratory_rate !== null && recovery?.respiratory_rate !== undefined) {
+    if (recovery.respiratory_rate > 20) {
+      const message = `Your respiratory rate during sleep was ${recovery.respiratory_rate} breaths/min, higher than normal. This can be a sign your body is under strain, which is worth watching alongside your AS symptoms.`;
+      await sendNudge('Recovery check', message);
+      await saveNudgeToDb(userId, 'elevated_resp_rate', message);
+      return;
+    }
   }
 }
 
