@@ -167,7 +167,8 @@ function SpondyScoreCard({
               <FactorRow label={t('score.factor_base')} value={breakdown.base} />
               <FactorRow label={t('score.factor_pain')} value={breakdown.painPoints} />
               <FactorRow label={t('score.factor_fatigue')} value={breakdown.fatiguePoints} />
-              {breakdown.flarePenalty > 0 && <FactorRow label={t('score.factor_recent_flare')} value={-breakdown.flarePenalty} />}
+              {breakdown.activeFlarePenalty > 0 && <FactorRow label={t('score.factor_active_flare')} value={-breakdown.activeFlarePenalty} />}
+              {breakdown.recentFlarePenalty > 0 && <FactorRow label={t('score.factor_recent_flare')} value={-breakdown.recentFlarePenalty} />}
               <FactorRow label={t('score.factor_streak')} value={breakdown.consistencyBonus} />
               <FactorRow label={t('score.factor_mood')} value={breakdown.moodPoints} />
               <FactorRow label={t('score.factor_medication')} value={breakdown.medPoints} />

@@ -594,6 +594,7 @@
     "factor_base": "Base",
     "factor_pain": "Pain",
     "factor_fatigue": "Fatigue",
+    "factor_active_flare": "Active flare",
     "factor_recent_flare": "Recent flare",
     "factor_streak": "Logging streak",
     "factor_mood": "Mood",

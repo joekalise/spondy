@@ -22,7 +22,8 @@ export interface ScoreBreakdown {
   base: number;
   painPoints: number;
   fatiguePoints: number;
-  flarePenalty: number;
+  activeFlarePenalty: number;
+  recentFlarePenalty: number;
   consistencyBonus: number;
   moodPoints: number;
   medPoints: number;
@@ -66,23 +67,35 @@ function flarePenaltyForType(flare: Flare): number {
   return Math.round(severityPenalty * typeMultiplier * flareRecencyWeight(flare.end_date));
 }
 
-function recentFlaresPenalty(flares: Flare[], uveitisEpisodes: UveitisEpisode[], profile: UserProfile | null): number {
-  let penalty = 0;
+// Splits the flare penalty into "active" (still ongoing, end_date null) and
+// "recent" (ended but still within the taper window) so the score breakdown
+// can show them as distinct factors instead of one merged line.
+function flarePenalties(
+  flares: Flare[],
+  uveitisEpisodes: UveitisEpisode[],
+  profile: UserProfile | null
+): { active: number; recent: number } {
+  let active = 0;
+  let recent = 0;
 
   for (const flare of flares) {
-    penalty += flarePenaltyForType(flare);
+    const penalty = flarePenaltyForType(flare);
+    if (flare.end_date === null) active += penalty;
+    else recent += penalty;
   }
 
   for (const episode of uveitisEpisodes) {
     const basePenalty = episode.severity === 'severe' ? 30 : episode.severity === 'moderate' ? 20 : 12;
-    penalty += Math.round(basePenalty * flareRecencyWeight(episode.end_date));
+    const penalty = Math.round(basePenalty * flareRecencyWeight(episode.end_date));
+    if (episode.end_date === null) active += penalty;
+    else recent += penalty;
   }
 
-  // Passive penalty for conditions without dedicated flare tracking
-  if (profile?.conditions.includes('ibd')) penalty += 8;
-  if (profile?.conditions.includes('psoriasis')) penalty += 5;
+  // Passive penalty for conditions without dedicated flare tracking — ongoing, not tapering
+  if (profile?.conditions.includes('ibd')) active += 8;
+  if (profile?.conditions.includes('psoriasis')) active += 5;
 
-  return penalty;
+  return { active, recent };
 }
 
 // Caps the score while a flare is active or recently ended, blending back to
@@ -140,21 +153,25 @@ function computeScore(
   const base = 75;
   const painPts = painContribution(avgPain);
   const fatiguePts = fatigueContribution(avgFatigue);
-  const flarePen = recentFlaresPenalty(recentFlares, recentUveitisEpisodes, profile);
+  const { active: activeFlarePen, recent: recentFlarePen } = flarePenalties(recentFlares, recentUveitisEpisodes, profile);
   const consistencyBonus = Math.round((count / 7) * 8);
   const moodPts = Math.round(avgMoodRaw * 0.5);
   const medPts = Math.round(avgMedRaw * 0.5);
   const cap = scoreUpperCap(recentFlares, recentUveitisEpisodes);
 
   const score = Math.round(
-    Math.min(cap, Math.max(0, base + painPts + fatiguePts - flarePen + consistencyBonus + moodPts + medPts))
+    Math.min(
+      cap,
+      Math.max(0, base + painPts + fatiguePts - activeFlarePen - recentFlarePen + consistencyBonus + moodPts + medPts)
+    )
   );
 
   const breakdown: ScoreBreakdown = {
     base,
     painPoints: painPts,
     fatiguePoints: fatiguePts,
-    flarePenalty: flarePen,
+    activeFlarePenalty: activeFlarePen,
+    recentFlarePenalty: recentFlarePen,
     consistencyBonus,
     moodPoints: moodPts,
     medPoints: medPts,
