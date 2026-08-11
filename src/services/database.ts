@@ -310,6 +310,20 @@ export async function saveHealthData(data: Omit<HealthData, 'id'>): Promise<Heal
   }
 }
 
+// Deliberately sends only {user_id, date, humidity} — Supabase upsert only
+// touches columns present in the payload, so this can't clobber steps/sleep/
+// HRV/etc. written independently by the HealthKit sync for the same day.
+export async function saveHumidity(userId: string, date: string, humidity: number): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('health_data')
+      .upsert({ user_id: userId, date, humidity }, { onConflict: 'user_id,date' });
+    if (error) throw error;
+  } catch (err) {
+    console.error('saveHumidity error:', err);
+  }
+}
+
 export async function getTodayHealthData(
   userId: string,
   date: string

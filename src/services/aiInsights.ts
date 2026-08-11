@@ -93,6 +93,48 @@ function buildHealthSummary(healthHistory: HealthData[]): string {
   return lines.join('\n');
 }
 
+// Shifts a YYYY-MM-DD string by N days using pure UTC arithmetic. Using
+// `new Date(dateStr + 'T00:00:00')` (local time) then `.toISOString()` (UTC)
+// silently shifts the date for anyone outside UTC — e.g. UTC+2 turns local
+// midnight into the previous day once converted back — which would corrupt
+// every lookup below. Date.UTC() sidesteps local time entirely.
+function shiftDateString(dateStr: string, days: number): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const utc = new Date(Date.UTC(y, m - 1, d));
+  utc.setUTCDate(utc.getUTCDate() - days);
+  return utc.toISOString().split('T')[0];
+}
+
+// Compares average pain on days that followed a high-humidity day (>70%) N
+// days earlier vs days that didn't, for a specific lag. Research on AS
+// specifically found humidity effects on pain showing up at both a 1-day and
+// a 7-day lag, so this is checked at both rather than just "today".
+function humidityLagCorrelation(
+  logs: DailyLog[],
+  healthHistory: HealthData[],
+  lagDays: number
+): { highAvgPain: number; otherAvgPain: number; highCount: number; otherCount: number } | null {
+  const humidityByDate = new Map(
+    healthHistory.filter((d) => d.humidity !== null && d.humidity !== undefined).map((d) => [d.date, d.humidity as number])
+  );
+  const highPain: number[] = [];
+  const otherPain: number[] = [];
+  for (const log of logs) {
+    const laggedDate = shiftDateString(log.date, lagDays);
+    const humidity = humidityByDate.get(laggedDate);
+    if (humidity === undefined) continue;
+    if (humidity > 70) highPain.push(log.pain_score);
+    else otherPain.push(log.pain_score);
+  }
+  if (highPain.length < 2 || otherPain.length < 2) return null;
+  return {
+    highAvgPain: highPain.reduce((s, v) => s + v, 0) / highPain.length,
+    otherAvgPain: otherPain.reduce((s, v) => s + v, 0) / otherPain.length,
+    highCount: highPain.length,
+    otherCount: otherPain.length,
+  };
+}
+
 function buildDataSummary(
   logs: DailyLog[],
   flares: Flare[],
@@ -228,11 +270,26 @@ ${topTriggers ? `- Most frequent triggers: ${topTriggers}` : '- No specific trig
     }
   }
 
-  // Humidity context
+  // Humidity context — today's reading plus a lagged correlation against
+  // pain, since the evidence is about delayed effects, not same-day ones.
   let humiditySection = '';
   if (humidityData) {
     const level = humidityData.humidity > 70 ? 'high (linked to worse AS symptoms in research)' : humidityData.humidity >= 40 ? 'moderate' : 'low';
-    humiditySection = `\n\nHUMIDITY: ${humidityData.humidity}% — ${level}, trend: ${humidityData.trend}. Note: both a dedicated ankylosing spondylitis study and a large general chronic-pain study found humid days linked to more reported pain, with barometric pressure alone not holding up once temperature was accounted for.`;
+    humiditySection = `\n\nHUMIDITY: ${humidityData.humidity}% today — ${level}, trend: ${humidityData.trend}. Note: both a dedicated ankylosing spondylitis study and a large general chronic-pain study found humid days linked to more reported pain, with effects appearing 1-7 days later rather than same-day, and barometric pressure alone not holding up once temperature was accounted for.`;
+  }
+  if (healthHistory) {
+    const lag1 = humidityLagCorrelation(logs, healthHistory, 1);
+    const lag7 = humidityLagCorrelation(logs, healthHistory, 7);
+    const lagLines: string[] = [];
+    if (lag1) {
+      lagLines.push(`- 1 day after high humidity (>70%): avg pain ${lag1.highAvgPain.toFixed(1)}/10 (n=${lag1.highCount}) vs ${lag1.otherAvgPain.toFixed(1)}/10 on other days (n=${lag1.otherCount})`);
+    }
+    if (lag7) {
+      lagLines.push(`- 7 days after high humidity (>70%): avg pain ${lag7.highAvgPain.toFixed(1)}/10 (n=${lag7.highCount}) vs ${lag7.otherAvgPain.toFixed(1)}/10 on other days (n=${lag7.otherCount})`);
+    }
+    if (lagLines.length > 0) {
+      humiditySection += `\nHUMIDITY LAG CORRELATION (this user's own data):\n${lagLines.join('\n')}`;
+    }
   }
 
   // Recovery context (today's overnight HealthKit data)
@@ -324,7 +381,7 @@ Analyse the data and respond with a JSON object in exactly this structure:
 Rules:
 - 3 points always (no more, no less)
 - Every point must reference actual numbers from the data — average scores, specific dates, counts, percentages. Never say "your pain has been high" when you can say "your pain averaged 6.4 this week vs 4.1 the week before"
-- Prioritise correlations over observations: look for relationships between sleep and pain, diet and fatigue, HRV and flare days, steps and mood, medication adherence and scores. If the data shows a correlation, lead with it and give the actual numbers
+- Prioritise correlations over observations: look for relationships between sleep and pain, diet and fatigue, HRV and flare days, steps and mood, medication adherence and scores, and humidity 1-7 days ago and today's pain (see HUMIDITY LAG CORRELATION if present — it's precomputed from this user's own data, use those numbers directly rather than eyeballing raw humidity values). If the data shows a correlation, lead with it and give the actual numbers
 - If there are not enough data points for a correlation, report the most notable individual pattern with real numbers${isEarlyData ? '\n- This is an early insight with fewer than 7 days of data. Be honest about that — say "in your first X days" rather than implying a full week of data. Focus on what IS visible and frame it as a baseline to build on.' : ''}
 - Never give generic AS advice that isn't grounded in their specific data
 - Never say "you are at risk" or anything diagnostic

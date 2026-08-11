@@ -108,6 +108,7 @@ export interface HealthData {
   resting_heart_rate: number | null;
   active_calories: number | null;
   workouts: number | null;
+  humidity?: number | null;
 }
 
 export interface RecoverySnapshot {
