@@ -596,6 +596,7 @@
     "factor_fatigue": "Fatigue",
     "factor_active_flare": "Active flare",
     "factor_recent_flare": "Recent flare",
+    "factor_condition": "Ongoing condition",
     "factor_streak": "Logging streak",
     "factor_mood": "Mood",
     "factor_medication": "Medication adherence"
