@@ -74,6 +74,12 @@ function dietQualityEmoji(quality: DietQuality): string {
 
 // DragSlider is imported from @/components/common/DragSlider
 
+function deriveMedicationsTaken(doses: ('yes' | 'no' | 'partial')[]): 'yes' | 'no' | 'partial' {
+  if (doses.every((d) => d === 'yes')) return 'yes';
+  if (doses.every((d) => d === 'no')) return 'no';
+  return 'partial';
+}
+
 // ─── Stiffness / Medication option rows ──────────────────────────────────────
 
 const STIFFNESS_OPTIONS: { value: MorningStiffness; labelKey: string }[] = [
@@ -210,6 +216,13 @@ interface DayLogFormProps {
   setMood: (v: Mood) => void;
   medsTaken: 'yes' | 'no' | 'partial';
   setMedsTaken: (v: 'yes' | 'no' | 'partial') => void;
+  medicationDoses: number;
+  medsTakenDose1: 'yes' | 'no' | 'partial';
+  setMedsTakenDose1: (v: 'yes' | 'no' | 'partial') => void;
+  medsTakenDose2: 'yes' | 'no' | 'partial';
+  setMedsTakenDose2: (v: 'yes' | 'no' | 'partial') => void;
+  medsTakenDose3: 'yes' | 'no' | 'partial';
+  setMedsTakenDose3: (v: 'yes' | 'no' | 'partial') => void;
   notes: string;
   setNotes: (v: string) => void;
   dietQuality: DietQuality | null;
@@ -241,6 +254,10 @@ function DayLogForm({
   stiffness, setStiffness,
   mood, setMood,
   medsTaken, setMedsTaken,
+  medicationDoses,
+  medsTakenDose1, setMedsTakenDose1,
+  medsTakenDose2, setMedsTakenDose2,
+  medsTakenDose3, setMedsTakenDose3,
   notes, setNotes,
   dietQuality, setDietQuality,
   dietTriggers, setDietTriggers,
@@ -321,7 +338,28 @@ function DayLogForm({
       {tracksMedication && (
         <View style={[styles.section, isDark && styles.sectionDark]}>
           <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>{t('tracker.medications_taken')}</Text>
-          <OptionRow options={medOptions} selected={medsTaken} onSelect={(v) => setMedsTaken(v as 'yes' | 'no' | 'partial')} isDark={isDark} />
+          {medicationDoses > 1 ? (
+            <>
+              {(medicationDoses === 3
+                ? [
+                    { label: t('tracker.medications_morning'), value: medsTakenDose1, onSelect: setMedsTakenDose1 },
+                    { label: t('tracker.medications_afternoon'), value: medsTakenDose2, onSelect: setMedsTakenDose2 },
+                    { label: t('tracker.medications_evening'), value: medsTakenDose3, onSelect: setMedsTakenDose3 },
+                  ]
+                : [
+                    { label: t('tracker.medications_morning'), value: medsTakenDose1, onSelect: setMedsTakenDose1 },
+                    { label: t('tracker.medications_evening'), value: medsTakenDose2, onSelect: setMedsTakenDose2 },
+                  ]
+              ).map((dose, i) => (
+                <React.Fragment key={dose.label}>
+                  <Text style={[styles.symptomSubLabel, isDark && styles.textSecDark, { marginBottom: Spacing.xs, marginTop: i > 0 ? Spacing.md : 0 }]}>{dose.label}</Text>
+                  <OptionRow options={medOptions} selected={dose.value} onSelect={(v) => dose.onSelect(v as 'yes' | 'no' | 'partial')} isDark={isDark} />
+                </React.Fragment>
+              ))}
+            </>
+          ) : (
+            <OptionRow options={medOptions} selected={medsTaken} onSelect={(v) => setMedsTaken(v as 'yes' | 'no' | 'partial')} isDark={isDark} />
+          )}
         </View>
       )}
 
@@ -503,6 +541,7 @@ interface DayLogModalProps {
   initialLog: DailyLog | null;
   userId: string;
   tracksMedication: boolean;
+  medicationDoses: number;
   prnMedNames: string[];
   isFemale: boolean;
   isDark: boolean;
@@ -511,12 +550,15 @@ interface DayLogModalProps {
   onClose: () => void;
 }
 
-function DayLogModal({ date, initialLog, userId, tracksMedication, prnMedNames, isFemale, isDark, t, onSaved, onClose }: DayLogModalProps) {
+function DayLogModal({ date, initialLog, userId, tracksMedication, medicationDoses, prnMedNames, isFemale, isDark, t, onSaved, onClose }: DayLogModalProps) {
   const [painScore, setPainScore] = useState(initialLog?.pain_score ?? 0);
   const [fatigueScore, setFatigueScore] = useState(initialLog?.fatigue_score ?? 0);
   const [stiffness, setStiffness] = useState<MorningStiffness | null>(initialLog?.stiffness_duration ?? null);
   const [mood, setMood] = useState<Mood | null>(initialLog?.mood ?? null);
   const [medsTaken, setMedsTaken] = useState<'yes' | 'no' | 'partial'>(initialLog?.medications_taken ?? (tracksMedication ? 'yes' : 'no'));
+  const [medsTakenDose1, setMedsTakenDose1] = useState<'yes' | 'no' | 'partial'>(initialLog?.medications_taken_dose_1 ?? 'yes');
+  const [medsTakenDose2, setMedsTakenDose2] = useState<'yes' | 'no' | 'partial'>(initialLog?.medications_taken_dose_2 ?? 'yes');
+  const [medsTakenDose3, setMedsTakenDose3] = useState<'yes' | 'no' | 'partial'>(initialLog?.medications_taken_dose_3 ?? 'yes');
   const [notes, setNotes] = useState(initialLog?.notes ?? '');
   const [dietQuality, setDietQuality] = useState<DietQuality | null>(initialLog?.diet_quality ?? null);
   const [dietTriggers, setDietTriggers] = useState<DietTrigger[]>(initialLog?.diet_triggers ?? []);
@@ -537,7 +579,12 @@ function DayLogModal({ date, initialLog, userId, tracksMedication, prnMedNames, 
         fatigue_score: fatigueScore,
         stiffness_duration: stiffness,
         mood,
-        medications_taken: medsTaken,
+        medications_taken: medicationDoses > 1
+          ? deriveMedicationsTaken([medsTakenDose1, medsTakenDose2, medsTakenDose3].slice(0, medicationDoses))
+          : medsTaken,
+        medications_taken_dose_1: medicationDoses > 1 ? medsTakenDose1 : null,
+        medications_taken_dose_2: medicationDoses > 1 ? medsTakenDose2 : null,
+        medications_taken_dose_3: medicationDoses > 2 ? medsTakenDose3 : null,
         notes,
         diet_quality: dietQuality,
         diet_triggers: dietTriggers,
@@ -587,6 +634,10 @@ function DayLogModal({ date, initialLog, userId, tracksMedication, prnMedNames, 
             stiffness={stiffness} setStiffness={setStiffness}
             mood={mood} setMood={setMood}
             medsTaken={medsTaken} setMedsTaken={setMedsTaken}
+            medicationDoses={medicationDoses}
+            medsTakenDose1={medsTakenDose1} setMedsTakenDose1={setMedsTakenDose1}
+            medsTakenDose2={medsTakenDose2} setMedsTakenDose2={setMedsTakenDose2}
+            medsTakenDose3={medsTakenDose3} setMedsTakenDose3={setMedsTakenDose3}
             notes={notes} setNotes={setNotes}
             dietQuality={dietQuality} setDietQuality={setDietQuality}
             dietTriggers={dietTriggers} setDietTriggers={setDietTriggers}
@@ -771,6 +822,7 @@ export default function TrackScreen() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const isFemale = profile?.biological_sex === 'female';
+  const medicationDoses = profile?.medication_doses_per_day ?? 1;
 
   const todayStr = localDateString(0);
 
@@ -831,6 +883,9 @@ export default function TrackScreen() {
   const [stiffness, setStiffness] = useState<MorningStiffness | null>(null);
   const [mood, setMood] = useState<Mood | null>(null);
   const [medsTaken, setMedsTaken] = useState<'yes' | 'no' | 'partial'>('yes');
+  const [medsTakenDose1, setMedsTakenDose1] = useState<'yes' | 'no' | 'partial'>('yes');
+  const [medsTakenDose2, setMedsTakenDose2] = useState<'yes' | 'no' | 'partial'>('yes');
+  const [medsTakenDose3, setMedsTakenDose3] = useState<'yes' | 'no' | 'partial'>('yes');
   const [notes, setNotes] = useState('');
   const [dietQuality, setDietQuality] = useState<DietQuality | null>(null);
   const [dietTriggers, setDietTriggers] = useState<DietTrigger[]>([]);
@@ -850,6 +905,9 @@ export default function TrackScreen() {
       setStiffness(todayLog.stiffness_duration);
       setMood(todayLog.mood);
       setMedsTaken(todayLog.medications_taken ?? 'yes');
+      setMedsTakenDose1(todayLog.medications_taken_dose_1 ?? 'yes');
+      setMedsTakenDose2(todayLog.medications_taken_dose_2 ?? 'yes');
+      setMedsTakenDose3(todayLog.medications_taken_dose_3 ?? 'yes');
       setNotes(todayLog.notes ?? '');
       setDietQuality(todayLog.diet_quality ?? null);
       setDietTriggers(todayLog.diet_triggers ?? []);
@@ -864,6 +922,9 @@ export default function TrackScreen() {
       setStiffness(null);
       setMood(null);
       setMedsTaken('yes');
+      setMedsTakenDose1('yes');
+      setMedsTakenDose2('yes');
+      setMedsTakenDose3('yes');
       setPrnTaken(null);
       setNotes('');
       setDietQuality(null);
@@ -882,7 +943,26 @@ export default function TrackScreen() {
     setIsSaving(true);
     setSaved(false);
     try {
-      await saveLog({ pain_score: painScore, fatigue_score: fatigueScore, stiffness_duration: stiffness, mood, medications_taken: medsTaken, notes, diet_quality: dietQuality, diet_triggers: dietTriggers, exercise_done: exerciseDone, exercise_type: exerciseType, exercise_minutes: exerciseMinutes, period_active: isFemale ? periodActive : null, prn_taken: prnMedNames.length > 0 ? prnTaken : null });
+      await saveLog({
+        pain_score: painScore,
+        fatigue_score: fatigueScore,
+        stiffness_duration: stiffness,
+        mood,
+        medications_taken: medicationDoses > 1
+          ? deriveMedicationsTaken([medsTakenDose1, medsTakenDose2, medsTakenDose3].slice(0, medicationDoses))
+          : medsTaken,
+        medications_taken_dose_1: medicationDoses > 1 ? medsTakenDose1 : null,
+        medications_taken_dose_2: medicationDoses > 1 ? medsTakenDose2 : null,
+        medications_taken_dose_3: medicationDoses > 2 ? medsTakenDose3 : null,
+        notes,
+        diet_quality: dietQuality,
+        diet_triggers: dietTriggers,
+        exercise_done: exerciseDone,
+        exercise_type: exerciseType,
+        exercise_minutes: exerciseMinutes,
+        period_active: isFemale ? periodActive : null,
+        prn_taken: prnMedNames.length > 0 ? prnTaken : null,
+      });
       logEvent(Events.DAY_LOGGED, { date: localDateString() }).catch(() => {});
       if (profile?.notification_time) {
         scheduleDailyCheckInFromTomorrow(profile.notification_time, {
@@ -900,7 +980,7 @@ export default function TrackScreen() {
     } finally {
       setIsSaving(false);
     }
-  }, [user, saveLog, painScore, fatigueScore, stiffness, mood, medsTaken, notes, dietQuality, dietTriggers, exerciseDone, exerciseType, exerciseMinutes, t]);
+  }, [user, saveLog, painScore, fatigueScore, stiffness, mood, medsTaken, medicationDoses, medsTakenDose1, medsTakenDose2, medsTakenDose3, notes, dietQuality, dietTriggers, exerciseDone, exerciseType, exerciseMinutes, t]);
 
   const showForm = !todayLogged || editing;
 
@@ -999,6 +1079,10 @@ export default function TrackScreen() {
             stiffness={stiffness} setStiffness={setStiffness}
             mood={mood} setMood={setMood}
             medsTaken={medsTaken} setMedsTaken={setMedsTaken}
+            medicationDoses={medicationDoses}
+            medsTakenDose1={medsTakenDose1} setMedsTakenDose1={setMedsTakenDose1}
+            medsTakenDose2={medsTakenDose2} setMedsTakenDose2={setMedsTakenDose2}
+            medsTakenDose3={medsTakenDose3} setMedsTakenDose3={setMedsTakenDose3}
             notes={notes} setNotes={setNotes}
             dietQuality={dietQuality} setDietQuality={setDietQuality}
             dietTriggers={dietTriggers} setDietTriggers={setDietTriggers}
@@ -1036,6 +1120,7 @@ export default function TrackScreen() {
           initialLog={modalLog}
           userId={user.id}
           tracksMedication={tracksScheduledMeds}
+          medicationDoses={medicationDoses}
           prnMedNames={prnMedNames}
           isFemale={isFemale}
           isDark={isDark}

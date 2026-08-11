@@ -72,6 +72,7 @@ export interface UserProfile {
   onboarding_complete: boolean;
   welcome_message?: string;
   preferred_name?: string | null;
+  medication_doses_per_day?: number;
 }
 
 export interface DailyLog {
@@ -84,6 +85,9 @@ export interface DailyLog {
   mood: Mood | null;
   notes: string;
   medications_taken: 'yes' | 'no' | 'partial';
+  medications_taken_dose_1?: 'yes' | 'no' | 'partial' | null;
+  medications_taken_dose_2?: 'yes' | 'no' | 'partial' | null;
+  medications_taken_dose_3?: 'yes' | 'no' | 'partial' | null;
   diet_quality: DietQuality | null;
   diet_triggers: DietTrigger[] | null;
   exercise_done: boolean;

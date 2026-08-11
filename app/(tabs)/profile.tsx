@@ -929,6 +929,7 @@ export default function ProfileScreen() {
   const { flares } = useFlares();
   const { isSubscribed, isLoading: subLoading, monthlyPrice, trialDays, purchase, restore } = useSubscription();
   const { tracks: tracksMedication, setTracks: setTracksMedication } = useMedicationTracking();
+  const medicationDosesPerDay = profile?.medication_doses_per_day ?? 1;
   const { injections: biologicInjections, logInjection, deleteInjection: deleteBiologicInj } = useBiologicInjections();
   const {
     isAvailable: healthAvailable,
@@ -1138,6 +1139,15 @@ export default function ProfileScreen() {
       Alert.alert('Error', t('errors.save_failed'));
     }
   }, [pendingTime, reminderEnabled, saveProfile, t]);
+
+  const handleSetMedicationDosesPerDay = useCallback(async (value: number) => {
+    try {
+      await saveProfile({ medication_doses_per_day: value });
+    } catch (err) {
+      console.error('Update medication doses per day error:', err);
+      Alert.alert('Error', t('errors.save_failed'));
+    }
+  }, [saveProfile, t]);
 
   const handleSaveAiContext = useCallback(async () => {
     setIsSavingAiContext(true);
@@ -1557,6 +1567,40 @@ export default function ProfileScreen() {
               thumbColor="#FFFFFF"
             />
           </View>
+
+          {/* How many times a day medication is taken, only relevant when tracking is on */}
+          {tracksMedication && (
+            <>
+              <View style={[styles.rowDivider, { backgroundColor: cardBorder }]} />
+              <View style={styles.settingsRow}>
+                <View style={styles.settingsRowLeft}>
+                  <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>
+                    {t('profile.medication_doses_title')}
+                  </Text>
+                </View>
+                <View style={styles.chipsRow}>
+                  {[1, 2, 3].map((n) => (
+                    <TouchableOpacity
+                      key={n}
+                      onPress={() => handleSetMedicationDosesPerDay(n)}
+                      activeOpacity={0.8}
+                      style={[
+                        styles.chip,
+                        {
+                          backgroundColor: medicationDosesPerDay === n ? Colors.primary : cardBg,
+                          borderColor: medicationDosesPerDay === n ? Colors.primary : cardBorder,
+                        },
+                      ]}
+                    >
+                      <Text style={[styles.chipText, { color: medicationDosesPerDay === n ? '#FFFFFF' : textSecondary }]}>
+                        {n}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            </>
+          )}
 
           {/* Medications list */}
           {medsLoading ? (
