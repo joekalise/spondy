@@ -4,7 +4,7 @@ module.exports = {
   expo: {
     name: 'Spondy',
     slug: 'spondy',
-    version: '1.0.1',
+    version: '1.1.0',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'automatic',
@@ -21,6 +21,8 @@ module.exports = {
       infoPlist: {
         NSHealthShareUsageDescription:
           'Spondy reads your health data to identify patterns that may relate to your AS symptoms.',
+        NSHealthUpdateUsageDescription:
+          'Spondy may write workout and symptom data to Apple Health.',
         ITSAppUsesNonExemptEncryption: false,
         UIBackgroundModes: ['fetch', 'processing'],
       },
@@ -41,6 +43,8 @@ module.exports = {
     plugins: [
       'expo-router',
       'expo-secure-store',
+      'expo-font',
+      'expo-web-browser',
       [
         'expo-notifications',
         {
@@ -64,7 +68,10 @@ module.exports = {
       ],
       'expo-background-fetch',
       'expo-task-manager',
-      '@sentry/react-native',
+      // NOT a separate '@sentry/react-native' entry — it resolves to the same
+      // plugin as '@sentry/react-native/expo' below, and createRunOncePlugin
+      // dedupes by package name, so an earlier unconfigured entry silently wins
+      // and this org/project config never applies (found via a real prebuild).
       [
         '@sentry/react-native/expo',
         {
@@ -74,7 +81,9 @@ module.exports = {
         },
       ],
       '@react-native-community/datetimepicker',
-      '@react-native-firebase/app',
+      // NOT '@react-native-firebase/app' — its config plugin is incompatible with
+      // this project's bare-workflow iOS build (see May 2026 fix commit). Firebase
+      // is wired manually in ios/Spondy/AppDelegate.swift and the Podfile instead.
       'expo-updates',
     ],
     updates: {
@@ -83,7 +92,7 @@ module.exports = {
       fallbackToCacheTimeout: 0,
       checkAutomatically: 'ON_LOAD',
     },
-    runtimeVersion: '1.0.0',
+    runtimeVersion: '1.1.0',
     scheme: 'spondy',
     extra: {
       router: {
