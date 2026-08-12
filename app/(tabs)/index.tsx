@@ -8,6 +8,7 @@ import {
   useColorScheme,
   Linking,
   Platform,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -35,7 +36,9 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { SpondyMark } from '@/components/common/SpondyMark';
 import { ProfileButton } from '@/components/common/ProfileButton';
 import { InfoButton } from '@/components/common/InfoButton';
+import { PremiumModal } from '@/components/common/PremiumModal';
 import { sendFlareWarningIfNeeded, evaluateAndSendNudges } from '@/services/notifications';
+import { logEvent, Events } from '@/services/analytics';
 import { DailyLog, Flare, Mood } from '@/types';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -398,12 +401,14 @@ function FlareRiskCard({
   isDark,
   isPremium,
   onChatPress,
+  onUpgradePress,
 }: {
   level: 'watch' | 'warning';
   signals: string[];
   isDark: boolean;
   isPremium: boolean;
   onChatPress: () => void;
+  onUpgradePress: () => void;
 }) {
   const { t } = useTranslation();
   const isWarning = level === 'warning';
@@ -415,36 +420,57 @@ function FlareRiskCard({
 
   return (
     <View style={[styles.flareRiskCard, { backgroundColor: bgColor, borderColor }]}>
-      <Text style={[styles.flareRiskTitle, { color: accentColor }]}>
-        {isWarning ? '⚠️ Possible flare building' : '👀 Symptoms to watch'}
-      </Text>
-      <Text style={[styles.flareRiskBody, isDark && styles.textSecDark]}>
-        {isWarning
-          ? 'Several signals suggest a flare could be building. Rest up and check your medications.'
-          : 'A couple of signals worth watching. Keep an eye on how you feel over the next day or two.'}
-      </Text>
-      <View style={styles.flareRiskSignals}>
-        {signals.map((s) => (
-          <View key={s} style={[styles.flareRiskChip, { borderColor: accentColor + '60' }]}>
-            <Text style={[styles.flareRiskChipText, { color: accentColor }]}>
-              {SIGNAL_LABELS[s] ?? s}
-            </Text>
-          </View>
-        ))}
-      </View>
-      {isPremium && (
-        <View style={styles.flareChatRow}>
-          <TouchableOpacity
-            onPress={onChatPress}
-            style={[styles.flareChatBtn, { backgroundColor: accentColor }]}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.flareChatBtnText}>{t('home.chat_about_this')}</Text>
-          </TouchableOpacity>
+      <View style={styles.flareRiskTitleRow}>
+        <Text style={[styles.flareRiskTitle, { color: accentColor }]}>
+          {isWarning ? '⚠️ Possible flare building' : '👀 Symptoms to watch'}
+        </Text>
+        {!isPremium && (
           <View style={styles.flarePremiumBadge}>
             <Text style={styles.flarePremiumBadgeText}>{t('common.premium')}</Text>
           </View>
-        </View>
+        )}
+      </View>
+      {isPremium ? (
+        <>
+          <Text style={[styles.flareRiskBody, isDark && styles.textSecDark]}>
+            {isWarning
+              ? 'Several signals suggest a flare could be building. Rest up and check your medications.'
+              : 'A couple of signals worth watching. Keep an eye on how you feel over the next day or two.'}
+          </Text>
+          <View style={styles.flareRiskSignals}>
+            {signals.map((s) => (
+              <View key={s} style={[styles.flareRiskChip, { borderColor: accentColor + '60' }]}>
+                <Text style={[styles.flareRiskChipText, { color: accentColor }]}>
+                  {SIGNAL_LABELS[s] ?? s}
+                </Text>
+              </View>
+            ))}
+          </View>
+          <View style={styles.flareChatRow}>
+            <TouchableOpacity
+              onPress={onChatPress}
+              style={[styles.flareChatBtn, { backgroundColor: accentColor }]}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.flareChatBtnText}>{t('home.chat_about_this')}</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      ) : (
+        <>
+          <Text style={[styles.flareRiskBody, isDark && styles.textSecDark]}>
+            {t('home.flare_risk_locked_body')}
+          </Text>
+          <View style={styles.flareChatRow}>
+            <TouchableOpacity
+              onPress={onUpgradePress}
+              style={[styles.flareChatBtn, { backgroundColor: accentColor }]}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.flareChatBtnText}>{t('home.flare_risk_unlock_cta')}</Text>
+            </TouchableOpacity>
+          </View>
+        </>
       )}
     </View>
   );
@@ -566,7 +592,10 @@ export default function HomeScreen() {
   const isDark = colorScheme === 'dark';
   const router = useRouter();
   const { user } = useAuth();
-  const { isSubscribed: isPremium } = useSubscription();
+  const { isSubscribed: isPremium, monthlyPrice, trialDays, purchase, restore } = useSubscription();
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [isPurchasing, setIsPurchasing] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
   const { profile } = useProfile();
 
   const { todayLog, todayLogged, streak, isLoading: logLoading, refresh: refreshLog } = useDailyLog();
@@ -612,11 +641,46 @@ export default function HomeScreen() {
     await Linking.openURL(url);
   }, [markReviewCompleted]);
 
-  // Send flare warning notification when risk is elevated (once per day max)
+  const handlePurchase = useCallback(async () => {
+    setIsPurchasing(true);
+    logEvent(Events.PURCHASE_STARTED).catch(() => {});
+    try {
+      const success = await purchase();
+      if (success) {
+        logEvent(Events.PURCHASE_SUCCESS).catch(() => {});
+        setShowPremiumModal(false);
+      } else {
+        logEvent(Events.PURCHASE_CANCELLED).catch(() => {});
+        Alert.alert('', t('profile.purchase_unavailable'));
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      logEvent(Events.PURCHASE_ERROR, { message: msg }).catch(() => {});
+      Alert.alert('Purchase error', msg);
+    } finally {
+      setIsPurchasing(false);
+    }
+  }, [purchase, t]);
+
+  const handleRestore = useCallback(async () => {
+    setIsRestoring(true);
+    try {
+      const success = await restore();
+      if (success) setShowPremiumModal(false);
+      else Alert.alert('', t('common.no_purchases'));
+    } catch (err) {
+      console.error('Restore error:', err);
+    } finally {
+      setIsRestoring(false);
+    }
+  }, [restore, t]);
+
+  // Send flare warning notification when risk is elevated (once per day max) —
+  // premium-only, otherwise the push leaks what the locked card withholds
   useEffect(() => {
-    if (!user || flareRisk.level === 'none') return;
+    if (!user || !isPremium || flareRisk.level === 'none') return;
     sendFlareWarningIfNeeded(user.id, flareRisk.level).catch(() => {});
-  }, [user, flareRisk.level]);
+  }, [user, isPremium, flareRisk.level]);
 
   // Proactive nudges — sleep, pain trend, fatigue, mood (once per day max)
   useEffect(() => {
@@ -682,6 +746,7 @@ export default function HomeScreen() {
             isDark={isDark}
             isPremium={isPremium}
             onChatPress={() => router.push('/ai-chat')}
+            onUpgradePress={() => setShowPremiumModal(true)}
           />
         )}
 
@@ -880,6 +945,18 @@ export default function HomeScreen() {
 
         <View style={styles.bottomPad} />
       </ScrollView>
+
+      <PremiumModal
+        visible={showPremiumModal}
+        onClose={() => setShowPremiumModal(false)}
+        onPurchase={handlePurchase}
+        onRestore={handleRestore}
+        monthlyPrice={monthlyPrice}
+        trialDays={trialDays}
+        isPurchasing={isPurchasing}
+        isRestoring={isRestoring}
+        isDark={isDark}
+      />
     </SafeAreaView>
   );
 }
@@ -1338,10 +1415,17 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     gap: Spacing.sm,
   },
+  flareRiskTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.sm,
+  },
   flareRiskTitle: {
     fontSize: FontSize.sm,
     fontWeight: '700',
     fontFamily: FontFamily.bold,
+    flex: 1,
   },
   flareRiskBody: {
     fontSize: FontSize.sm,

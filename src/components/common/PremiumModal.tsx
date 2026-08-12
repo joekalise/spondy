@@ -88,34 +88,23 @@ function MockFlareCard({ isDark }: { isDark: boolean }) {
   const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
   const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
 
-  const bars = [3, 5, 4, 7, 6, 8, 5];
-  const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-  const maxBar = 8;
+  const signals = ['⏱ Long morning stiffness', '↑ Pain trending up', '😴 Poor sleep'];
 
   return (
     <View style={[mock.card, { backgroundColor: cardBg, borderColor: Colors.warning + '60' }]}>
       <View style={mock.row}>
-        <Text style={[mock.cardTitle, { color: textPrimary }]}>Flare risk</Text>
-        <View style={[mock.badge, { backgroundColor: Colors.warning + '20' }]}>
-          <Text style={[mock.badgeText, { color: Colors.warning }]}>⚠ Elevated</Text>
-        </View>
+        <Text style={[mock.cardTitle, { color: textPrimary }]}>⚠️ Possible flare building</Text>
       </View>
-      <View style={mock.chartRow}>
-        {bars.map((h, i) => (
-          <View key={i} style={mock.barCol}>
-            <View style={mock.barTrack}>
-              <View style={[
-                mock.barFill,
-                { height: `${(h / maxBar) * 100}%`, backgroundColor: h >= 7 ? Colors.error : h >= 5 ? Colors.warning : Colors.success },
-              ]} />
-            </View>
-            <Text style={[mock.barLabel, { color: textSecondary }]}>{days[i]}</Text>
+      <Text style={[mock.body, { color: textSecondary }]}>
+        Several signals suggest a flare could be building. Rest up and check your medications.
+      </Text>
+      <View style={mock.chipRow}>
+        {signals.map(s => (
+          <View key={s} style={[mock.chip, { borderColor: Colors.warning + '60' }]}>
+            <Text style={[mock.chipText, { color: Colors.warning }]}>{s}</Text>
           </View>
         ))}
       </View>
-      <Text style={[mock.body, { color: textSecondary, marginTop: Spacing.xs }]}>
-        Stiffness has been trending up for 3 days. Based on your patterns, take it easy this weekend.
-      </Text>
     </View>
   );
 }
@@ -159,7 +148,7 @@ export function PremiumModal({
     {
       icon: '🎯',
       title: 'Extended personalisation',
-      body: 'The more context you give, the smarter your insights get. Premium unlocks full AI personalisation.',
+      body: 'Add more detail about your condition in your profile, and Premium insights use it to get more specific.',
     },
   ];
 
@@ -350,33 +339,6 @@ const mock = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     marginTop: Spacing.xs,
-  },
-  chartRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    height: 60,
-    gap: 6,
-    marginTop: Spacing.sm,
-  },
-  barCol: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 4,
-  },
-  barTrack: {
-    flex: 1,
-    width: '100%',
-    justifyContent: 'flex-end',
-    borderRadius: 3,
-    overflow: 'hidden',
-    backgroundColor: 'transparent',
-  },
-  barFill: {
-    width: '100%',
-    borderRadius: 3,
-  },
-  barLabel: {
-    fontSize: 10,
   },
 });
 

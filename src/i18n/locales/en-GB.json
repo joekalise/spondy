@@ -257,6 +257,8 @@
     "todays_log": "Today's log",
     "start_checkin": "Start check-in →",
     "chat_about_this": "Chat about this",
+    "flare_risk_locked_body": "Unlock which signals are driving this and what to do about it.",
+    "flare_risk_unlock_cta": "Unlock",
     "review_title": "Enjoying Spondy?",
     "review_cta": "Leave a review ⭐",
     "review_dismiss": "Not now",
@@ -565,7 +567,7 @@
     "ai_title": "AI-powered insights",
     "profile_body": "Weekly reports, flare prediction, and a chat with your own data.",
     "profile_body_with_price": "Weekly reports, flare prediction, and a chat with your own data. {{price}}/month after a {{days}}-day free trial.",
-    "chat_body": "Ask anything about your patterns, trends, or symptoms, and get answers grounded in your own logged data.",
+    "chat_body": "Ask anything about your patterns, trends, or symptoms, and get answers based on what you've actually logged.",
     "see_whats_included": "See what's included →"
   },
   "profile_privacy": {

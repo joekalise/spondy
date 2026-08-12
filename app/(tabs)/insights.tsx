@@ -404,7 +404,7 @@ interface TrialPromptCardProps {
 
 function TrialPromptCard({ isDark, hasEnoughData, readyThresholdDays, onStartTrial }: TrialPromptCardProps) {
   const { t } = useTranslation();
-  const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
+  const cardBg = isDark ? '#2D1A0E' : '#FFF7ED';
   const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
   const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
 
@@ -671,7 +671,7 @@ function BasdaiPromptCard({
 
   if (!latestScore) {
     return (
-      <View style={[styles.basdaiPromptCard, { backgroundColor: isDark ? '#2D1A0E' : '#FFF7ED', borderColor: Colors.primary + '40' }]}>
+      <View style={[styles.basdaiPromptCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
         <View style={styles.basdaiPromptTitleRow}>
           <Text style={[styles.basdaiPromptTitle, { color: textPrimary, flex: 1 }]}>{t('insights.basdai_prompt')}</Text>
           <TouchableOpacity onPress={() => setShowInfo(v => !v)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
@@ -718,7 +718,7 @@ function BasdaiPromptCard({
   }
 
   return (
-    <View style={[styles.basdaiPromptCard, { backgroundColor: isDark ? '#2D1A0E' : '#FFF7ED', borderColor: Colors.warning + '50' }]}>
+    <View style={[styles.basdaiPromptCard, { backgroundColor: cardBg, borderColor: Colors.warning + '50' }]}>
       <View style={styles.basdaiPromptTitleRow}>
         <Text style={[styles.basdaiPromptTitle, { color: textPrimary, flex: 1 }]}>{t('insights.basdai_reassessment_due')}</Text>
         <TouchableOpacity onPress={() => setShowInfo(v => !v)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
