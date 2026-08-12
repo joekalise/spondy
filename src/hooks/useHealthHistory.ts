@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { HealthData } from '@/types';
 import { getHealthDataRange, saveHealthData } from '@/services/database';
-import { isHealthConnected, fetchTodayHealthData } from '@/services/healthKit';
+import { isHealthConnected, fetchTodayHealthData } from '@/services/health';
 import { useAuth } from '@/contexts/AuthContext';
 
 export function useHealthHistory(days = 7): {

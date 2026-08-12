@@ -13,7 +13,7 @@ import * as Crypto from 'expo-crypto';
 import * as WebBrowser from 'expo-web-browser';
 import { supabase } from '@/services/supabase';
 import { initializeRevenueCat } from '@/services/revenuecat';
-import { disconnectHealth } from '@/services/healthKit';
+import { disconnectHealth } from '@/services/health';
 
 WebBrowser.maybeCompleteAuthSession();
 

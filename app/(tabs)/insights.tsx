@@ -24,7 +24,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { getDailyLogs, getFlares, getStreak, getBasdaiScores } from '@/services/database';
 import { getCachedHumidity } from '@/services/weather';
-import { fetchTodayRecoveryData } from '@/services/healthKit';
+import { fetchTodayRecoveryData } from '@/services/health';
 import { generateWeeklyInsight, WeeklyInsight } from '@/services/aiInsights';
 import { getAiConsent } from '@/services/aiConsent';
 import { useSubscription } from '@/hooks/useSubscription';

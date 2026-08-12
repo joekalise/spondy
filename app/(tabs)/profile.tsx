@@ -1670,8 +1670,12 @@ export default function ProfileScreen() {
                     {Platform.OS === 'ios' ? 'Apple Health' : 'Health Connect'}
                   </Text>
                   <InfoButton
-                    title="Apple Health"
-                    message={`Connecting Apple Health lets Spondy read data from your iPhone and Apple Watch, giving you a more complete picture of how your body is doing:\n\n• Steps and active energy (how much you moved)\n• Sleep duration (how rest affects your symptoms)\n• Heart rate variability (a useful recovery indicator)\n• Blood oxygen and respiratory rate (overnight recovery signals)\n• Mindful minutes (meditation and breathing sessions)\n\nAll data stays on your device and in your private account. Nothing is shared with third parties.`}
+                    title={Platform.OS === 'ios' ? 'Apple Health' : 'Health Connect'}
+                    message={
+                      Platform.OS === 'ios'
+                        ? `Connecting Apple Health lets Spondy read data from your iPhone and Apple Watch, giving you a more complete picture of how your body is doing:\n\n• Steps and active energy (how much you moved)\n• Sleep duration (how rest affects your symptoms)\n• Heart rate variability (a useful recovery indicator)\n• Blood oxygen and respiratory rate (overnight recovery signals)\n• Mindful minutes (meditation and breathing sessions)\n\nAll data stays on your device and in your private account. Nothing is shared with third parties.`
+                        : `Connecting Health Connect lets Spondy read data from your phone and connected apps or devices, giving you a more complete picture of how your body is doing:\n\n• Steps and active energy (how much you moved)\n• Sleep duration (how rest affects your symptoms)\n• Heart rate variability (a useful recovery indicator)\n• Blood oxygen and respiratory rate (overnight recovery signals)\n• Mindful minutes (meditation and breathing sessions)\n\nAll data stays on your device and in your private account. Nothing is shared with third parties.`
+                    }
                     color={textSecondary}
                   />
                 </View>

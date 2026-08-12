@@ -26,6 +26,7 @@ module.exports = {
       },
     },
     android: {
+      versionCode: 5,
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
         backgroundColor: '#F97316',
@@ -50,6 +51,17 @@ module.exports = {
       // iOS-only plugins
       ...(!isAndroid ? [['expo-apple-authentication']] : []),
       ...(!isAndroid ? ['react-native-health'] : []),
+      // Android-only plugins
+      ...(isAndroid ? ['react-native-health-connect'] : []),
+      [
+        'expo-build-properties',
+        {
+          android: {
+            // Health Connect requires API 26+
+            minSdkVersion: 26,
+          },
+        },
+      ],
       'expo-background-fetch',
       'expo-task-manager',
       '@sentry/react-native',

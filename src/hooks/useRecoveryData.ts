@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { RecoverySnapshot } from '@/types';
-import { isHealthConnected, fetchTodayRecoveryData, ensureLatestHealthPermissions } from '@/services/healthKit';
+import { isHealthConnected, fetchTodayRecoveryData, ensureLatestHealthPermissions } from '@/services/health';
 
 export function useRecoveryData(): { data: RecoverySnapshot | null; refresh: () => void } {
   const [data, setData] = useState<RecoverySnapshot | null>(null);

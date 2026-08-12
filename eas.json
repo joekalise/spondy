@@ -30,7 +30,6 @@
       }
     },
     "production-android": {
-      "autoIncrement": true,
       "android": {
         "image": "latest",
         "buildType": "app-bundle"

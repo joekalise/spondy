@@ -29,7 +29,7 @@ import { sendChatMessage } from '@/services/aiInsights';
 import { getAiConsent } from '@/services/aiConsent';
 import { getDailyLogs, getBasdaiScores } from '@/services/database';
 import { getCachedHumidity } from '@/services/weather';
-import { fetchTodayRecoveryData } from '@/services/healthKit';
+import { fetchTodayRecoveryData } from '@/services/health';
 import { logEvent, Events } from '@/services/analytics';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
