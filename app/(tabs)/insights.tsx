@@ -879,6 +879,14 @@ export default function InsightsScreen() {
     .map((l) => axisLabel(l.date));
   const chartLabels = logs.map((l) => axisLabel(l.date));
 
+  // Humidity comes from healthHistory (fixed 28-day window), not the period-
+  // filtered logs — same convention as other healthHistory-derived content.
+  const humidityHistoryDays = [...(healthHistory ?? [])]
+    .filter((d) => d.humidity !== null && d.humidity !== undefined)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const humidityChartData = humidityHistoryDays.map((d) => d.humidity as number);
+  const humidityChartLabels = humidityHistoryDays.map((d) => axisLabel(d.date));
+
   const avgPain =
     painData.length > 0
       ? (painData.reduce((a, b) => a + b, 0) / painData.length).toFixed(1)
@@ -1068,6 +1076,33 @@ export default function InsightsScreen() {
                   height={80}
                   minVal={1}
                   maxVal={5}
+                  width={Math.max(10, chartWidth - Spacing.md * 2)}
+                />
+              </View>
+            )}
+
+            {/* Humidity chart — raw trend only, no correlation markers. The
+                lag-correlation finding lives behind the paid AI insight. */}
+            {humidityChartData.length > 0 && (
+              <View
+                style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}
+              >
+                <Text style={[styles.cardTitle, { color: textPrimary }]}>
+                  {t('insights.humidity_trend')}
+                </Text>
+                {humidityChartData.length < 7 && (
+                  <Text style={[styles.chartHint, { color: textSecondary }]}>
+                    This chart fills out as more days are tracked.
+                  </Text>
+                )}
+                <TrendChart
+                  series={[
+                    { data: humidityChartData, color: Colors.secondary, label: 'humidity' },
+                  ]}
+                  labels={humidityChartLabels}
+                  height={80}
+                  minVal={0}
+                  maxVal={100}
                   width={Math.max(10, chartWidth - Spacing.md * 2)}
                 />
               </View>

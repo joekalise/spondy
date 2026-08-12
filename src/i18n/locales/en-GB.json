@@ -378,6 +378,7 @@
     "pain_trend": "Pain trend",
     "fatigue_trend": "Fatigue trend",
     "mood_trend": "Mood trend",
+    "humidity_trend": "Humidity",
     "sleep_trend": "Sleep",
     "activity_trend": "Activity",
     "no_data": "Keep tracking to see your patterns emerge here",
