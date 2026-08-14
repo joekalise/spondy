@@ -24,7 +24,7 @@ module.exports = {
         NSHealthUpdateUsageDescription:
           'Spondy may write workout and symptom data to Apple Health.',
         ITSAppUsesNonExemptEncryption: false,
-        UIBackgroundModes: ['fetch', 'processing'],
+        UIBackgroundModes: ['fetch'],
       },
     },
     android: {
