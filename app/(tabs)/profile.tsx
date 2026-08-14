@@ -1489,7 +1489,7 @@ export default function ProfileScreen() {
         <Text style={[styles.sectionLabel, { color: textSecondary }]}>{t('profile.notifications')}</Text>
         <View style={[styles.settingsCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
           {/* Daily check-in */}
-          <View style={styles.settingsRow}>
+          <View style={[styles.settingsRow, { paddingRight: Spacing.md }]}>
             <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>
               {t('profile.daily_reminder')}
             </Text>
@@ -1551,7 +1551,7 @@ export default function ProfileScreen() {
           <View style={[styles.rowDivider, { backgroundColor: cardBorder }]} />
 
           {/* Medication tracking */}
-          <View style={styles.settingsRow}>
+          <View style={[styles.settingsRow, { paddingRight: Spacing.md }]}>
             <View style={styles.settingsRowLeft}>
               <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>
                 {t('profile.track_medication_adherence')}
