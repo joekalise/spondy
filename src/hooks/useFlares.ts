@@ -91,7 +91,15 @@ export function useFlares(flareType: FlareType = 'as'): {
   const updateFlare = useCallback(async (id: string, updates: Partial<Flare>) => {
     const updated = await dbUpdateFlare(id, updates);
     setFlares(prev => prev.map(f => f.id === id ? updated : f));
-    if (activeFlare?.id === id) setActiveFlare(updated.end_date ? null : updated);
+    // Reacts to the edited flare's own end_date, not just whether it was already
+    // the tracked active flare — otherwise reopening a previously-ended flare
+    // (clearing its end_date) never surfaces it as active, and it disappears from
+    // both the active card and the ended-flares history list.
+    if (!updated.end_date) {
+      setActiveFlare(updated);
+    } else if (activeFlare?.id === id) {
+      setActiveFlare(null);
+    }
   }, [activeFlare]);
 
   const deleteFlare = useCallback(async (id: string) => {

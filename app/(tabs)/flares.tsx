@@ -236,6 +236,15 @@ function EditFlareModal({ visible, flare, onClose, onSave, onDelete, isDark, loc
               />
             </View>
           </View>
+          {endDate !== '' && (
+            <TouchableOpacity
+              onPress={() => setEndDate('')}
+              style={styles.reopenFlareLink}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Text style={styles.reopenFlareLinkText}>{t('flares.reopen_this_flare')}</Text>
+            </TouchableOpacity>
+          )}
 
           <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>
             {t('flares.notes')}
@@ -1370,6 +1379,17 @@ const styles = StyleSheet.create({
   activeFlareEditLink: {
     alignSelf: 'flex-end',
     marginBottom: 8,
+  },
+  reopenFlareLink: {
+    alignSelf: 'flex-start',
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  reopenFlareLinkText: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
+    color: Colors.primary,
   },
   historyDateRange: {
     fontSize: FontSize.md,

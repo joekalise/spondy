@@ -363,6 +363,7 @@
     "dates": "Dates",
     "start_label": "Start",
     "end_label": "End",
+    "reopen_this_flare": "Still going? Reopen this flare",
     "severity_label": "Severity",
     "affected_eye": "Affected eye",
     "symptoms_label": "Symptoms",
