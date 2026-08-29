@@ -1,4 +1,38 @@
+const { withAndroidManifest } = require('@expo/config-plugins');
+
 const isAndroid = process.env.EAS_BUILD_PLATFORM === 'android';
+
+// RevenueCat's Android SDK pulls in Google Play Billing, which transitively depends on
+// play-services-code-scanner. That library's own manifest declares
+// GmsBarcodeScanningDelegateActivity with a hardcoded PORTRAIT lock — Spondy never uses
+// barcode scanning at all, but Google's large-screen policy scan flags it anyway since
+// it ships inside the final APK regardless. Override the inherited attribute via the
+// standard Android manifest-merger tools:replace mechanism (there's no way to configure
+// this from our own code otherwise — it's declared inside the library's AAR).
+function withBarcodeScannerOrientationFix(config) {
+  return withAndroidManifest(config, (config) => {
+    const manifest = config.modResults.manifest;
+    manifest.$['xmlns:tools'] = 'http://schemas.android.com/tools';
+
+    const application = manifest.application?.[0];
+    if (!application) return config;
+
+    const activityName = 'com.google.mlkit.vision.codescanner.internal.GmsBarcodeScanningDelegateActivity';
+    application.activity = application.activity ?? [];
+    const alreadyPresent = application.activity.some((a) => a.$['android:name'] === activityName);
+    if (!alreadyPresent) {
+      application.activity.push({
+        $: {
+          'android:name': activityName,
+          'android:screenOrientation': 'unspecified',
+          'tools:replace': 'android:screenOrientation',
+        },
+      });
+    }
+
+    return config;
+  });
+}
 
 module.exports = {
   expo: {
@@ -96,6 +130,7 @@ module.exports = {
       // this project's bare-workflow iOS build (see May 2026 fix commit). Firebase
       // is wired manually in ios/Spondy/AppDelegate.swift and the Podfile instead.
       'expo-updates',
+      withBarcodeScannerOrientationFix,
     ],
     updates: {
       url: 'https://u.expo.dev/d0cda471-dc65-4d6c-b28c-d6e9dde174e6',
