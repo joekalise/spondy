@@ -5,7 +5,11 @@ module.exports = {
     name: 'Spondy',
     slug: 'spondy',
     version: '1.1.0',
-    orientation: 'portrait',
+    // No top-level `orientation` lock — that sets android:screenOrientation="portrait"
+    // in the manifest, which Google's large-screen policy flags (blocks resizability on
+    // tablets/foldables/Chromebooks). iOS keeps its existing portrait-only behavior via
+    // the explicit infoPlist override below; Android is locked to portrait at runtime
+    // instead (src/hooks/useLockPortraitOnPhones.ts), only on phone-sized screens.
     icon: './assets/icon.png',
     userInterfaceStyle: 'automatic',
     splash: {
@@ -25,10 +29,16 @@ module.exports = {
           'Spondy may write workout and symptom data to Apple Health.',
         ITSAppUsesNonExemptEncryption: false,
         UIBackgroundModes: ['fetch'],
+        // Preserves the app's prior portrait-only behavior now that the top-level
+        // `orientation` config key (which set this for both platforms) is gone.
+        UISupportedInterfaceOrientations: [
+          'UIInterfaceOrientationPortrait',
+          'UIInterfaceOrientationPortraitUpsideDown',
+        ],
       },
     },
     android: {
-      versionCode: 8,
+      versionCode: 9,
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
         backgroundColor: '#F97316',

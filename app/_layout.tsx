@@ -33,6 +33,7 @@ import { ProfileProvider, useProfile } from '@/contexts/ProfileContext';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { UpdateBanner } from '@/components/common/UpdateBanner';
 import { registerBackgroundHealthSync, triggerHealthSyncNow } from '@/services/backgroundHealthSync';
+import { useLockPortraitOnPhones } from '@/hooks/useLockPortraitOnPhones';
 import { scheduleDailyCheckIn, cancelLapseNotification } from '@/services/notifications';
 import { setUserId } from '@/services/analytics';
 import * as Sentry from '@sentry/react-native';
@@ -200,6 +201,8 @@ export default Sentry.wrap(function RootLayout() {
     PlusJakartaSans_700Bold,
     PlusJakartaSans_800ExtraBold,
   });
+
+  useLockPortraitOnPhones();
 
   if (!fontsLoaded) return null;
 
