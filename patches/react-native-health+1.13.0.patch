@@ -1,0 +1,13 @@
+diff --git a/node_modules/react-native-health/index.js b/node_modules/react-native-health/index.js
+index 06e5105..bf74154 100644
+--- a/node_modules/react-native-health/index.js
++++ b/node_modules/react-native-health/index.js
+@@ -1,6 +1,7 @@
+ import { Activities, Observers, Permissions, Units } from './src/constants'
+ 
+-const { AppleHealthKit } = require('react-native').NativeModules
++const { TurboModuleRegistry } = require('react-native')
++const AppleHealthKit = TurboModuleRegistry.getEnforcing('AppleHealthKit')
+ 
+ export const HealthKit = Object.assign({}, AppleHealthKit, {
+   Constants: {
