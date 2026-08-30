@@ -161,6 +161,7 @@ const EXERCISE_TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: 'physio', label: 'Physio exercises' },
   { value: 'swimming', label: 'Swimming' },
   { value: 'walking', label: 'Walking' },
+  { value: 'running', label: 'Running' },
   { value: 'yoga', label: 'Yoga / stretching' },
   { value: 'cycling', label: 'Cycling' },
   { value: 'gym', label: 'Gym' },
@@ -231,8 +232,8 @@ interface DayLogFormProps {
   setDietTriggers: (v: DietTrigger[]) => void;
   exerciseDone: boolean;
   setExerciseDone: (v: boolean) => void;
-  exerciseType: string | null;
-  setExerciseType: (v: string | null) => void;
+  exerciseType: string[];
+  setExerciseType: (v: string[]) => void;
   exerciseMinutes: number | null;
   setExerciseMinutes: (v: number | null) => void;
   tracksMedication: boolean;
@@ -477,11 +478,15 @@ function DayLogForm({
           <>
             <View style={styles.chipRow}>
               {EXERCISE_TYPE_OPTIONS.map((opt) => {
-                const selected = exerciseType === opt.value;
+                const selected = exerciseType.includes(opt.value);
                 return (
                   <TouchableOpacity
                     key={opt.value}
-                    onPress={() => setExerciseType(selected ? null : opt.value)}
+                    onPress={() => setExerciseType(
+                      selected
+                        ? exerciseType.filter((v) => v !== opt.value)
+                        : [...exerciseType, opt.value]
+                    )}
                     activeOpacity={0.7}
                     style={[styles.chip, isDark && styles.chipDark, selected && styles.chipSelected]}
                   >
@@ -563,7 +568,7 @@ function DayLogModal({ date, initialLog, userId, tracksMedication, medicationDos
   const [dietQuality, setDietQuality] = useState<DietQuality | null>(initialLog?.diet_quality ?? null);
   const [dietTriggers, setDietTriggers] = useState<DietTrigger[]>(initialLog?.diet_triggers ?? []);
   const [exerciseDone, setExerciseDone] = useState(initialLog?.exercise_done ?? false);
-  const [exerciseType, setExerciseType] = useState<string | null>(initialLog?.exercise_type ?? null);
+  const [exerciseType, setExerciseType] = useState<string[]>(initialLog?.exercise_type ?? []);
   const [exerciseMinutes, setExerciseMinutes] = useState<number | null>(initialLog?.exercise_minutes ?? null);
   const [periodActive, setPeriodActive] = useState(initialLog?.period_active ?? false);
   const [prnTaken, setPrnTaken] = useState<boolean | null>(initialLog?.prn_taken ?? null);
@@ -890,7 +895,7 @@ export default function TrackScreen() {
   const [dietQuality, setDietQuality] = useState<DietQuality | null>(null);
   const [dietTriggers, setDietTriggers] = useState<DietTrigger[]>([]);
   const [exerciseDone, setExerciseDone] = useState(false);
-  const [exerciseType, setExerciseType] = useState<string | null>(null);
+  const [exerciseType, setExerciseType] = useState<string[]>([]);
   const [exerciseMinutes, setExerciseMinutes] = useState<number | null>(null);
   const [periodActive, setPeriodActive] = useState(false);
   const [prnTaken, setPrnTaken] = useState<boolean | null>(null);
@@ -912,7 +917,7 @@ export default function TrackScreen() {
       setDietQuality(todayLog.diet_quality ?? null);
       setDietTriggers(todayLog.diet_triggers ?? []);
       setExerciseDone(todayLog.exercise_done ?? false);
-      setExerciseType(todayLog.exercise_type ?? null);
+      setExerciseType(todayLog.exercise_type ?? []);
       setExerciseMinutes(todayLog.exercise_minutes ?? null);
       setPeriodActive(todayLog.period_active ?? false);
       setPrnTaken(todayLog.prn_taken ?? null);
@@ -930,7 +935,7 @@ export default function TrackScreen() {
       setDietQuality(null);
       setDietTriggers([]);
       setExerciseDone(false);
-      setExerciseType(null);
+      setExerciseType([]);
       setExerciseMinutes(null);
       setPeriodActive(false);
     }

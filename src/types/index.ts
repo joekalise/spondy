@@ -92,7 +92,7 @@ export interface DailyLog {
   diet_triggers: DietTrigger[] | null;
   exercise_done: boolean;
   exercise_minutes: number | null;
-  exercise_type: string | null;
+  exercise_type: string[] | null;
   period_active?: boolean | null;
   prn_taken?: boolean | null;
 }
