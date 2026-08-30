@@ -55,6 +55,7 @@ module.exports = {
     ios: {
       supportsTablet: false,
       bundleIdentifier: 'com.spondy.app',
+      buildNumber: '3',
       googleServicesFile: './GoogleService-Info.plist',
       infoPlist: {
         NSHealthShareUsageDescription:
