@@ -732,16 +732,58 @@ function AddMedicationModal({
               <Text style={[styles.fieldLabel, { color: textSecondary }]}>
                 {t('medications.reminder_time')}
               </Text>
-              <DateTimePicker
-                value={timeStringToDate(reminderTime)}
-                mode="time"
-                display="spinner"
-                onChange={(_event, date) => {
-                  if (date) setReminderTime(dateToTimeString(date));
-                }}
-                textColor={textPrimary}
-                style={{ width: '100%', height: 150 }}
-              />
+              {Platform.OS === 'android' ? (
+                // display="spinner" renders as native NumberPicker widgets on Android,
+                // which fight the surrounding ScrollView for touch and can swallow
+                // gestures for the rest of the modal — same issue already worked around
+                // in OnboardingScreen's notification-time step. Inline +/- avoids it.
+                (() => {
+                  const [hStr, mStr] = reminderTime.split(':');
+                  const hVal = parseInt(hStr, 10);
+                  const mVal = parseInt(mStr, 10);
+                  const adjustTime = (hDelta: number, mDelta: number) => {
+                    const newH = ((hVal + hDelta) + 24) % 24;
+                    const newM = ((mVal + mDelta) + 60) % 60;
+                    setReminderTime(`${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`);
+                  };
+                  return (
+                    <View style={styles.androidTimeRow}>
+                      <View style={styles.androidTimeCol}>
+                        <TouchableOpacity style={[styles.androidTimeBtn, { backgroundColor: cardBg, borderColor: cardBorder }]} onPress={() => adjustTime(1, 0)} activeOpacity={0.7}>
+                          <Text style={[styles.androidTimeArrow, { color: Colors.primary }]}>▲</Text>
+                        </TouchableOpacity>
+                        <Text style={[styles.androidTimeValue, { color: textPrimary }]}>{String(hVal).padStart(2, '0')}</Text>
+                        <TouchableOpacity style={[styles.androidTimeBtn, { backgroundColor: cardBg, borderColor: cardBorder }]} onPress={() => adjustTime(-1, 0)} activeOpacity={0.7}>
+                          <Text style={[styles.androidTimeArrow, { color: Colors.primary }]}>▼</Text>
+                        </TouchableOpacity>
+                        <Text style={[styles.androidTimeUnit, { color: textSecondary }]}>hour</Text>
+                      </View>
+                      <Text style={[styles.androidTimeColon, { color: textPrimary }]}>:</Text>
+                      <View style={styles.androidTimeCol}>
+                        <TouchableOpacity style={[styles.androidTimeBtn, { backgroundColor: cardBg, borderColor: cardBorder }]} onPress={() => adjustTime(0, 5)} activeOpacity={0.7}>
+                          <Text style={[styles.androidTimeArrow, { color: Colors.primary }]}>▲</Text>
+                        </TouchableOpacity>
+                        <Text style={[styles.androidTimeValue, { color: textPrimary }]}>{String(mVal).padStart(2, '0')}</Text>
+                        <TouchableOpacity style={[styles.androidTimeBtn, { backgroundColor: cardBg, borderColor: cardBorder }]} onPress={() => adjustTime(0, -5)} activeOpacity={0.7}>
+                          <Text style={[styles.androidTimeArrow, { color: Colors.primary }]}>▼</Text>
+                        </TouchableOpacity>
+                        <Text style={[styles.androidTimeUnit, { color: textSecondary }]}>min</Text>
+                      </View>
+                    </View>
+                  );
+                })()
+              ) : (
+                <DateTimePicker
+                  value={timeStringToDate(reminderTime)}
+                  mode="time"
+                  display="spinner"
+                  onChange={(_event, date) => {
+                    if (date) setReminderTime(dateToTimeString(date));
+                  }}
+                  textColor={textPrimary}
+                  style={{ width: '100%', height: 150 }}
+                />
+              )}
             </>
           )}
 
@@ -2479,6 +2521,46 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.semiBold,
     marginBottom: Spacing.xs,
     marginTop: Spacing.sm,
+  },
+  androidTimeRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: Spacing.xl,
+    marginVertical: Spacing.md,
+  },
+  androidTimeCol: {
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  androidTimeBtn: {
+    borderWidth: 1,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+  },
+  androidTimeArrow: {
+    fontSize: FontSize.lg,
+    fontWeight: '700',
+    fontFamily: FontFamily.bold,
+  },
+  androidTimeValue: {
+    fontSize: 52,
+    fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    textAlign: 'center',
+    minWidth: 80,
+  },
+  androidTimeUnit: {
+    fontSize: FontSize.sm,
+    textAlign: 'center',
+  },
+  androidTimeColon: {
+    fontSize: 52,
+    fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    alignSelf: 'center',
+    paddingBottom: 28,
   },
   textInput: {
     borderWidth: 1,
