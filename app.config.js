@@ -76,7 +76,7 @@ module.exports = {
       },
     },
     android: {
-      versionCode: 9,
+      versionCode: 10,
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
         backgroundColor: '#F97316',
