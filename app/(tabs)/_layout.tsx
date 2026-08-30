@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import { useColorScheme } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
@@ -9,6 +10,11 @@ export default function TabsLayout() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { t } = useTranslation();
+  // Android's edge-to-edge mode (mandatory since Expo SDK 54) renders content
+  // behind the system nav bar, so a fixed paddingBottom only clears nav bars of
+  // exactly that height — taller 3-button bars/OEM overlays overlap the tabs.
+  // Use the device's real inset instead of guessing.
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -22,8 +28,8 @@ export default function TabsLayout() {
           backgroundColor: isDark ? Colors.surfaceDark : Colors.surface,
           borderTopColor: isDark ? Colors.borderDark : Colors.border,
           borderTopWidth: 1,
-          height: 84,
-          paddingBottom: 24,
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom + 8,
           paddingTop: 8,
         },
         tabBarLabelStyle: {
