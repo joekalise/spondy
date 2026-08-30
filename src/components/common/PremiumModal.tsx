@@ -42,7 +42,7 @@ function MockInsightCard({ isDark }: { isDark: boolean }) {
         <View style={mock.badge}><Text style={mock.badgeText}>AI</Text></View>
       </View>
       <Text style={[mock.body, { color: textSecondary }]}>
-        Your pain was lower on days you slept over 7 hours. Fatigue spiked mid-week — likely linked to Tuesday's longer walk.
+        Your pain was lower on days you slept over 7 hours. Fatigue spiked mid-week, likely linked to Tuesday's longer walk.
       </Text>
       <View style={mock.chipRow}>
         {['😴 Sleep → pain', '🚶 Activity', '📈 Trending up'].map(t => (
@@ -138,12 +138,12 @@ export function PremiumModal({
     {
       icon: '💬',
       title: 'Chat with your data',
-      body: 'Ask anything — "why do I flare on weekends?" or "what helps my sleep?" — and get answers grounded in your own history.',
+      body: 'Ask anything, like "why do I flare on weekends?" or "what helps my sleep?", and get answers grounded in your own history.',
     },
     {
       icon: '🔮',
       title: 'Flare prediction nudges',
-      body: 'When your patterns suggest a flare is building, Spondy lets you know early — so you can act before it peaks.',
+      body: 'When your patterns suggest a flare is building, Spondy lets you know early so you can act before it peaks.',
     },
     {
       icon: '🎯',
@@ -162,7 +162,12 @@ export function PremiumModal({
     >
       <SafeAreaView style={[styles.screen, { backgroundColor: bg }]}>
         {/* Close button */}
-        <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
+        <TouchableOpacity
+          onPress={onClose}
+          style={styles.closeBtn}
+          activeOpacity={0.7}
+          hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
+        >
           <Text style={[styles.closeText, { color: textSecondary }]}>✕</Text>
         </TouchableOpacity>
 
@@ -347,9 +352,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   closeBtn: {
+    // Kept clear of the screen's extreme top-right corner (extra top/right
+    // margin, not just padding) — that corner is iOS's Control Center swipe
+    // zone, and a touchable sitting flush against it loses touch arbitration
+    // to the system gesture, making it feel unpressable. Not an issue on
+    // Android, which has no equivalent gesture zone there.
     alignSelf: 'flex-end',
+    marginTop: Spacing.sm,
+    marginRight: Spacing.md,
     padding: Spacing.md,
-    paddingBottom: 0,
   },
   closeText: {
     fontSize: 20,
