@@ -187,7 +187,7 @@
     "biological_sex": {
       "title": "¿Cuál es tu sexo biológico?",
       "subtitle": "La EA puede presentarse diferente dependiendo de tu biología. Esto nos ayuda a personalizar tu seguimiento.",
-      "info_title": "Por qué preguntamos",
+      "info_title": "¿Por qué preguntamos?",
       "info_message": "La EA afecta a las personas de manera diferente según el sexo biológico. Las mujeres suelen experimentar más afectación de articulaciones periféricas, imágenes atípicas y síntomas que varían con los cambios hormonales del ciclo menstrual. Si seleccionas 'Mujer' podrás registrar tu período en el diario, lo que permite que el análisis de IA detecte patrones como brotes que coinciden con fases específicas de tu ciclo. Siempre puedes omitir esto o modificarlo después en tu perfil.",
       "male": "Hombre",
       "female": "Mujer",
@@ -609,7 +609,12 @@
     "cache_age_days_one": "hace {{count}} día",
     "cache_age_days_other": "hace {{count}} días",
     "updated_label": "Actualizado {{age}}",
-    "chart_fills_out_hint": "Este gráfico se completa a medida que registras más días."
+    "chart_fills_out_hint": "Este gráfico se completa a medida que registras más días.",
+    "chat_card_subtitle": "Pregunta sobre tus patrones, tendencias o síntomas",
+    "disclaimer": "Solo con fines informativos. No es asesoramiento médico. Consulta siempre a tu reumatólogo o equipo de salud sobre tus síntomas y tratamiento.",
+    "basdai_scale_min": "0 = Nada",
+    "basdai_scale_max": "10 = Grave",
+    "basdai_threshold_note": "Una puntuación ≥4 es el umbral clínico para la terapia biológica. Considera compartir esto con tu reumatólogo."
   },
   "profile": {
     "title": "Tu perfil",
@@ -661,7 +666,11 @@
     "subscription_feature_1": "Informe de análisis semanal impulsado por IA",
     "subscription_feature_2": "Chatea con tus datos",
     "subscription_feature_3": "Predicción avanzada de brotes",
-    "subscription_feature_4": "Personalización de IA extendida"
+    "subscription_feature_4": "Personalización de IA extendida",
+    "apple_health_label": "Salud",
+    "health_connect_label": "Health Connect",
+    "apple_health_info_message": "Conectar Salud permite que Spondy lea datos de tu iPhone y Apple Watch, dándote una imagen más completa de cómo está tu cuerpo:\n\n• Pasos y energía activa (cuánto te moviste)\n• Duración del sueño (cómo el descanso afecta tus síntomas)\n• Variabilidad de la frecuencia cardíaca (un indicador útil de recuperación)\n• Oxígeno en sangre y frecuencia respiratoria (señales de recuperación nocturna)\n• Minutos conscientes (sesiones de meditación y respiración)\n\nTodos los datos permanecen en tu dispositivo y en tu cuenta privada. Nada se comparte con terceros.",
+    "health_connect_info_message": "Conectar Health Connect permite que Spondy lea datos de tu teléfono y de las apps o dispositivos conectados, dándote una imagen más completa de cómo está tu cuerpo:\n\n• Pasos y energía activa (cuánto te moviste)\n• Duración del sueño (cómo el descanso afecta tus síntomas)\n• Variabilidad de la frecuencia cardíaca (un indicador útil de recuperación)\n• Oxígeno en sangre y frecuencia respiratoria (señales de recuperación nocturna)\n• Minutos conscientes (sesiones de meditación y respiración)\n\nTodos los datos permanecen en tu dispositivo y en tu cuenta privada. Nada se comparte con terceros."
   },
   "medications": {
     "title": "Medicamentos y recordatorios",
@@ -784,7 +793,8 @@
     "sources_disclaimer": "Spondy no es un dispositivo médico y no proporciona asesoramiento médico. Los análisis de IA son análisis de patrones basados en tus propios datos registrados. Siempre consulta con tu reumatólogo o equipo de salud antes de hacer cambios en tu tratamiento.",
     "sources_nass": "Sociedad Nacional de Espondilitis Anquilosante (NASS, Reino Unido)",
     "sources_saa": "Asociación de Espondilitis de Estados Unidos (SAA)",
-    "sources_basdai": "BASDAI: Índice de Actividad de la Enfermedad de Bath para EA"
+    "sources_basdai": "BASDAI: Índice de Actividad de la Enfermedad de Bath para EA",
+    "sources_ceade": "CEADE (Coordinadora Española de Afectados de Espondiloartritis)"
   },
   "export": {
     "title": "Compartir con mi doctor",
@@ -861,7 +871,6 @@
     "section_uveitis": "Episodios de uveítis",
     "uveitis_eye_treatment_header": "Ojo / Tratamiento",
     "uveitis_none": "No se registraron episodios de uveítis en este período",
-    "eye_suffix": " ojo",
     "uveitis_treated_suffix": ", tratado",
     "section_biologic_injections": "Inyecciones biológicas",
     "biologic_date_header": "Fecha",
@@ -926,7 +935,7 @@
     "error_save_name": "No se pudo guardar el nombre. Por favor, intenta de nuevo.",
     "biological_sex": "Sexo biológico",
     "smoking_status": "Estado de tabaquismo",
-    "smoking_info_title": "Por qué preguntamos",
+    "smoking_info_title": "¿Por qué preguntamos?",
     "smoking_info_message": "Fumar es uno de los pocos factores modificables vinculados a la actividad de la enfermedad en la investigación sobre la EA. Los estudios muestran que los fumadores actuales tienden a tener puntuaciones BASDAI más altas y más cambios espinales con el tiempo, con un efecto que crece según cuánto haya fumado la persona. Esto es solo contexto para tus patrones, no un consejo.",
     "age_range": "Rango de edad",
     "disease_activity": "Actividad de la enfermedad",

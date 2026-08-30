@@ -35,4 +35,17 @@ i18n.use(initReactI18next).init({
   },
 });
 
+// i18next's automatic count-based _one/_other suffix resolution depends on
+// the device having a working Intl.PluralRules — on devices without one it
+// silently fails and renders the raw key instead of falling back sanely.
+// Pick the suffix manually instead of trusting that resolution.
+export function tPlural(
+  t: (key: string, opts?: Record<string, unknown>) => string,
+  key: string,
+  count: number,
+  opts?: Record<string, unknown>
+): string {
+  return count === 1 ? t(`${key}_one`, { count, ...opts }) : t(`${key}_other`, { count, ...opts });
+}
+
 export default i18n;

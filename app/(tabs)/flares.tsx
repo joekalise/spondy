@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { tPlural } from '@/i18n';
 import { Colors } from '@/constants/colors';
 import { FontSize, FontFamily, Spacing, BorderRadius } from '@/constants/theme';
 import { useFlares } from '@/hooks/useFlares';
@@ -317,7 +318,7 @@ function FlareHistoryItem({ flare, isDark, onEdit }: { flare: Flare; isDark: boo
       </View>
       <Text style={[styles.historyDuration, isDark && styles.textPrimaryDark]}>
         {flare.end_date
-          ? t('flares.duration_days', { count: days })
+          ? tPlural(t, 'flares.duration_days', days)
           : t('flares.duration_ongoing')}
       </Text>
       {areaLabels.length > 0 && (
@@ -631,7 +632,7 @@ function UveitisHistoryItem({ episode, onEnd, onEdit, isDark }: { episode: Uveit
       <Text style={[styles.historyDuration, isDark && styles.textPrimaryDark]}>
         {UVEITIS_EYE_FULL_KEYS[episode.affected_eye] ? t(UVEITIS_EYE_FULL_KEYS[episode.affected_eye]) : episode.affected_eye}
         {episode.end_date
-          ? ` · ${t('flares.duration_days', { count: daysBetween(episode.start_date, episode.end_date) })}`
+          ? ` · ${tPlural(t, 'flares.duration_days', daysBetween(episode.start_date, episode.end_date))}`
           : ` · ${t('flares.duration_ongoing')}`}
       </Text>
       {episode.symptoms.length > 0 && (
@@ -898,7 +899,7 @@ export default function FlaresScreen() {
                 {t('flares.started')}: {formatDate(activeFlare.start_date)}
               </Text>
               <Text style={[styles.activeFlareDuration, isDark && styles.textSecDark]}>
-                {t('flares.duration_ongoing')} · {t('flares.duration_days', { count: daysBetween(activeFlare.start_date, null) })}
+                {t('flares.duration_ongoing')} · {tPlural(t, 'flares.duration_days', daysBetween(activeFlare.start_date, null))}
               </Text>
               {activeFlare.areas_affected.length > 0 && (
                 <Text style={[styles.activeFlareAreas, isDark && styles.textSecDark]}>
@@ -959,7 +960,7 @@ export default function FlaresScreen() {
                   {t('flares.started')}: {formatDate(activeEnthesitis.start_date)}
                 </Text>
                 <Text style={[styles.activeFlareDuration, isDark && styles.textSecDark]}>
-                  {t('flares.duration_ongoing')} · {t('flares.duration_days', { count: daysBetween(activeEnthesitis.start_date, null) })}
+                  {t('flares.duration_ongoing')} · {tPlural(t, 'flares.duration_days', daysBetween(activeEnthesitis.start_date, null))}
                 </Text>
                 {activeEnthesitis.areas_affected.length > 0 && (
                   <Text style={[styles.activeFlareAreas, isDark && styles.textSecDark]}>
@@ -1017,7 +1018,7 @@ export default function FlaresScreen() {
                   {t('flares.started')}: {formatDate(activePeripheral.start_date)}
                 </Text>
                 <Text style={[styles.activeFlareDuration, isDark && styles.textSecDark]}>
-                  {t('flares.duration_ongoing')} · {t('flares.duration_days', { count: daysBetween(activePeripheral.start_date, null) })}
+                  {t('flares.duration_ongoing')} · {tPlural(t, 'flares.duration_days', daysBetween(activePeripheral.start_date, null))}
                 </Text>
                 {activePeripheral.areas_affected.length > 0 && (
                   <Text style={[styles.activeFlareAreas, isDark && styles.textSecDark]}>
@@ -1075,7 +1076,7 @@ export default function FlaresScreen() {
                   {t('flares.started')}: {formatDate(activeUveitis.start_date)} · {UVEITIS_EYE_FULL_KEYS[activeUveitis.affected_eye] ? t(UVEITIS_EYE_FULL_KEYS[activeUveitis.affected_eye]) : activeUveitis.affected_eye}
                 </Text>
                 <Text style={[styles.activeFlareDuration, isDark && styles.textSecDark]}>
-                  {t('flares.duration_ongoing')} · {t('flares.duration_days', { count: daysBetween(activeUveitis.start_date, null) })}
+                  {t('flares.duration_ongoing')} · {tPlural(t, 'flares.duration_days', daysBetween(activeUveitis.start_date, null))}
                 </Text>
                 {activeUveitis.symptoms.length > 0 && (
                   <Text style={[styles.activeFlareAreas, isDark && styles.textSecDark]}>

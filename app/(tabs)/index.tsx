@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { tPlural } from '@/i18n';
 import { useRouter, useFocusEffect } from 'expo-router';
 import Svg, { Polyline, Circle } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
@@ -180,7 +181,7 @@ function SpondyScoreCard({
                 {score >= 70 ? t('home.score_managing_well') : score >= 40 ? t('home.score_moderate_symptoms') : t('home.score_high_symptom_load')}
               </Text>
               <Text style={[styles.scoreHint, { color: textSec }]}>
-                {t('home.score_based_on_days', { count: breakdown?.logCount ?? 0 })}
+                {tPlural(t, 'home.score_based_on_days', breakdown?.logCount ?? 0)}
               </Text>
             </View>
           </View>

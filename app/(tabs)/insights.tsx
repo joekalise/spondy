@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Polyline, Line, Text as SvgText, Circle } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
+import { tPlural } from '@/i18n';
 import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 
 import { Colors } from '@/constants/colors';
@@ -71,10 +72,10 @@ function cacheAgeLabel(t: (key: string, opts?: Record<string, unknown>) => strin
   const hours = Math.floor(ms / 3600000);
   const days = Math.floor(ms / 86400000);
   if (mins < 2) return t('insights.cache_age_just_now');
-  if (hours < 1) return t('insights.cache_age_mins', { count: mins });
-  if (days < 1) return t('insights.cache_age_hours', { count: hours });
+  if (hours < 1) return tPlural(t, 'insights.cache_age_mins', mins);
+  if (days < 1) return tPlural(t, 'insights.cache_age_hours', hours);
   if (days === 1) return t('insights.cache_age_yesterday');
-  return t('insights.cache_age_days', { count: days });
+  return tPlural(t, 'insights.cache_age_days', days);
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -442,10 +443,10 @@ function moodToScore(mood: Mood | null): number {
   }
 }
 
-function dayLabel(dateStr: string): string {
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+function dayLabel(t: (key: string) => string, dateStr: string): string {
+  const dayKeys = ['common.day_short.sun', 'common.day_short.mon', 'common.day_short.tue', 'common.day_short.wed', 'common.day_short.thu', 'common.day_short.fri', 'common.day_short.sat'];
   const d = new Date(dateStr + 'T12:00:00');
-  return days[d.getDay()];
+  return t(dayKeys[d.getDay()]);
 }
 
 function formatDate(dateStr: string): string {
@@ -514,7 +515,7 @@ function ChatDataCard({ isDark, onPress }: { isDark: boolean; onPress: () => voi
         </View>
       </View>
       <Text style={[styles.chatCardSubtitle, { color: textSecondary }]}>
-        Ask about your patterns, trends, or symptoms
+        {t('insights.chat_card_subtitle')}
       </Text>
     </TouchableOpacity>
   );
@@ -591,8 +592,8 @@ function BasdaiModal({ visible, onClose, onSave, isDark }: BasdaiModalProps) {
         value={value}
         onChange={setValue}
         isDark={isDark}
-        minLabel="0 = None"
-        maxLabel="10 = Severe"
+        minLabel={t('insights.basdai_scale_min')}
+        maxLabel={t('insights.basdai_scale_max')}
       />
     );
   }
@@ -623,7 +624,7 @@ function BasdaiModal({ visible, onClose, onSave, isDark }: BasdaiModalProps) {
             <Text style={[styles.basdaiInterpText, { color: interp.color }]}>{interp.label}</Text>
             {computedScore >= 4 && (
               <Text style={[styles.basdaiThresholdNote, { color: textSecondary }]}>
-                Score ≥4 is the clinical threshold for biologic therapy. Consider sharing this with your rheumatologist.
+                {t('insights.basdai_threshold_note')}
               </Text>
             )}
           </View>
@@ -742,7 +743,7 @@ function BasdaiPromptCard({
 type Period = 7 | 30 | 90 | 180;
 
 export default function InsightsScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const { profile } = useProfile();
   const router = useRouter();
@@ -870,8 +871,8 @@ export default function InsightsScreen() {
   const moodData = logs.map((l) => moodToScore(l.mood)).filter((v) => v > 0);
   const axisLabel = (dateStr: string) =>
     period <= 7
-      ? dayLabel(dateStr)
-      : new Date(dateStr + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+      ? dayLabel(t, dateStr)
+      : new Date(dateStr + 'T12:00:00').toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' });
 
   const moodLabels = logs
     .filter((l) => l.mood !== null)
@@ -900,7 +901,7 @@ export default function InsightsScreen() {
   if (logs.length >= 7) {
     const dayMap: Record<string, number[]> = {};
     logs.forEach((l) => {
-      const d = dayLabel(l.date);
+      const d = dayLabel(t, l.date);
       if (!dayMap[d]) dayMap[d] = [];
       dayMap[d].push(l.pain_score);
     });
@@ -1168,7 +1169,7 @@ export default function InsightsScreen() {
         )}
 
         <Text style={[styles.disclaimer, { color: isDark ? Colors.textSecondaryDark : Colors.textSecondary }]}>
-          For informational purposes only. Not medical advice. Always consult your rheumatologist or healthcare team about your symptoms and treatment.
+          {t('insights.disclaimer')}
         </Text>
 
       </ScrollView>

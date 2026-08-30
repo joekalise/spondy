@@ -120,7 +120,7 @@ function buildReportHTML(params: {
           <td>${f.end_date ? fmtDateShort(f.end_date) : `<em>${t('pdf_export.flare_ongoing')}</em>`}</td>
           <td>${tPlural('pdf_export.flare_days', flareDays(f.start_date, f.end_date))}</td>
           <td style="text-transform:capitalize;">${t(`onboarding.severity.${f.severity}`) || f.severity}</td>
-          <td>${f.areas_affected.map(a => a.replace(/_/g, ' ')).join(', ')}</td>
+          <td>${f.areas_affected.map(a => t(`flares.as_location.${a}`, { defaultValue: a.replace(/_/g, ' ') })).join(', ')}</td>
         </tr>`).join('');
 
   // ── Uveitis rows ──────────────────────────────────────────────────────────
@@ -132,7 +132,7 @@ function buildReportHTML(params: {
           <td>${e.end_date ? fmtDateShort(e.end_date) : `<em>${t('pdf_export.flare_ongoing')}</em>`}</td>
           <td>${tPlural('pdf_export.flare_days', flareDays(e.start_date, e.end_date))}</td>
           <td style="text-transform:capitalize;">${t(`onboarding.severity.${e.severity}`) || e.severity}</td>
-          <td>${capitalize(e.affected_eye)}${t('pdf_export.eye_suffix')}${e.treatment_received ? t('pdf_export.uveitis_treated_suffix') : ''}</td>
+          <td>${t(`flares.uveitis_eye_full.${e.affected_eye}`, { defaultValue: `${capitalize(e.affected_eye)} eye` })}${e.treatment_received ? t('pdf_export.uveitis_treated_suffix') : ''}</td>
         </tr>`).join('');
 
   // ── Biologic injections ───────────────────────────────────────────────────

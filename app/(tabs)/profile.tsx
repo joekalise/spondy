@@ -20,6 +20,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
+import { tPlural } from '@/i18n';
 import Constants from 'expo-constants';
 
 import { InfoButton } from '@/components/common/InfoButton';
@@ -877,7 +878,7 @@ function LogInjectionModal({ visible, onClose, onSave, defaultMedicationName, is
 // ─── Main screen ──────────────────────────────────────────────────────────────
 
 export default function ProfileScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { signOut, user } = useAuth();
   const { profile, saveProfile } = useProfile();
   const {
@@ -912,7 +913,7 @@ export default function ProfileScreen() {
     if (profile?.diagnosis_years) parts.push(t(`onboarding.diagnosis_years.${profile.diagnosis_years}`));
     if ((profile?.conditions?.length ?? 0) > 0) {
       const count = profile!.conditions.length;
-      parts.push(t('profile_alerts.conditions_count', { count }));
+      parts.push(tPlural(t, 'profile_alerts.conditions_count', count));
     }
     return parts.join(' · ');
   }, [profile]);
@@ -1628,14 +1629,14 @@ export default function ProfileScreen() {
               <View style={[styles.settingsRow, { paddingRight: Spacing.md }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs }}>
                   <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>
-                    {Platform.OS === 'ios' ? 'Apple Health' : 'Health Connect'}
+                    {Platform.OS === 'ios' ? t('profile.apple_health_label') : t('profile.health_connect_label')}
                   </Text>
                   <InfoButton
-                    title={Platform.OS === 'ios' ? 'Apple Health' : 'Health Connect'}
+                    title={Platform.OS === 'ios' ? t('profile.apple_health_label') : t('profile.health_connect_label')}
                     message={
                       Platform.OS === 'ios'
-                        ? `Connecting Apple Health lets Spondy read data from your iPhone and Apple Watch, giving you a more complete picture of how your body is doing:\n\n• Steps and active energy (how much you moved)\n• Sleep duration (how rest affects your symptoms)\n• Heart rate variability (a useful recovery indicator)\n• Blood oxygen and respiratory rate (overnight recovery signals)\n• Mindful minutes (meditation and breathing sessions)\n\nAll data stays on your device and in your private account. Nothing is shared with third parties.`
-                        : `Connecting Health Connect lets Spondy read data from your phone and connected apps or devices, giving you a more complete picture of how your body is doing:\n\n• Steps and active energy (how much you moved)\n• Sleep duration (how rest affects your symptoms)\n• Heart rate variability (a useful recovery indicator)\n• Blood oxygen and respiratory rate (overnight recovery signals)\n• Mindful minutes (meditation and breathing sessions)\n\nAll data stays on your device and in your private account. Nothing is shared with third parties.`
+                        ? t('profile.apple_health_info_message')
+                        : t('profile.health_connect_info_message')
                     }
                     color={textSecondary}
                   />
@@ -1948,28 +1949,46 @@ export default function ProfileScreen() {
             {t('profile_privacy.sources_disclaimer')}
           </Text>
           <View style={[styles.rowDivider, { backgroundColor: cardBorder }]} />
-          <TouchableOpacity
-            onPress={() => Linking.openURL('https://nass.co.uk')}
-            activeOpacity={0.7}
-            style={styles.settingsRow}
-          >
-            <Text style={[styles.settingsRowLabel, { color: Colors.primary }]}>
-              {t('profile_privacy.sources_nass')}
-            </Text>
-            <Text style={[styles.chevron, { color: Colors.primary }]}>›</Text>
-          </TouchableOpacity>
-          <View style={[styles.rowDivider, { backgroundColor: cardBorder }]} />
-          <TouchableOpacity
-            onPress={() => Linking.openURL('https://spondylitis.org')}
-            activeOpacity={0.7}
-            style={styles.settingsRow}
-          >
-            <Text style={[styles.settingsRowLabel, { color: Colors.primary }]}>
-              {t('profile_privacy.sources_saa')}
-            </Text>
-            <Text style={[styles.chevron, { color: Colors.primary }]}>›</Text>
-          </TouchableOpacity>
-          <View style={[styles.rowDivider, { backgroundColor: cardBorder }]} />
+          {i18n.language.startsWith('es') ? (
+            <>
+              <TouchableOpacity
+                onPress={() => Linking.openURL('https://eaceade.es')}
+                activeOpacity={0.7}
+                style={styles.settingsRow}
+              >
+                <Text style={[styles.settingsRowLabel, { color: Colors.primary }]}>
+                  {t('profile_privacy.sources_ceade')}
+                </Text>
+                <Text style={[styles.chevron, { color: Colors.primary }]}>›</Text>
+              </TouchableOpacity>
+              <View style={[styles.rowDivider, { backgroundColor: cardBorder }]} />
+            </>
+          ) : (
+            <>
+              <TouchableOpacity
+                onPress={() => Linking.openURL('https://nass.co.uk')}
+                activeOpacity={0.7}
+                style={styles.settingsRow}
+              >
+                <Text style={[styles.settingsRowLabel, { color: Colors.primary }]}>
+                  {t('profile_privacy.sources_nass')}
+                </Text>
+                <Text style={[styles.chevron, { color: Colors.primary }]}>›</Text>
+              </TouchableOpacity>
+              <View style={[styles.rowDivider, { backgroundColor: cardBorder }]} />
+              <TouchableOpacity
+                onPress={() => Linking.openURL('https://spondylitis.org')}
+                activeOpacity={0.7}
+                style={styles.settingsRow}
+              >
+                <Text style={[styles.settingsRowLabel, { color: Colors.primary }]}>
+                  {t('profile_privacy.sources_saa')}
+                </Text>
+                <Text style={[styles.chevron, { color: Colors.primary }]}>›</Text>
+              </TouchableOpacity>
+              <View style={[styles.rowDivider, { backgroundColor: cardBorder }]} />
+            </>
+          )}
           <TouchableOpacity
             onPress={() => Linking.openURL('https://www.basdai.com')}
             activeOpacity={0.7}

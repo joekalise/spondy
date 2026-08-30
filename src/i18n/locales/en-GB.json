@@ -609,7 +609,12 @@
     "cache_age_days_one": "{{count}} day ago",
     "cache_age_days_other": "{{count}} days ago",
     "updated_label": "Updated {{age}}",
-    "chart_fills_out_hint": "This chart fills out as you log more days."
+    "chart_fills_out_hint": "This chart fills out as you log more days.",
+    "chat_card_subtitle": "Ask about your patterns, trends, or symptoms",
+    "disclaimer": "For informational purposes only. Not medical advice. Always consult your rheumatologist or healthcare team about your symptoms and treatment.",
+    "basdai_scale_min": "0 = None",
+    "basdai_scale_max": "10 = Severe",
+    "basdai_threshold_note": "Score ≥4 is the clinical threshold for biologic therapy. Consider sharing this with your rheumatologist."
   },
   "profile": {
     "title": "Your profile",
@@ -661,7 +666,11 @@
     "subscription_feature_1": "AI-powered weekly insight report",
     "subscription_feature_2": "Chat with your data",
     "subscription_feature_3": "Advanced flare prediction",
-    "subscription_feature_4": "Extended AI personalisation"
+    "subscription_feature_4": "Extended AI personalisation",
+    "apple_health_label": "Apple Health",
+    "health_connect_label": "Health Connect",
+    "apple_health_info_message": "Connecting Apple Health lets Spondy read data from your iPhone and Apple Watch, giving you a more complete picture of how your body is doing:\n\n• Steps and active energy (how much you moved)\n• Sleep duration (how rest affects your symptoms)\n• Heart rate variability (a useful recovery indicator)\n• Blood oxygen and respiratory rate (overnight recovery signals)\n• Mindful minutes (meditation and breathing sessions)\n\nAll data stays on your device and in your private account. Nothing is shared with third parties.",
+    "health_connect_info_message": "Connecting Health Connect lets Spondy read data from your phone and connected apps or devices, giving you a more complete picture of how your body is doing:\n\n• Steps and active energy (how much you moved)\n• Sleep duration (how rest affects your symptoms)\n• Heart rate variability (a useful recovery indicator)\n• Blood oxygen and respiratory rate (overnight recovery signals)\n• Mindful minutes (meditation and breathing sessions)\n\nAll data stays on your device and in your private account. Nothing is shared with third parties."
   },
   "medications": {
     "title": "Medications & reminders",
@@ -784,7 +793,8 @@
     "sources_disclaimer": "Spondy is not a medical device and does not provide medical advice. AI insights are pattern analysis based on your own logged data. Always consult your rheumatologist or healthcare team before making any changes to your treatment.",
     "sources_nass": "National Ankylosing Spondylitis Society (NASS)",
     "sources_saa": "Spondylitis Association of America (SAA)",
-    "sources_basdai": "BASDAI: Bath AS Disease Activity Index"
+    "sources_basdai": "BASDAI: Bath AS Disease Activity Index",
+    "sources_ceade": "CEADE (Coordinadora Española de Afectados de Espondiloartritis)"
   },
   "export": {
     "title": "Share with my doctor",
@@ -861,7 +871,6 @@
     "section_uveitis": "Uveitis Episodes",
     "uveitis_eye_treatment_header": "Eye / Treatment",
     "uveitis_none": "No uveitis episodes recorded in this period",
-    "eye_suffix": " eye",
     "uveitis_treated_suffix": ", treated",
     "section_biologic_injections": "Biologic Injections",
     "biologic_date_header": "Date",
