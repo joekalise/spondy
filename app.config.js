@@ -82,6 +82,18 @@ module.exports = {
       permissions: [
         'android.permission.RECEIVE_BOOT_COMPLETED',
         'android.permission.WAKE_LOCK',
+        // Health Connect requires a matching <uses-permission> for every record
+        // type requested via requestPermission(), or it silently grants none
+        // (no error, no dialog) — see PERMISSIONS in src/services/healthConnect.ts.
+        'android.permission.health.READ_STEPS',
+        'android.permission.health.READ_SLEEP',
+        'android.permission.health.READ_HEART_RATE',
+        'android.permission.health.READ_HEART_RATE_VARIABILITY',
+        'android.permission.health.READ_ACTIVE_CALORIES_BURNED',
+        'android.permission.health.READ_EXERCISE',
+        'android.permission.health.READ_OXYGEN_SATURATION',
+        'android.permission.health.READ_RESPIRATORY_RATE',
+        'android.permission.health.READ_MINDFULNESS',
       ],
     },
     plugins: [
