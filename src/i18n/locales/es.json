@@ -43,7 +43,25 @@
     "password_hint": "Al menos 8 caracteres.",
     "password": "Contraseña",
     "email": "Correo electrónico",
-    "delete": "Eliminar"
+    "delete": "Eliminar",
+    "day_short": {
+      "sun": "dom",
+      "mon": "lun",
+      "tue": "mar",
+      "wed": "mié",
+      "thu": "jue",
+      "fri": "vie",
+      "sat": "sáb"
+    },
+    "day_initial": {
+      "mon": "L",
+      "tue": "M",
+      "wed": "X",
+      "thu": "J",
+      "fri": "V",
+      "sat": "S",
+      "sun": "D"
+    }
   },
   "auth": {
     "welcome": "Bienvenido a Spondy",
@@ -298,7 +316,32 @@
     "review_dismiss": "Ahora no",
     "legend_low": "Bajo (0-3)",
     "legend_moderate": "Moderado (4-6)",
-    "legend_high": "Alto (7-10)"
+    "legend_high": "Alto (7-10)",
+    "signal": {
+      "pain_rising": "↑ Dolor en aumento",
+      "fatigue_rising": "↑ Fatiga en aumento",
+      "stiffness_worsening": "⏱ Rigidez matutina prolongada",
+      "missed_medication": "💊 Medicación olvidada",
+      "mood_declining": "↓ Ánimo bajando",
+      "hrv_dropping": "❤️ VFC bajando",
+      "poor_sleep": "😴 Mal sueño",
+      "hr_elevated": "❤️‍🔥 Frecuencia cardíaca elevada",
+      "low_activity": "🚶 Actividad reducida",
+      "inflammatory_diet": "🍽️ Dieta inflamatoria",
+      "recent_alcohol": "🍷 Alcohol reciente",
+      "high_starch_intake": "🌾 Alto consumo de almidón",
+      "low_spo2": "🫁 SpO₂ nocturna baja",
+      "elevated_resp_rate": "😤 Frec. respiratoria elevada al dormir"
+    },
+    "flare_building_title": "Posible brote en desarrollo",
+    "flare_building_body": "Varias señales sugieren que podría estar formándose un brote. Descansa y revisa tu medicación.",
+    "symptoms_to_watch_title": "Síntomas a vigilar",
+    "symptoms_to_watch_body": "Un par de señales que vale la pena vigilar. Presta atención a cómo te sientes en el próximo día o dos.",
+    "score_managing_well": "Bien controlado",
+    "score_moderate_symptoms": "Síntomas moderados",
+    "score_high_symptom_load": "Carga de síntomas alta",
+    "score_based_on_days_one": "Basado en {{count}} día esta semana",
+    "score_based_on_days_other": "Basado en {{count}} días esta semana"
   },
   "tracker": {
     "title": "Registro diario",
@@ -369,7 +412,11 @@
       "other": "Otro"
     },
     "prn_question_named": "¿Tomaste {{name}} hoy?",
-    "prn_question_generic": "¿Tomaste alguna medicación según sea necesario hoy?"
+    "prn_question_generic": "¿Tomaste alguna medicación según sea necesario hoy?",
+    "recent_stats": "Dolor {{pain}}/10 · Fatiga {{fatigue}}/10",
+    "log_this_day": "Registrar este día",
+    "logged_today": "Registrado hoy",
+    "log_for_today": "Registrar hoy"
   },
   "flares": {
     "title": "Registro de brotes",
@@ -403,7 +450,6 @@
     "log_flare_cta": "Registrar un brote comenzando ahora",
     "confirm_end": "¿Estás seguro de que quieres marcar este brote como terminado?",
     "ended_ago": "Terminó hace {{days}} días",
-    "duration_days": "{{days}} días",
     "duration_ongoing": "En curso",
     "section_enthesitis": "Brote de entesitis",
     "section_peripheral": "Brote de articulación periférica",
@@ -485,7 +531,11 @@
     "delete_flare_title": "Eliminar brote",
     "delete_flare_body": "Esto eliminará permanentemente esta entrada.",
     "delete_episode_title": "Eliminar episodio",
-    "delete_episode_body": "Esto eliminará permanentemente este episodio."
+    "delete_episode_body": "Esto eliminará permanentemente este episodio.",
+    "duration_days_one": "{{count}} día",
+    "duration_days_other": "{{count}} días",
+    "delete_this_entry": "Eliminar esta entrada",
+    "log_episode_button": "Registrar un episodio"
   },
   "insights": {
     "title": "Tus análisis",
@@ -924,7 +974,16 @@
     "delete_confirm_cta": "Sí, eliminar todo",
     "remove_medication_body": "¿Eliminar este recordatorio de medicación?",
     "remove_injection_body": "¿Eliminar este registro de inyección?",
-    "injection_interval_days": "intervalo de {{days}}d"
+    "injection_interval_days": "intervalo de {{days}}d",
+    "smoking_never": "Nunca ha fumado",
+    "smoking_former": "Exfumador",
+    "smoking_current": "Fumador actual",
+    "add_your_name": "Añade tu nombre",
+    "feedback_row_subtitle": "Errores, ideas o cualquier cosa que tengas en mente",
+    "feedback_placeholder": "Errores, ideas o cualquier otra cosa...",
+    "delete_data_note": "Elimina permanentemente todos tus registros, brotes, medicamentos y datos de perfil.",
+    "conditions_count_one": "{{count}} condición",
+    "conditions_count_other": "{{count}} condiciones"
   },
   "insights_info": {
     "how_it_works_title": "Cómo funciona",

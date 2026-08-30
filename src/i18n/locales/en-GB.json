@@ -43,7 +43,25 @@
     "password_hint": "At least 8 characters.",
     "password": "Password",
     "email": "Email",
-    "delete": "Delete"
+    "delete": "Delete",
+    "day_short": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    },
+    "day_initial": {
+      "mon": "M",
+      "tue": "T",
+      "wed": "W",
+      "thu": "T",
+      "fri": "F",
+      "sat": "S",
+      "sun": "S"
+    }
   },
   "auth": {
     "welcome": "Welcome to Spondy",
@@ -298,7 +316,32 @@
     "review_dismiss": "Not now",
     "legend_low": "Low (0-3)",
     "legend_moderate": "Moderate (4-6)",
-    "legend_high": "High (7-10)"
+    "legend_high": "High (7-10)",
+    "signal": {
+      "pain_rising": "↑ Pain trending up",
+      "fatigue_rising": "↑ Fatigue increasing",
+      "stiffness_worsening": "⏱ Long morning stiffness",
+      "missed_medication": "💊 Missed medications",
+      "mood_declining": "↓ Mood declining",
+      "hrv_dropping": "❤️ HRV dropping",
+      "poor_sleep": "😴 Poor sleep",
+      "hr_elevated": "❤️‍🔥 Elevated heart rate",
+      "low_activity": "🚶 Reduced activity",
+      "inflammatory_diet": "🍽️ Inflammatory diet",
+      "recent_alcohol": "🍷 Recent alcohol",
+      "high_starch_intake": "🌾 High starch intake",
+      "low_spo2": "🫁 Low overnight SpO₂",
+      "elevated_resp_rate": "😤 Elevated sleep resp rate"
+    },
+    "flare_building_title": "Possible flare building",
+    "flare_building_body": "Several signals suggest a flare could be building. Rest up and check your medications.",
+    "symptoms_to_watch_title": "Symptoms to watch",
+    "symptoms_to_watch_body": "A couple of signals worth watching. Keep an eye on how you feel over the next day or two.",
+    "score_managing_well": "Managing well",
+    "score_moderate_symptoms": "Moderate symptoms",
+    "score_high_symptom_load": "High symptom load",
+    "score_based_on_days_one": "Based on {{count}} day this week",
+    "score_based_on_days_other": "Based on {{count}} days this week"
   },
   "tracker": {
     "title": "Daily check-in",
@@ -369,7 +412,11 @@
       "other": "Other"
     },
     "prn_question_named": "Did you take {{name}} today?",
-    "prn_question_generic": "Did you take any as-needed medication today?"
+    "prn_question_generic": "Did you take any as-needed medication today?",
+    "recent_stats": "Pain {{pain}}/10 · Fatigue {{fatigue}}/10",
+    "log_this_day": "Log this day",
+    "logged_today": "Logged today",
+    "log_for_today": "Log for today"
   },
   "flares": {
     "title": "Flare log",
@@ -403,7 +450,6 @@
     "log_flare_cta": "Log a flare starting now",
     "confirm_end": "Are you sure you want to mark this flare as ended?",
     "ended_ago": "Ended {{days}} days ago",
-    "duration_days": "{{days}} days",
     "duration_ongoing": "Ongoing",
     "section_enthesitis": "Enthesitis Flare",
     "section_peripheral": "Peripheral Joint Flare",
@@ -485,7 +531,11 @@
     "delete_flare_title": "Delete flare",
     "delete_flare_body": "This will permanently remove this entry.",
     "delete_episode_title": "Delete episode",
-    "delete_episode_body": "This will permanently remove this episode."
+    "delete_episode_body": "This will permanently remove this episode.",
+    "duration_days_one": "{{count}} day",
+    "duration_days_other": "{{count}} days",
+    "delete_this_entry": "Delete this entry",
+    "log_episode_button": "Log an episode"
   },
   "insights": {
     "title": "Your insights",
@@ -924,7 +974,16 @@
     "delete_confirm_cta": "Yes, delete everything",
     "remove_medication_body": "Remove this medication reminder?",
     "remove_injection_body": "Remove this injection record?",
-    "injection_interval_days": "{{days}}d interval"
+    "injection_interval_days": "{{days}}d interval",
+    "smoking_never": "Never smoked",
+    "smoking_former": "Former smoker",
+    "smoking_current": "Current smoker",
+    "add_your_name": "Add your name",
+    "feedback_row_subtitle": "Bugs, ideas, or anything on your mind",
+    "feedback_placeholder": "Bugs, ideas, or anything else...",
+    "delete_data_note": "Permanently deletes all logs, flares, medications, and profile data.",
+    "conditions_count_one": "{{count}} condition",
+    "conditions_count_other": "{{count}} conditions"
   },
   "insights_info": {
     "how_it_works_title": "How it works",

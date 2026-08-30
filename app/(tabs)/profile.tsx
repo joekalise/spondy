@@ -103,87 +103,6 @@ function formatOnboardingMeds(meds: string[]): string {
   return filtered.map((m) => MEDICATION_LABELS[m] ?? capitalize(m)).join(', ');
 }
 
-const BIOLOGICAL_SEX_LABELS: Record<string, string> = {
-  male: 'Male',
-  female: 'Female',
-  prefer_not_to_say: 'Prefer not to say',
-};
-
-const SMOKING_STATUS_LABELS: Record<string, string> = {
-  never: 'Never smoked',
-  former: 'Former smoker',
-  current: 'Current smoker',
-};
-
-const AGE_RANGE_LABELS: Record<string, string> = {
-  under_25: 'Under 25',
-  '25_35': '25-34',
-  '35_45': '35-44',
-  '45_55': '45-54',
-  '55_plus': '55 and over',
-};
-
-const DIAGNOSIS_YEARS_LABELS: Record<string, string> = {
-  under_1: 'Less than a year',
-  '1_3': '1-3 years',
-  '3_5': '3-5 years',
-  '5_10': '5-10 years',
-  '10_plus': '10+ years',
-};
-
-const SEVERITY_LABELS: Record<string, string> = {
-  mild: 'Mild',
-  moderate: 'Moderate',
-  severe: 'Severe',
-};
-
-const PAIN_LOCATION_LABELS: Record<string, string> = {
-  lower_back: 'Lower back',
-  upper_back: 'Upper back',
-  hips: 'Hips',
-  knees: 'Knees',
-  shoulders: 'Shoulders',
-  neck: 'Neck',
-  chest: 'Chest',
-  jaw: 'Jaw',
-  heels: 'Heels',
-  other: 'Other',
-};
-
-const PAIN_TYPE_LABELS: Record<string, string> = {
-  stiffness: 'Morning stiffness',
-  sharp_pain: 'Sharp pain',
-  burning: 'Burning',
-  aching: 'Deep aching',
-  fatigue: 'AS fatigue',
-};
-
-const CONDITION_LABELS: Record<string, string> = {
-  uveitis: 'Uveitis',
-  psoriasis: 'Psoriasis',
-  ibd: 'IBD',
-  enthesitis: 'Enthesitis',
-  peripheral_joint: 'Peripheral joints',
-  fatigue: 'Significant fatigue',
-  brain_fog: 'Brain fog',
-  anxiety_depression: 'Anxiety / depression',
-};
-
-const MORNING_STIFFNESS_LABELS: Record<string, string> = {
-  under_30: 'Under 30 min',
-  '30_60': '30-60 min',
-  '1_2_hours': '1-2 hours',
-  over_2_hours: 'Over 2 hours',
-};
-
-const CHALLENGE_LABELS: Record<string, string> = {
-  sleep: 'Sleep quality',
-  exercise: 'Staying active',
-  work: 'Work / productivity',
-  social_life: 'Social life',
-  mental_health: 'Mental health',
-};
-
 function formatList(items: string[], labelMap: Record<string, string>): string {
   if (!items || items.length === 0) return '';
   return items.map((i) => labelMap[i] ?? capitalize(i)).join(', ');
@@ -376,7 +295,7 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
 
           <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_alerts.biological_sex')}</Text>
           {(['male', 'female', 'prefer_not_to_say'] as BiologicalSex[]).map(v => (
-            <OptionCard key={v} style={compactCard} label={BIOLOGICAL_SEX_LABELS[v]} isSelected={biologicalSex === v} onPress={() => setBiologicalSex(v)} />
+            <OptionCard key={v} style={compactCard} label={t(`onboarding.biological_sex.${v}`)} isSelected={biologicalSex === v} onPress={() => setBiologicalSex(v)} />
           ))}
 
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs }}>
@@ -388,53 +307,53 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
             />
           </View>
           {(['never', 'former', 'current'] as SmokingStatus[]).map(v => (
-            <OptionCard key={v} style={compactCard} label={SMOKING_STATUS_LABELS[v]} isSelected={smokingStatus === v} onPress={() => setSmokingStatus(v)} />
+            <OptionCard key={v} style={compactCard} label={t(`profile_alerts.smoking_${v}`)} isSelected={smokingStatus === v} onPress={() => setSmokingStatus(v)} />
           ))}
 
           <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_alerts.age_range')}</Text>
           {(['under_25', '25_35', '35_45', '45_55', '55_plus'] as AgeRange[]).map(v => (
-            <OptionCard key={v} style={compactCard} label={AGE_RANGE_LABELS[v]} isSelected={ageRange === v} onPress={() => setAgeRange(v)} />
+            <OptionCard key={v} style={compactCard} label={t(`onboarding.age_range.${v}`)} isSelected={ageRange === v} onPress={() => setAgeRange(v)} />
           ))}
 
           <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_alerts.years_with_as')}</Text>
           {(['under_1', '1_3', '3_5', '5_10', '10_plus'] as DiagnosisYears[]).map(v => (
-            <OptionCard key={v} style={compactCard} label={DIAGNOSIS_YEARS_LABELS[v]} isSelected={diagnosisYears === v} onPress={() => setDiagnosisYears(v)} />
+            <OptionCard key={v} style={compactCard} label={t(`onboarding.diagnosis_years.${v}`)} isSelected={diagnosisYears === v} onPress={() => setDiagnosisYears(v)} />
           ))}
 
           <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_alerts.disease_activity')}</Text>
           {(['mild', 'moderate', 'severe'] as Severity[]).map(v => (
-            <OptionCard key={v} style={compactCard} label={SEVERITY_LABELS[v]} isSelected={severity === v} onPress={() => setSeverity(v)} />
+            <OptionCard key={v} style={compactCard} label={t(`onboarding.severity.${v}`)} isSelected={severity === v} onPress={() => setSeverity(v)} />
           ))}
 
           <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_alerts.morning_stiffness')}</Text>
           {(['under_30', '30_60', '1_2_hours', 'over_2_hours'] as MorningStiffness[]).map(v => (
-            <OptionCard key={v} style={compactCard} label={MORNING_STIFFNESS_LABELS[v]} isSelected={morningStiffness === v} onPress={() => setMorningStiffness(v)} />
+            <OptionCard key={v} style={compactCard} label={t(`onboarding.morning_stiffness.${v}`)} isSelected={morningStiffness === v} onPress={() => setMorningStiffness(v)} />
           ))}
 
           <EditSectionHeader label={t('profile_alerts.symptoms_section')} color={textSecondary} />
 
           <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_alerts.pain_locations')}</Text>
           {(['lower_back', 'upper_back', 'hips', 'knees', 'shoulders', 'neck', 'chest', 'jaw', 'heels', 'other'] as PainLocation[]).map(v => (
-            <MultiSelectCard key={v} style={compactCard} label={PAIN_LOCATION_LABELS[v]} isSelected={painLocations.includes(v)} onPress={() => setPainLocations(arr => toggle(arr, v))} />
+            <MultiSelectCard key={v} style={compactCard} label={t(`onboarding.pain_locations.${v}`)} isSelected={painLocations.includes(v)} onPress={() => setPainLocations(arr => toggle(arr, v))} />
           ))}
 
           <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_alerts.pain_types')}</Text>
           {(['stiffness', 'sharp_pain', 'burning', 'aching', 'fatigue'] as PainType[]).map(v => (
-            <MultiSelectCard key={v} style={compactCard} label={PAIN_TYPE_LABELS[v]} isSelected={painTypes.includes(v)} onPress={() => setPainTypes(arr => toggle(arr, v))} />
+            <MultiSelectCard key={v} style={compactCard} label={t(`onboarding.pain_types.${v}`)} isSelected={painTypes.includes(v)} onPress={() => setPainTypes(arr => toggle(arr, v))} />
           ))}
 
           <EditSectionHeader label={t('profile_alerts.conditions_section')} color={textSecondary} />
 
           <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_alerts.conditions')}</Text>
           {(['uveitis', 'psoriasis', 'ibd', 'enthesitis', 'peripheral_joint', 'fatigue', 'brain_fog', 'anxiety_depression'] as AssociatedCondition[]).map(v => (
-            <MultiSelectCard key={v} style={compactCard} label={CONDITION_LABELS[v]} isSelected={conditions.includes(v)} onPress={() => setConditions(arr => toggle(arr, v))} />
+            <MultiSelectCard key={v} style={compactCard} label={t(`onboarding.conditions.${v}`)} isSelected={conditions.includes(v)} onPress={() => setConditions(arr => toggle(arr, v))} />
           ))}
 
           <EditSectionHeader label={t('profile_alerts.lifestyle_section')} color={textSecondary} />
 
           <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_alerts.challenges')}</Text>
           {(['sleep', 'exercise', 'work', 'social_life', 'mental_health'] as LifestyleChallenge[]).map(v => (
-            <MultiSelectCard key={v} style={compactCard} label={CHALLENGE_LABELS[v]} isSelected={challenges.includes(v)} onPress={() => setChallenges(arr => toggle(arr, v))} />
+            <MultiSelectCard key={v} style={compactCard} label={t(`onboarding.challenges.${v}`)} isSelected={challenges.includes(v)} onPress={() => setChallenges(arr => toggle(arr, v))} />
           ))}
 
           <EditSectionHeader label={t('profile_alerts.treatment_section')} color={textSecondary} />
@@ -989,11 +908,11 @@ export default function ProfileScreen() {
 
   const profileRowSubtitle = useMemo(() => {
     const parts: string[] = [];
-    if (profile?.severity) parts.push(SEVERITY_LABELS[profile.severity]);
-    if (profile?.diagnosis_years) parts.push(DIAGNOSIS_YEARS_LABELS[profile.diagnosis_years]);
+    if (profile?.severity) parts.push(t(`onboarding.severity.${profile.severity}`));
+    if (profile?.diagnosis_years) parts.push(t(`onboarding.diagnosis_years.${profile.diagnosis_years}`));
     if ((profile?.conditions?.length ?? 0) > 0) {
       const count = profile!.conditions.length;
-      parts.push(`${count} condition${count > 1 ? 's' : ''}`);
+      parts.push(t('profile_alerts.conditions_count', { count }));
     }
     return parts.join(' · ');
   }, [profile]);
@@ -1391,7 +1310,7 @@ export default function ProfileScreen() {
           ) : (
             <TouchableOpacity onPress={() => setEditingName(true)} activeOpacity={0.7}>
               <Text style={[styles.nameDisplay, { color: nameValue ? textPrimary : textSecondary }]}>
-                {nameValue || 'Add your name'}
+                {nameValue || t('profile_alerts.add_your_name')}
               </Text>
             </TouchableOpacity>
           )}
@@ -1919,7 +1838,7 @@ export default function ProfileScreen() {
             <View style={styles.settingsRowLeft}>
               <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>{t('profile_alerts.share_feedback_title')}</Text>
               <Text style={[styles.settingsRowSub, { color: textSecondary }]}>
-                Bugs, ideas, or anything on your mind
+                {t('profile_alerts.feedback_row_subtitle')}
               </Text>
             </View>
             <Text style={[styles.chevron, { color: textSecondary }]}>›</Text>
@@ -1988,7 +1907,7 @@ export default function ProfileScreen() {
             )}
           </TouchableOpacity>
           <Text style={[styles.deleteDataNote, { color: textSecondary, paddingHorizontal: Spacing.md, paddingBottom: Spacing.sm }]}>
-            Permanently deletes all logs, flares, medications, and profile data.
+            {t('profile_alerts.delete_data_note')}
           </Text>
         </View>
 
@@ -2131,7 +2050,7 @@ export default function ProfileScreen() {
                 multiline
                 numberOfLines={6}
                 textAlignVertical="top"
-                placeholder="Bugs, ideas, or anything else..."
+                placeholder={t('profile_alerts.feedback_placeholder')}
                 placeholderTextColor={textSecondary}
                 value={feedbackText}
                 onChangeText={setFeedbackText}

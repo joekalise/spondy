@@ -97,6 +97,23 @@ const PERIPHERAL_LOCATIONS: { value: string; labelKey: string }[] = [
   { value: 'other', labelKey: 'flares.peripheral_location.other' },
 ];
 
+// Saved flares only store the raw location value (e.g. "lower_back"), so
+// displaying history needs to translate it back through whichever location
+// list matches the flare's type, not just show the raw value.
+function locationOptionsForType(flareType?: string): { value: string; labelKey: string }[] {
+  if (flareType === 'enthesitis') return ENTHESITIS_LOCATIONS;
+  if (flareType === 'peripheral') return PERIPHERAL_LOCATIONS;
+  return AS_LOCATIONS;
+}
+
+function translatedAreaLabels(t: (key: string) => string, areas: string[], flareType?: string): string {
+  const options = locationOptionsForType(flareType);
+  return areas
+    .map((a) => options.find((o) => o.value === a)?.labelKey)
+    .map((key, i) => (key ? t(key) : areas[i].replace(/_/g, ' ')))
+    .join(', ');
+}
+
 // ─── Edit Flare Modal ─────────────────────────────────────────────────────────
 
 interface EditFlareModalProps {
@@ -281,7 +298,7 @@ function EditFlareModal({ visible, flare, onClose, onSave, onDelete, isDark, loc
 function FlareHistoryItem({ flare, isDark, onEdit }: { flare: Flare; isDark: boolean; onEdit: () => void }) {
   const { t } = useTranslation();
   const days = daysBetween(flare.start_date, flare.end_date);
-  const areaLabels = flare.areas_affected.map(a => a.replace(/_/g, ' ')).join(', ');
+  const areaLabels = translatedAreaLabels(t, flare.areas_affected, flare.flare_type);
   const severityColor = SEVERITY_COLOR[flare.severity];
 
   return (
@@ -294,13 +311,13 @@ function FlareHistoryItem({ flare, isDark, onEdit }: { flare: Flare; isDark: boo
         <View style={styles.historyItemActions}>
           <SeverityBadge severity={flare.severity} isDark={isDark} />
           <TouchableOpacity onPress={onEdit} activeOpacity={0.7} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Text style={[styles.historyEditLink, { color: Colors.primary }]}>Edit</Text>
+            <Text style={[styles.historyEditLink, { color: Colors.primary }]}>{t('common.edit')}</Text>
           </TouchableOpacity>
         </View>
       </View>
       <Text style={[styles.historyDuration, isDark && styles.textPrimaryDark]}>
         {flare.end_date
-          ? t('flares.duration_days', { days })
+          ? t('flares.duration_days', { count: days })
           : t('flares.duration_ongoing')}
       </Text>
       {areaLabels.length > 0 && (
@@ -570,8 +587,8 @@ function EditUveitisModal({ visible, episode, onClose, onSave, onDelete, isDark 
             placeholder={t('common.optional_notes')} placeholderTextColor={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
             value={notes} onChangeText={setNotes} multiline numberOfLines={2} textAlignVertical="top" />
 
-          <Button label="Save changes" onPress={handleSave} isLoading={isSaving} style={styles.modalConfirmButton} />
-          <Button label="Delete this entry" onPress={handleDelete} variant="ghost" textStyle={{ color: Colors.error }} />
+          <Button label={t('common.save_changes')} onPress={handleSave} isLoading={isSaving} style={styles.modalConfirmButton} />
+          <Button label={t('flares.delete_this_entry')} onPress={handleDelete} variant="ghost" textStyle={{ color: Colors.error }} />
           <Button label={t('common.cancel')} onPress={onClose} variant="ghost" />
         </View>
       </View>
@@ -581,7 +598,21 @@ function EditUveitisModal({ visible, episode, onClose, onSave, onDelete, isDark 
 
 // ─── Uveitis history item ────────────────────────────────────────────────────
 
+const UVEITIS_EYE_FULL_KEYS: Record<string, string> = {
+  left: 'flares.uveitis_eye_full.left',
+  right: 'flares.uveitis_eye_full.right',
+  both: 'flares.uveitis_eye_full.both',
+};
+const UVEITIS_SYMPTOM_KEYS: Record<string, string> = {
+  red_eye: 'flares.uveitis_symptom.red_eye',
+  photophobia: 'flares.uveitis_symptom.photophobia',
+  blurred_vision: 'flares.uveitis_symptom.blurred_vision',
+  eye_pain: 'flares.uveitis_symptom.eye_pain',
+  floaters: 'flares.uveitis_symptom.floaters',
+};
+
 function UveitisHistoryItem({ episode, onEnd, onEdit, isDark }: { episode: UveitisEpisode; onEnd: () => void; onEdit: () => void; isDark: boolean }) {
+  const { t } = useTranslation();
   const severityColor = SEVERITY_COLOR[episode.severity];
   return (
     <View style={[styles.historyItem, isDark && styles.historyItemDark, { borderLeftColor: severityColor }]}>
@@ -593,17 +624,19 @@ function UveitisHistoryItem({ episode, onEnd, onEdit, isDark }: { episode: Uveit
         <View style={styles.historyItemActions}>
           <SeverityBadge severity={episode.severity} isDark={isDark} />
           <TouchableOpacity onPress={onEdit} activeOpacity={0.7} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Text style={[styles.historyEditLink, { color: Colors.primary }]}>Edit</Text>
+            <Text style={[styles.historyEditLink, { color: Colors.primary }]}>{t('common.edit')}</Text>
           </TouchableOpacity>
         </View>
       </View>
       <Text style={[styles.historyDuration, isDark && styles.textPrimaryDark]}>
-        {episode.affected_eye.charAt(0).toUpperCase() + episode.affected_eye.slice(1)} eye
-        {episode.end_date ? ` · ${daysBetween(episode.start_date, episode.end_date)} days` : ' · Ongoing'}
+        {UVEITIS_EYE_FULL_KEYS[episode.affected_eye] ? t(UVEITIS_EYE_FULL_KEYS[episode.affected_eye]) : episode.affected_eye}
+        {episode.end_date
+          ? ` · ${t('flares.duration_days', { count: daysBetween(episode.start_date, episode.end_date) })}`
+          : ` · ${t('flares.duration_ongoing')}`}
       </Text>
       {episode.symptoms.length > 0 && (
         <Text style={[styles.historyAreas, isDark && styles.textSecDark]}>
-          {episode.symptoms.map(s => s.replace(/_/g, ' ')).join(', ')}
+          {episode.symptoms.map(s => UVEITIS_SYMPTOM_KEYS[s] ? t(UVEITIS_SYMPTOM_KEYS[s]) : s.replace(/_/g, ' ')).join(', ')}
         </Text>
       )}
     </View>
@@ -865,15 +898,15 @@ export default function FlaresScreen() {
                 {t('flares.started')}: {formatDate(activeFlare.start_date)}
               </Text>
               <Text style={[styles.activeFlareDuration, isDark && styles.textSecDark]}>
-                {t('flares.duration_ongoing')} · {daysBetween(activeFlare.start_date, null)} days
+                {t('flares.duration_ongoing')} · {t('flares.duration_days', { count: daysBetween(activeFlare.start_date, null) })}
               </Text>
               {activeFlare.areas_affected.length > 0 && (
                 <Text style={[styles.activeFlareAreas, isDark && styles.textSecDark]}>
-                  {activeFlare.areas_affected.map(a => a.replace(/_/g, ' ')).join(', ')}
+                  {translatedAreaLabels(t, activeFlare.areas_affected, activeFlare.flare_type)}
                 </Text>
               )}
               <TouchableOpacity onPress={() => setEditingFlare(activeFlare)} style={styles.activeFlareEditLink} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Text style={styles.historyEditLink}>Edit</Text>
+                <Text style={styles.historyEditLink}>{t('common.edit')}</Text>
               </TouchableOpacity>
               <Button
                 label={t('flares.end_flare')}
@@ -923,18 +956,18 @@ export default function FlaresScreen() {
                   <SeverityBadge severity={activeEnthesitis.severity} isDark={isDark} />
                 </View>
                 <Text style={[styles.activeFlareDate, isDark && styles.textSecDark]}>
-                  Started: {formatDate(activeEnthesitis.start_date)}
+                  {t('flares.started')}: {formatDate(activeEnthesitis.start_date)}
                 </Text>
                 <Text style={[styles.activeFlareDuration, isDark && styles.textSecDark]}>
-                  {t('flares.duration_ongoing')} · {daysBetween(activeEnthesitis.start_date, null)} days
+                  {t('flares.duration_ongoing')} · {t('flares.duration_days', { count: daysBetween(activeEnthesitis.start_date, null) })}
                 </Text>
                 {activeEnthesitis.areas_affected.length > 0 && (
                   <Text style={[styles.activeFlareAreas, isDark && styles.textSecDark]}>
-                    {activeEnthesitis.areas_affected.map(a => a.replace(/_/g, ' ')).join(', ')}
+                    {translatedAreaLabels(t, activeEnthesitis.areas_affected, activeEnthesitis.flare_type)}
                   </Text>
                 )}
                 <TouchableOpacity onPress={() => setEditingFlare(activeEnthesitis)} style={styles.activeFlareEditLink} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                  <Text style={styles.historyEditLink}>Edit</Text>
+                  <Text style={styles.historyEditLink}>{t('common.edit')}</Text>
                 </TouchableOpacity>
                 <Button
                   label={t('common.mark_resolved')}
@@ -981,18 +1014,18 @@ export default function FlaresScreen() {
                   <SeverityBadge severity={activePeripheral.severity} isDark={isDark} />
                 </View>
                 <Text style={[styles.activeFlareDate, isDark && styles.textSecDark]}>
-                  Started: {formatDate(activePeripheral.start_date)}
+                  {t('flares.started')}: {formatDate(activePeripheral.start_date)}
                 </Text>
                 <Text style={[styles.activeFlareDuration, isDark && styles.textSecDark]}>
-                  {t('flares.duration_ongoing')} · {daysBetween(activePeripheral.start_date, null)} days
+                  {t('flares.duration_ongoing')} · {t('flares.duration_days', { count: daysBetween(activePeripheral.start_date, null) })}
                 </Text>
                 {activePeripheral.areas_affected.length > 0 && (
                   <Text style={[styles.activeFlareAreas, isDark && styles.textSecDark]}>
-                    {activePeripheral.areas_affected.map(a => a.replace(/_/g, ' ')).join(', ')}
+                    {translatedAreaLabels(t, activePeripheral.areas_affected, activePeripheral.flare_type)}
                   </Text>
                 )}
                 <TouchableOpacity onPress={() => setEditingFlare(activePeripheral)} style={styles.activeFlareEditLink} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                  <Text style={styles.historyEditLink}>Edit</Text>
+                  <Text style={styles.historyEditLink}>{t('common.edit')}</Text>
                 </TouchableOpacity>
                 <Button
                   label={t('common.mark_resolved')}
@@ -1039,18 +1072,18 @@ export default function FlaresScreen() {
                   <SeverityBadge severity={activeUveitis.severity} isDark={isDark} />
                 </View>
                 <Text style={[styles.activeFlareDate, isDark && styles.textSecDark]}>
-                  Started: {formatDate(activeUveitis.start_date)} · {activeUveitis.affected_eye} eye
+                  {t('flares.started')}: {formatDate(activeUveitis.start_date)} · {UVEITIS_EYE_FULL_KEYS[activeUveitis.affected_eye] ? t(UVEITIS_EYE_FULL_KEYS[activeUveitis.affected_eye]) : activeUveitis.affected_eye}
                 </Text>
                 <Text style={[styles.activeFlareDuration, isDark && styles.textSecDark]}>
-                  {t('flares.duration_ongoing')} · {daysBetween(activeUveitis.start_date, null)} days
+                  {t('flares.duration_ongoing')} · {t('flares.duration_days', { count: daysBetween(activeUveitis.start_date, null) })}
                 </Text>
                 {activeUveitis.symptoms.length > 0 && (
                   <Text style={[styles.activeFlareAreas, isDark && styles.textSecDark]}>
-                    {activeUveitis.symptoms.map(s => s.replace(/_/g, ' ')).join(', ')}
+                    {activeUveitis.symptoms.map(s => UVEITIS_SYMPTOM_KEYS[s] ? t(UVEITIS_SYMPTOM_KEYS[s]) : s.replace(/_/g, ' ')).join(', ')}
                   </Text>
                 )}
                 <TouchableOpacity onPress={() => setEditingUveitis(activeUveitis)} style={styles.activeFlareEditLink} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                  <Text style={styles.historyEditLink}>Edit</Text>
+                  <Text style={styles.historyEditLink}>{t('common.edit')}</Text>
                 </TouchableOpacity>
                 <Button
                   label={t('common.mark_resolved')}
@@ -1072,7 +1105,7 @@ export default function FlaresScreen() {
                   <Text style={[styles.statusText, isDark && styles.textPrimaryDark]}>{t('flares.no_current_episode')}</Text>
                 </View>
                 <Button
-                  label="Log an episode"
+                  label={t('flares.log_episode_button')}
                   onPress={() => setShowUveitisModal(true)}
                   variant="outline"
                   style={styles.logFlareBtn}

@@ -17,6 +17,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { DragSlider } from '@/components/common/DragSlider';
 import { useTranslation } from 'react-i18next';
+import i18n from '@/i18n';
 import { Colors } from '@/constants/colors';
 import { FontSize, FontFamily, Spacing, BorderRadius } from '@/constants/theme';
 import { useDailyLog } from '@/hooks/useDailyLog';
@@ -44,12 +45,12 @@ function localDateString(offsetDays = 0): string {
 
 function dateLabelShort(dateStr: string): string {
   const d = new Date(dateStr + 'T12:00:00');
-  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  return d.toLocaleDateString(i18n.language, { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
 function dateLabelFull(dateStr: string): string {
   const d = new Date(dateStr + 'T12:00:00');
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString(i18n.language, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 function moodEmoji(mood: Mood | null): string {
@@ -682,7 +683,7 @@ function DatePickerModal({ isDark, maxDate, onSelect, onClose }: DatePickerModal
 
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const monthName = new Date(year, month, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  const monthName = new Date(year, month, 1).toLocaleDateString(i18n.language, { month: 'long', year: 'numeric' });
 
   const prevMonth = () => {
     if (month === 0) { setYear(y => y - 1); setMonth(11); }
@@ -738,7 +739,15 @@ function DatePickerModal({ isDark, maxDate, onSelect, onClose }: DatePickerModal
           </View>
 
           <View style={styles.calDayHeaders}>
-            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
+            {[
+              t('common.day_initial.mon'),
+              t('common.day_initial.tue'),
+              t('common.day_initial.wed'),
+              t('common.day_initial.thu'),
+              t('common.day_initial.fri'),
+              t('common.day_initial.sat'),
+              t('common.day_initial.sun'),
+            ].map((d, i) => (
               <Text key={i} style={[styles.calDayHeader, isDark && styles.textSecDark]}>{d}</Text>
             ))}
           </View>
@@ -797,11 +806,11 @@ function RecentLogsCard({ recentDays, logsByDate, isDark, hasOlderLogs, onOpenDa
               <Text style={[styles.recentDate, isDark && styles.textPrimaryDark]}>{dateLabelShort(date)}</Text>
               {log ? (
                 <Text style={[styles.recentStats, isDark && styles.textSecDark]}>
-                  Pain {log.pain_score}/10 · Fatigue {log.fatigue_score}/10 · {moodEmoji(log.mood)}
+                  {t('tracker.recent_stats', { pain: log.pain_score, fatigue: log.fatigue_score })} · {moodEmoji(log.mood)}
                   {log.diet_quality ? ` · ${dietQualityEmoji(log.diet_quality)}` : ''}
                 </Text>
               ) : (
-                <Text style={[styles.recentStats, { color: Colors.primary }]}>+ Log this day</Text>
+                <Text style={[styles.recentStats, { color: Colors.primary }]}>+ {t('tracker.log_this_day')}</Text>
               )}
             </View>
             <Text style={[styles.recentChevron, isDark && styles.textSecDark]}>›</Text>
@@ -1006,7 +1015,7 @@ export default function TrackScreen() {
   const yesterdayLog = recentLogs.find((l) => l.date === yesterdayStr) ?? null;
 
   // Today's date label
-  const todayDateLabel = new Date().toLocaleDateString('en-GB', {
+  const todayDateLabel = new Date().toLocaleDateString(i18n.language, {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -1039,7 +1048,7 @@ export default function TrackScreen() {
               {todayDateLabel}
             </Text>
             <Text style={[styles.logHeaderSubtitle, isDark && styles.textSecDark]}>
-              {todayLogged ? 'Logged today' : 'Log for today'}
+              {todayLogged ? t('tracker.logged_today') : t('tracker.log_for_today')}
             </Text>
           </View>
           <ProfileButton />

@@ -124,7 +124,7 @@ function SpondyScoreCard({
   breakdown: import('@/hooks/useWeeklyData').ScoreBreakdown | null;
   logs: DailyLog[];
   isDark: boolean;
-  t: (key: string) => string;
+  t: (key: string, opts?: Record<string, unknown>) => string;
 }) {
   const [showBreakdown, setShowBreakdown] = useState(false);
   const color = score !== null ? scoreColor(score) : Colors.textSecondary;
@@ -177,10 +177,10 @@ function SpondyScoreCard({
                 />
               </View>
               <Text style={[styles.scoreBarLabel, { color }]}>
-                {score >= 70 ? 'Managing well' : score >= 40 ? 'Moderate symptoms' : 'High symptom load'}
+                {score >= 70 ? t('home.score_managing_well') : score >= 40 ? t('home.score_moderate_symptoms') : t('home.score_high_symptom_load')}
               </Text>
               <Text style={[styles.scoreHint, { color: textSec }]}>
-                Based on {breakdown?.logCount ?? 0} day{(breakdown?.logCount ?? 0) !== 1 ? 's' : ''} this week
+                {t('home.score_based_on_days', { count: breakdown?.logCount ?? 0 })}
               </Text>
             </View>
           </View>
@@ -283,13 +283,13 @@ function SevenDayOverview({
 }) {
   // Build last 7 days (Mon-Sun style, most recent 7 calendar days)
   const days: { dayLabel: string; log: DailyLog | null }[] = [];
-  const DAY_ABBR = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const DAY_ABBR_KEYS = ['common.day_short.sun', 'common.day_short.mon', 'common.day_short.tue', 'common.day_short.wed', 'common.day_short.thu', 'common.day_short.fri', 'common.day_short.sat'];
   for (let i = 6; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const log = logs.find((l) => l.date === dateStr) ?? null;
-    days.push({ dayLabel: DAY_ABBR[d.getDay()], log });
+    days.push({ dayLabel: t(DAY_ABBR_KEYS[d.getDay()]), log });
   }
 
   const hasAnyData = days.some((d) => d.log !== null);
@@ -383,21 +383,21 @@ function WeeklyTrends({
 
 // ─── Flare Risk Card ──────────────────────────────────────────────────────────
 
-const SIGNAL_LABELS: Record<string, string> = {
-  pain_rising: '↑ Pain trending up',
-  fatigue_rising: '↑ Fatigue increasing',
-  stiffness_worsening: '⏱ Long morning stiffness',
-  missed_medication: '💊 Missed medications',
-  mood_declining: '↓ Mood declining',
-  hrv_dropping: '❤️ HRV dropping',
-  poor_sleep: '😴 Poor sleep',
-  hr_elevated: '❤️‍🔥 Elevated heart rate',
-  low_activity: '🚶 Reduced activity',
-  inflammatory_diet: '🍽️ Inflammatory diet',
-  recent_alcohol: '🍷 Recent alcohol',
-  high_starch_intake: '🌾 High starch intake',
-  low_spo2: '🫁 Low overnight SpO₂',
-  elevated_resp_rate: '😤 Elevated sleep resp rate',
+const SIGNAL_LABEL_KEYS: Record<string, string> = {
+  pain_rising: 'home.signal.pain_rising',
+  fatigue_rising: 'home.signal.fatigue_rising',
+  stiffness_worsening: 'home.signal.stiffness_worsening',
+  missed_medication: 'home.signal.missed_medication',
+  mood_declining: 'home.signal.mood_declining',
+  hrv_dropping: 'home.signal.hrv_dropping',
+  poor_sleep: 'home.signal.poor_sleep',
+  hr_elevated: 'home.signal.hr_elevated',
+  low_activity: 'home.signal.low_activity',
+  inflammatory_diet: 'home.signal.inflammatory_diet',
+  recent_alcohol: 'home.signal.recent_alcohol',
+  high_starch_intake: 'home.signal.high_starch_intake',
+  low_spo2: 'home.signal.low_spo2',
+  elevated_resp_rate: 'home.signal.elevated_resp_rate',
 };
 
 function FlareRiskCard({
@@ -427,7 +427,7 @@ function FlareRiskCard({
     <View style={[styles.flareRiskCard, { backgroundColor: bgColor, borderColor }]}>
       <View style={styles.flareRiskTitleRow}>
         <Text style={[styles.flareRiskTitle, { color: accentColor }]}>
-          {isWarning ? '⚠️ Possible flare building' : '👀 Symptoms to watch'}
+          {isWarning ? `⚠️ ${t('home.flare_building_title')}` : `👀 ${t('home.symptoms_to_watch_title')}`}
         </Text>
         {!isPremium && (
           <View style={styles.flarePremiumBadge}>
@@ -439,14 +439,14 @@ function FlareRiskCard({
         <>
           <Text style={[styles.flareRiskBody, isDark && styles.textSecDark]}>
             {isWarning
-              ? 'Several signals suggest a flare could be building. Rest up and check your medications.'
-              : 'A couple of signals worth watching. Keep an eye on how you feel over the next day or two.'}
+              ? t('home.flare_building_body')
+              : t('home.symptoms_to_watch_body')}
           </Text>
           <View style={styles.flareRiskSignals}>
             {signals.map((s) => (
               <View key={s} style={[styles.flareRiskChip, { borderColor: accentColor + '60' }]}>
                 <Text style={[styles.flareRiskChipText, { color: accentColor }]}>
-                  {SIGNAL_LABELS[s] ?? s}
+                  {SIGNAL_LABEL_KEYS[s] ? t(SIGNAL_LABEL_KEYS[s]) : s}
                 </Text>
               </View>
             ))}
