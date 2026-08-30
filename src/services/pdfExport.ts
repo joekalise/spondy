@@ -71,9 +71,9 @@ function buildReportHTML(params: {
 
   // ── Stats ──────────────────────────────────────────────────────────────────
   const avgPain = logs.length > 0
-    ? (logs.reduce((s, l) => s + l.pain_score, 0) / logs.length).toFixed(1) : '—';
+    ? (logs.reduce((s, l) => s + l.pain_score, 0) / logs.length).toFixed(1) : t('pdf_export.none_reported');
   const avgFatigue = logs.length > 0
-    ? (logs.reduce((s, l) => s + l.fatigue_score, 0) / logs.length).toFixed(1) : '—';
+    ? (logs.reduce((s, l) => s + l.fatigue_score, 0) / logs.length).toFixed(1) : t('pdf_export.none_reported');
 
   const highPainDays = logs.filter(l => l.pain_score >= 7).length;
   const highFatigueDays = logs.filter(l => l.fatigue_score >= 7).length;
@@ -142,7 +142,7 @@ function buildReportHTML(params: {
         <tr>
           <td>${fmtDateShort(i.injected_at.split('T')[0])}</td>
           <td>${i.medication_name}${i.lot_number ? ` (lot: ${i.lot_number})` : ''}</td>
-          <td>${i.response_rating !== null ? `${i.response_rating}/5` : '—'}${i.notes ? ` · ${i.notes}` : ''}</td>
+          <td>${i.response_rating !== null ? `${i.response_rating}/5` : t('pdf_export.none_reported')}${i.notes ? ` · ${i.notes}` : ''}</td>
         </tr>`).join('');
 
   // ── Notes HTML ────────────────────────────────────────────────────────────
@@ -242,15 +242,15 @@ function buildReportHTML(params: {
   <div class="profile-grid">
     <div class="profile-row">
       <span class="profile-label">${t('pdf_export.field_age_range')}</span>
-      <span class="profile-value">${profile.age_range ? t(`onboarding.age_range.${profile.age_range}`) : '—'}</span>
+      <span class="profile-value">${profile.age_range ? t(`onboarding.age_range.${profile.age_range}`) : t('pdf_export.none_reported')}</span>
     </div>
     <div class="profile-row">
       <span class="profile-label">${t('pdf_export.field_years_since_diagnosis')}</span>
-      <span class="profile-value">${profile.diagnosis_years ? t(`onboarding.diagnosis_years.${profile.diagnosis_years}`) : '—'}</span>
+      <span class="profile-value">${profile.diagnosis_years ? t(`onboarding.diagnosis_years.${profile.diagnosis_years}`) : t('pdf_export.none_reported')}</span>
     </div>
     <div class="profile-row">
       <span class="profile-label">${t('pdf_export.field_self_reported_activity')}</span>
-      <span class="profile-value">${profile.severity ? t(`onboarding.severity.${profile.severity}`) : '—'}</span>
+      <span class="profile-value">${profile.severity ? t(`onboarding.severity.${profile.severity}`) : t('pdf_export.none_reported')}</span>
     </div>
     <div class="profile-row">
       <span class="profile-label">${t('pdf_export.field_active_medications')}</span>

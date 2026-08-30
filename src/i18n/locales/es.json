@@ -137,7 +137,7 @@
       "title": "¿Tienes alguna condición asociada?",
       "subtitle": "Estas a menudo acompañan a la EA. Selecciona las que apliquen.",
       "info_title": "Sobre las condiciones asociadas",
-      "info_message": "Muchas personas con EA desarrollan condiciones relacionadas. Registrarlas junto con tu EA nos ayuda a identificar patrones — por ejemplo, los brotes de uveítis a menudo coinciden con un aumento de la inflamación espinal. Al anotarlas aquí, Spondy puede mostrar correlaciones relevantes en tus datos.",
+      "info_message": "Muchas personas con EA desarrollan condiciones relacionadas. Registrarlas junto con tu EA nos ayuda a identificar patrones. Por ejemplo, los brotes de uveítis a menudo coinciden con un aumento de la inflamación espinal. Al anotarlas aquí, Spondy puede mostrar correlaciones relevantes en tus datos.",
       "uveitis": "Uveítis (inflamación ocular)",
       "psoriasis": "Psoriasis",
       "ibd": "Enfermedad inflamatoria intestinal (EII)",
@@ -207,8 +207,8 @@
       "what_shared_3": "Datos de salud (sueño, HRV, pasos) si los has sincronizado",
       "how_used_title": "Cómo se usa:",
       "how_used_body": "Tus datos se envían de forma segura para generar análisis. Anthropic no usa tus datos para entrenar modelos de IA. Puedes retirar el consentimiento en cualquier momento desde Configuración.",
-      "agree_cta": "Estoy de acuerdo — personalizar mi experiencia",
-      "decline_cta": "No gracias — usar modo básico"
+      "agree_cta": "Estoy de acuerdo, personalizar mi experiencia",
+      "decline_cta": "No gracias, usar modo básico"
     }
   },
   "profile_ready": {
@@ -564,13 +564,13 @@
     "ai_consent_alert_body": "Esto permite que Spondy comparta tus datos de salud (registros de síntomas, perfil, métricas de salud) con Claude AI (Anthropic, Inc.) para generar análisis. Anthropic no usa tus datos para entrenar modelos de IA.",
     "ai_consent_alert_agree": "Estoy de acuerdo",
     "ai_title": "Privacidad de Datos e IA",
-    "ai_body_1": "Cuando usas el Chat de IA o los análisis semanales, tus registros de síntomas, resúmenes de datos de salud e información de perfil se envían a Anthropic (API de Claude) para generar respuestas. Tus datos de salud sin procesar nunca se envían — solo resúmenes agregados. El historial de conversación se almacena localmente solo en tu dispositivo.",
+    "ai_body_1": "Cuando usas el Chat de IA o los análisis semanales, tus registros de síntomas, resúmenes de datos de salud e información de perfil se envían a Anthropic (API de Claude) para generar respuestas. Tus datos de salud sin procesar nunca se envían, solo resúmenes agregados. El historial de conversación se almacena localmente solo en tu dispositivo.",
     "ai_body_2": "Los eventos de análisis (p. ej. características usadas) se envían a Firebase. Los informes de fallos se envían a Sentry. Ninguno de estos servicios recibe tus datos de salud o síntomas.",
     "sources_title": "Fuentes Médicas y Descargo de Responsabilidad",
     "sources_disclaimer": "Spondy no es un dispositivo médico y no proporciona asesoramiento médico. Los análisis de IA son análisis de patrones basados en tus propios datos registrados. Siempre consulta con tu reumatólogo o equipo de salud antes de hacer cambios en tu tratamiento.",
     "sources_nass": "Sociedad Nacional de Espondilitis Anquilosante (NASS, Reino Unido)",
     "sources_saa": "Asociación de Espondilitis de Estados Unidos (SAA)",
-    "sources_basdai": "BASDAI — Índice de Actividad de la Enfermedad de Bath para EA"
+    "sources_basdai": "BASDAI: Índice de Actividad de la Enfermedad de Bath para EA"
   },
   "export": {
     "title": "Compartir con mi doctor",
@@ -628,7 +628,7 @@
     "basdai_interpretation_header": "Interpretación",
     "basdai_q1_header": "Q1 Fatiga",
     "basdai_q2_header": "Q2 Dolor espinal",
-    "basdai_q56_header": "Q5–6 Rigidez",
+    "basdai_q56_header": "Q5-6 Rigidez",
     "basdai_low": "Actividad baja",
     "basdai_moderate": "Moderada",
     "basdai_high": "Alto",
@@ -683,7 +683,7 @@
     "disclaimer": "Los análisis de IA se basan en tus datos personales y no son asesoramiento médico. Siempre consulta con tu reumatólogo.",
     "as_resources": "Recursos de EA",
     "consent_off_title": "El chat de IA está desactivado",
-    "consent_off_body": "Habilita la personalización de IA en Perfil para usar esta función. Tus datos son tuyos — solo necesitamos tu permiso primero.",
+    "consent_off_body": "Habilita la personalización de IA en Perfil para usar esta función. Tus datos son tuyos, solo necesitamos tu permiso primero.",
     "go_to_profile": "Ir a Perfil",
     "clear": "Limpiar"
   },

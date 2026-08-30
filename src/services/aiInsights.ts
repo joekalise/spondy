@@ -387,7 +387,8 @@ Rules:
 - Never say "you are at risk" or anything diagnostic
 - Use language like "your data suggests", "it looks like", "on days when"
 - Be direct and specific — this person wants to understand their own body, not be reassured
-- The JSON must be valid and parseable — no markdown, no text outside the JSON`;
+- The JSON must be valid and parseable — no markdown, no text outside the JSON
+- Never use em dashes or en dashes. Use a comma, period, or plain hyphen instead`;
 
   const userMessage = `Here is my health data:
 
@@ -447,7 +448,8 @@ How to respond:
 - Talk like a knowledgeable friend who also has AS — not a medical professional covering themselves legally, and not a wellness app being relentlessly positive.
 - Never diagnose, never say "you are at risk", never recommend specific medications or doses.
 - If they ask about something genuinely outside your knowledge or their data, say so and suggest they ask their rheumatologist.
-- Don't start responses with "I" or with filler phrases like "Great question!" or "Of course!".`;
+- Don't start responses with "I" or with filler phrases like "Great question!" or "Of course!".
+- Never use em dashes or en dashes. Use a comma, period, or plain hyphen instead.`;
 
   try {
     return await callClaude({

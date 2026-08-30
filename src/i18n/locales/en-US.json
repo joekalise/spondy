@@ -3,7 +3,7 @@
     "subtitle": "A few questions to personalize your experience",
     "ai_consent": {
       "subtitle": "Spondy uses Claude AI (by Anthropic, Inc.) to generate your personalized insights and welcome message.",
-      "agree_cta": "I agree — personalize my experience"
+      "agree_cta": "I agree, personalize my experience"
     }
   },
   "insights": {
