@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { tPlural } from '@/i18n';
+import i18n, { tPlural } from '@/i18n';
 import { Colors } from '@/constants/colors';
 import { FontSize, FontFamily, Spacing, BorderRadius } from '@/constants/theme';
 import { useFlares } from '@/hooks/useFlares';
@@ -50,7 +50,7 @@ function SeverityBadge({ severity, isDark }: { severity: FlareSeverity; isDark: 
 // ─── Format helpers ──────────────────────────────────────────────────────────
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-GB', {
+  return new Date(dateStr).toLocaleDateString(i18n.language, {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -875,7 +875,7 @@ export default function FlaresScreen() {
         {/* Screen title */}
         <View style={styles.screenTitleRow}>
           <Text style={[styles.screenTitle, isDark && styles.textPrimaryDark]}>
-            Flares
+            {t('tabs.flares')}
           </Text>
           <ProfileButton />
         </View>

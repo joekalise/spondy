@@ -20,7 +20,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
-import { tPlural } from '@/i18n';
+import i18n, { tPlural } from '@/i18n';
 import Constants from 'expo-constants';
 
 import { InfoButton } from '@/components/common/InfoButton';
@@ -1293,7 +1293,7 @@ export default function ProfileScreen() {
               style={[styles.nameInput, { color: textPrimary, borderColor: Colors.primary }]}
               value={nameValue}
               onChangeText={setNameValue}
-              placeholder="Your first name"
+              placeholder={t('profile_alerts.first_name_placeholder')}
               placeholderTextColor={textSecondary}
               autoFocus
               returnKeyType="done"
@@ -1762,7 +1762,7 @@ export default function ProfileScreen() {
               <Text style={[styles.settingsRowSub, { color: textSecondary }]}>{t('profile_alerts.from_last_appointment')}</Text>
               <Text style={[styles.reportDateValue, { color: reportFromDate ? textPrimary : Colors.primary }]}>
                 {reportFromDate
-                  ? new Date(reportFromDate + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                  ? new Date(reportFromDate + 'T12:00:00').toLocaleDateString(i18n.language, { day: 'numeric', month: 'short', year: 'numeric' })
                   : t('profile_alerts.last_12_months')} ›
               </Text>
             </TouchableOpacity>

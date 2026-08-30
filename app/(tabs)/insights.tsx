@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Polyline, Line, Text as SvgText, Circle } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
-import { tPlural } from '@/i18n';
+import i18n, { tPlural } from '@/i18n';
 import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 
 import { Colors } from '@/constants/colors';
@@ -451,7 +451,7 @@ function dayLabel(t: (key: string) => string, dateStr: string): string {
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + 'T12:00:00');
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  return d.toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' });
 }
 
 function flareDays(flare: Flare): number {

@@ -341,7 +341,11 @@
     "score_moderate_symptoms": "Síntomas moderados",
     "score_high_symptom_load": "Carga de síntomas alta",
     "score_based_on_days_one": "Basado en {{count}} día esta semana",
-    "score_based_on_days_other": "Basado en {{count}} días esta semana"
+    "score_based_on_days_other": "Basado en {{count}} días esta semana",
+    "flare_ended_today": "El brote terminó hoy",
+    "flare_ended_yesterday": "El brote terminó ayer",
+    "flare_ended_days_ago_one": "El brote terminó hace {{count}} día",
+    "flare_ended_days_ago_other": "El brote terminó hace {{count}} días"
   },
   "tracker": {
     "title": "Registro diario",
@@ -992,7 +996,8 @@
     "feedback_placeholder": "Errores, ideas o cualquier otra cosa...",
     "delete_data_note": "Elimina permanentemente todos tus registros, brotes, medicamentos y datos de perfil.",
     "conditions_count_one": "{{count}} condición",
-    "conditions_count_other": "{{count}} condiciones"
+    "conditions_count_other": "{{count}} condiciones",
+    "first_name_placeholder": "Tu nombre"
   },
   "insights_info": {
     "how_it_works_title": "Cómo funciona",

@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { tPlural } from '@/i18n';
+import i18n, { tPlural } from '@/i18n';
 import { useRouter, useFocusEffect } from 'expo-router';
 import Svg, { Polyline, Circle } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
@@ -104,12 +104,12 @@ function humidityColor(pct: number): string {
   return Colors.success;
 }
 
-function flareEndedLabel(endDate: string): string {
+function flareEndedLabel(t: (key: string, opts?: Record<string, unknown>) => string, endDate: string): string {
   const ms = Date.now() - new Date(endDate).getTime();
   const days = Math.floor(ms / (1000 * 60 * 60 * 24));
-  if (days === 0) return 'Flare ended today';
-  if (days === 1) return 'Flare ended yesterday';
-  return `Flare ended ${days} days ago`;
+  if (days === 0) return t('home.flare_ended_today');
+  if (days === 1) return t('home.flare_ended_yesterday');
+  return tPlural(t, 'home.flare_ended_days_ago', days);
 }
 
 // ─── Spondy Score Card — horizontal design ────────────────────────────────────
@@ -667,7 +667,7 @@ export default function HomeScreen() {
           <View style={[styles.activeFlareCard, isDark && styles.activeFlareCardDark]}>
             <Text style={styles.activeFlareBadge}>🔴 {t('flares.active_flare')}</Text>
             <Text style={[styles.activeFlareDate, isDark && styles.textSecDark]}>
-              {t('flares.started')}: {new Date(activeFlare.start_date).toLocaleDateString('en-GB', {
+              {t('flares.started')}: {new Date(activeFlare.start_date).toLocaleDateString(i18n.language, {
                 day: 'numeric',
                 month: 'short',
               })}
@@ -859,7 +859,7 @@ export default function HomeScreen() {
         {!activeFlare && recentEndedFlare?.end_date && (
           <View style={[styles.flareRecoveryCard, isDark && styles.flareRecoveryCardDark]}>
             <Text style={[styles.flareRecoveryText, isDark && styles.textSecDark]}>
-              ✓ {flareEndedLabel(recentEndedFlare.end_date)}
+              ✓ {flareEndedLabel(t, recentEndedFlare.end_date)}
             </Text>
           </View>
         )}

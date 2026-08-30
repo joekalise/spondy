@@ -1,4 +1,5 @@
 import { supabase } from '@/services/supabase';
+import i18n from '@/i18n';
 import { BasdaiScore, DailyLog, Flare, HealthData, RecoverySnapshot, UserProfile } from '@/types';
 
 export interface WeeklyInsight {
@@ -30,7 +31,7 @@ async function callClaude(body: object): Promise<string> {
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + 'T12:00:00');
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString(i18n.language, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 function buildHealthSummary(healthHistory: HealthData[]): string {

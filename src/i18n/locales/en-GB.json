@@ -341,7 +341,11 @@
     "score_moderate_symptoms": "Moderate symptoms",
     "score_high_symptom_load": "High symptom load",
     "score_based_on_days_one": "Based on {{count}} day this week",
-    "score_based_on_days_other": "Based on {{count}} days this week"
+    "score_based_on_days_other": "Based on {{count}} days this week",
+    "flare_ended_today": "Flare ended today",
+    "flare_ended_yesterday": "Flare ended yesterday",
+    "flare_ended_days_ago_one": "Flare ended {{count}} day ago",
+    "flare_ended_days_ago_other": "Flare ended {{count}} days ago"
   },
   "tracker": {
     "title": "Daily check-in",
@@ -992,7 +996,8 @@
     "feedback_placeholder": "Bugs, ideas, or anything else...",
     "delete_data_note": "Permanently deletes all logs, flares, medications, and profile data.",
     "conditions_count_one": "{{count}} condition",
-    "conditions_count_other": "{{count}} conditions"
+    "conditions_count_other": "{{count}} conditions",
+    "first_name_placeholder": "Your first name"
   },
   "insights_info": {
     "how_it_works_title": "How it works",
