@@ -1,13 +1,35 @@
 diff --git a/node_modules/react-native-health/index.js b/node_modules/react-native-health/index.js
-index 06e5105..bf74154 100644
+index 06e5105..a9e9da0 100644
 --- a/node_modules/react-native-health/index.js
 +++ b/node_modules/react-native-health/index.js
-@@ -1,6 +1,7 @@
+@@ -1,14 +1,20 @@
  import { Activities, Observers, Permissions, Units } from './src/constants'
  
 -const { AppleHealthKit } = require('react-native').NativeModules
+-
+-export const HealthKit = Object.assign({}, AppleHealthKit, {
+-  Constants: {
+-    Activities,
+-    Observers,
+-    Permissions,
+-    Units,
+-  },
+-})
 +const { TurboModuleRegistry } = require('react-native')
 +const AppleHealthKit = TurboModuleRegistry.getEnforcing('AppleHealthKit')
++
++// Under the New Architecture, AppleHealthKit is a HostObject/TurboModule whose
++// methods resolve lazily via property access, not as enumerable own properties —
++// Object.assign({}, AppleHealthKit, {...}) silently drops every real method and
++// keeps only what's explicitly listed, leaving just Constants. Attach Constants
++// directly onto the real module object instead of copying into a plain object.
++AppleHealthKit.Constants = {
++  Activities,
++  Observers,
++  Permissions,
++  Units,
++}
++
++export const HealthKit = AppleHealthKit
  
- export const HealthKit = Object.assign({}, AppleHealthKit, {
-   Constants: {
+ module.exports = HealthKit
