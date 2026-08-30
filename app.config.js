@@ -55,7 +55,10 @@ module.exports = {
     ios: {
       supportsTablet: false,
       bundleIdentifier: 'com.spondy.app',
-      buildNumber: '3',
+      // buildNumber is NOT set here on purpose — the ios/ directory is checked
+      // into git, so EAS Build uses it as-is and silently ignores this field
+      // (confirmed via a real build's own warning). The real source of truth
+      // is CFBundleVersion in ios/Spondy/Info.plist.
       googleServicesFile: './GoogleService-Info.plist',
       infoPlist: {
         NSHealthShareUsageDescription:
