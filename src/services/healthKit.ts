@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Sentry from '@sentry/react-native';
 import { HealthData, RecoverySnapshot } from '@/types';
 
 const HEALTH_CONNECTED_KEY = '@spondy_health_connected';
@@ -7,12 +8,32 @@ const HEALTH_CONNECTED_KEY = '@spondy_health_connected';
 const HEALTH_PERMISSIONS_VERSION = 2;
 const HEALTH_PERMISSIONS_VERSION_KEY = '@spondy_health_permissions_version';
 
+// TEMPORARY diagnostic: healthKit calls are deliberately best-effort (silent catch)
+// everywhere else in this file, which is exactly what hid the original New
+// Architecture bug from ever surfacing an error. Report to Sentry here so the next
+// real-device test gives actual evidence instead of another silent "did nothing".
+function reportHealthKitDiagnostic(stage: string, err: unknown): void {
+  try {
+    Sentry.captureException(err instanceof Error ? err : new Error(String(err)), {
+      tags: { healthkit_stage: stage },
+    });
+  } catch {}
+}
+
 function getHK(): any | null {
   if (Platform.OS !== 'ios') return null;
   try {
     const mod = require('react-native-health');
-    return mod.default ?? mod;
-  } catch {
+    const hk = mod.default ?? mod;
+    if (!hk || typeof hk.initHealthKit !== 'function') {
+      reportHealthKitDiagnostic(
+        'getHK-empty-module',
+        new Error(`react-native-health loaded but has no initHealthKit method. Keys: ${hk ? Object.keys(hk).join(',') : 'null'}`)
+      );
+    }
+    return hk;
+  } catch (err) {
+    reportHealthKitDiagnostic('getHK-require-threw', err);
     return null;
   }
 }
@@ -61,7 +82,8 @@ export async function requestHealthPermissions(): Promise<boolean> {
     await AsyncStorage.setItem(HEALTH_CONNECTED_KEY, 'true');
     await AsyncStorage.setItem(HEALTH_PERMISSIONS_VERSION_KEY, String(HEALTH_PERMISSIONS_VERSION));
     return true;
-  } catch {
+  } catch (err) {
+    reportHealthKitDiagnostic('initHealthKit-failed', err);
     return false;
   }
 }

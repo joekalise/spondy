@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Sentry from '@sentry/react-native';
 import { HealthData, RecoverySnapshot } from '@/types';
 
 const HEALTH_CONNECTED_KEY = '@spondy_health_connected_android';
@@ -7,11 +8,22 @@ const HEALTH_CONNECTED_KEY = '@spondy_health_connected_android';
 const HEALTH_PERMISSIONS_VERSION = 1;
 const HEALTH_PERMISSIONS_VERSION_KEY = '@spondy_health_connect_permissions_version';
 
+// TEMPORARY diagnostic: same silent-catch pattern as healthKit.ts hid the iOS New
+// Architecture bug from ever surfacing. Report to Sentry so the next real-device
+// test gives actual evidence — including the legitimate "SDK not available" case,
+// e.g. the Health Connect app itself isn't installed on the test device.
+function reportHealthConnectDiagnostic(stage: string, detail: string): void {
+  try {
+    Sentry.captureException(new Error(detail), { tags: { health_connect_stage: stage } });
+  } catch {}
+}
+
 function getHC(): any | null {
   if (Platform.OS !== 'android') return null;
   try {
     return require('react-native-health-connect');
-  } catch {
+  } catch (err) {
+    reportHealthConnectDiagnostic('getHC-require-threw', String(err));
     return null;
   }
 }
@@ -33,8 +45,12 @@ export async function isHealthKitAvailable(): Promise<boolean> {
   if (!hc) return false;
   try {
     const status = await hc.getSdkStatus();
+    if (status !== hc.SdkAvailabilityStatus.SDK_AVAILABLE) {
+      reportHealthConnectDiagnostic('sdk-not-available', `getSdkStatus() returned ${status} (SDK_AVAILABLE is ${hc.SdkAvailabilityStatus.SDK_AVAILABLE})`);
+    }
     return status === hc.SdkAvailabilityStatus.SDK_AVAILABLE;
-  } catch {
+  } catch (err) {
+    reportHealthConnectDiagnostic('getSdkStatus-threw', String(err));
     return false;
   }
 }
@@ -55,12 +71,16 @@ export async function requestHealthPermissions(): Promise<boolean> {
     await hc.initialize();
     const granted = await hc.requestPermission(PERMISSIONS);
     const ok = granted.length > 0;
+    if (!ok) {
+      reportHealthConnectDiagnostic('no-permissions-granted', `requestPermission resolved with ${granted.length} granted permissions`);
+    }
     if (ok) {
       await AsyncStorage.setItem(HEALTH_CONNECTED_KEY, 'true');
       await AsyncStorage.setItem(HEALTH_PERMISSIONS_VERSION_KEY, String(HEALTH_PERMISSIONS_VERSION));
     }
     return ok;
-  } catch {
+  } catch (err) {
+    reportHealthConnectDiagnostic('requestPermission-threw', String(err));
     return false;
   }
 }
