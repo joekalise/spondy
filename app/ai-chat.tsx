@@ -413,7 +413,7 @@ export default function AIChatScreen() {
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           style={styles.backBtn}
         >
-          <Text style={[styles.backText, { color: Colors.primary }]}>{'‹ Back'}</Text>
+          <Text style={[styles.backText, { color: Colors.primary }]}>{`‹ ${t('common.back')}`}</Text>
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: textPrimary }]}>
           {t('ai_chat.title')}
@@ -423,7 +423,7 @@ export default function AIChatScreen() {
           activeOpacity={0.8}
           style={styles.backBtn}
         >
-          <Text style={[styles.clearText, { color: textSecondary }]}>Clear</Text>
+          <Text style={[styles.clearText, { color: textSecondary }]}>{t('ai_chat.clear')}</Text>
         </TouchableOpacity>
       </View>
 

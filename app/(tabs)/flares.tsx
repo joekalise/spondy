@@ -64,37 +64,37 @@ function daysBetween(start: string, end: string | null): number {
 
 // ─── Pain location labels ────────────────────────────────────────────────────
 
-const AS_LOCATIONS: { value: string; label: string }[] = [
-  { value: 'lower_back', label: 'Lower back / SI' },
-  { value: 'upper_back', label: 'Upper back' },
-  { value: 'hips', label: 'Hips' },
-  { value: 'neck', label: 'Neck' },
-  { value: 'chest', label: 'Chest / ribs' },
-  { value: 'shoulders', label: 'Shoulders' },
-  { value: 'knees', label: 'Knees' },
-  { value: 'jaw', label: 'Jaw (TMJ)' },
+const AS_LOCATIONS: { value: string; labelKey: string }[] = [
+  { value: 'lower_back', labelKey: 'flares.as_location.lower_back' },
+  { value: 'upper_back', labelKey: 'flares.as_location.upper_back' },
+  { value: 'hips', labelKey: 'flares.as_location.hips' },
+  { value: 'neck', labelKey: 'flares.as_location.neck' },
+  { value: 'chest', labelKey: 'flares.as_location.chest' },
+  { value: 'shoulders', labelKey: 'flares.as_location.shoulders' },
+  { value: 'knees', labelKey: 'flares.as_location.knees' },
+  { value: 'jaw', labelKey: 'flares.as_location.jaw' },
 ];
 
-const ENTHESITIS_LOCATIONS: { value: string; label: string }[] = [
-  { value: 'heel_achilles', label: 'Heel / Achilles' },
-  { value: 'plantar_fascia', label: 'Plantar fascia' },
-  { value: 'chest_sternum', label: 'Chest / sternum' },
-  { value: 'ribs', label: 'Ribs' },
-  { value: 'elbow', label: 'Elbow' },
-  { value: 'si_joint', label: 'SI joint' },
-  { value: 'knee_tendon', label: 'Knee tendon' },
-  { value: 'other', label: 'Other' },
+const ENTHESITIS_LOCATIONS: { value: string; labelKey: string }[] = [
+  { value: 'heel_achilles', labelKey: 'flares.enthesitis_location.heel_achilles' },
+  { value: 'plantar_fascia', labelKey: 'flares.enthesitis_location.plantar_fascia' },
+  { value: 'chest_sternum', labelKey: 'flares.enthesitis_location.chest_sternum' },
+  { value: 'ribs', labelKey: 'flares.enthesitis_location.ribs' },
+  { value: 'elbow', labelKey: 'flares.enthesitis_location.elbow' },
+  { value: 'si_joint', labelKey: 'flares.enthesitis_location.si_joint' },
+  { value: 'knee_tendon', labelKey: 'flares.enthesitis_location.knee_tendon' },
+  { value: 'other', labelKey: 'flares.enthesitis_location.other' },
 ];
 
-const PERIPHERAL_LOCATIONS: { value: string; label: string }[] = [
-  { value: 'knee', label: 'Knee' },
-  { value: 'hip', label: 'Hip' },
-  { value: 'shoulder', label: 'Shoulder' },
-  { value: 'ankle', label: 'Ankle' },
-  { value: 'wrist', label: 'Wrist' },
-  { value: 'elbow', label: 'Elbow' },
-  { value: 'fingers_toes', label: 'Fingers / toes' },
-  { value: 'other', label: 'Other' },
+const PERIPHERAL_LOCATIONS: { value: string; labelKey: string }[] = [
+  { value: 'knee', labelKey: 'flares.peripheral_location.knee' },
+  { value: 'hip', labelKey: 'flares.peripheral_location.hip' },
+  { value: 'shoulder', labelKey: 'flares.peripheral_location.shoulder' },
+  { value: 'ankle', labelKey: 'flares.peripheral_location.ankle' },
+  { value: 'wrist', labelKey: 'flares.peripheral_location.wrist' },
+  { value: 'elbow', labelKey: 'flares.peripheral_location.elbow' },
+  { value: 'fingers_toes', labelKey: 'flares.peripheral_location.fingers_toes' },
+  { value: 'other', labelKey: 'flares.peripheral_location.other' },
 ];
 
 // ─── Edit Flare Modal ─────────────────────────────────────────────────────────
@@ -106,7 +106,7 @@ interface EditFlareModalProps {
   onSave: (id: string, updates: Partial<Flare>) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   isDark: boolean;
-  locationOptions: { value: string; label: string }[];
+  locationOptions: { value: string; labelKey: string }[];
 }
 
 function EditFlareModal({ visible, flare, onClose, onSave, onDelete, isDark, locationOptions }: EditFlareModalProps) {
@@ -147,10 +147,10 @@ function EditFlareModal({ visible, flare, onClose, onSave, onDelete, isDark, loc
 
   const handleDelete = () => {
     if (!flare?.id) return;
-    Alert.alert('Delete flare', 'This will permanently remove this entry.', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('flares.delete_flare_title'), t('flares.delete_flare_body'), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Delete', style: 'destructive',
+        text: t('common.delete'), style: 'destructive',
         onPress: async () => {
           try { await onDelete(flare.id!); onClose(); }
           catch { Alert.alert(t('errors.save_failed')); }
@@ -204,7 +204,7 @@ function EditFlareModal({ visible, flare, onClose, onSave, onDelete, isDark, loc
                   activeOpacity={0.7}
                 >
                   <Text style={[styles.chipText, isDark && styles.textSecDark, selected && styles.chipTextSelected]}>
-                    {loc.label}
+                    {t(loc.labelKey)}
                   </Text>
                 </TouchableOpacity>
               );
@@ -320,7 +320,7 @@ interface StartFlareModalProps {
   onConfirm: (severity: FlareSeverity, areas: string[], notes: string) => Promise<void>;
   isDark: boolean;
   title: string;
-  locationOptions: { value: string; label: string }[];
+  locationOptions: { value: string; labelKey: string }[];
 }
 
 function StartFlareModal({ visible, onClose, onConfirm, isDark, title, locationOptions }: StartFlareModalProps) {
@@ -383,7 +383,7 @@ function StartFlareModal({ visible, onClose, onConfirm, isDark, title, locationO
           </View>
 
           <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>
-            Location (optional)
+            {t('flares.location_optional')}
           </Text>
           <View style={styles.chipRow}>
             {locationOptions.map((loc) => {
@@ -396,7 +396,7 @@ function StartFlareModal({ visible, onClose, onConfirm, isDark, title, locationO
                   activeOpacity={0.7}
                 >
                   <Text style={[styles.chipText, isDark && styles.textSecDark, selected && styles.chipTextSelected]}>
-                    {loc.label}
+                    {t(loc.labelKey)}
                   </Text>
                 </TouchableOpacity>
               );
@@ -474,9 +474,9 @@ function EditUveitisModal({ visible, episode, onClose, onSave, onDelete, isDark 
 
   const handleDelete = () => {
     if (!episode?.id) return;
-    Alert.alert('Delete episode', 'This will permanently remove this episode.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: async () => {
+    Alert.alert(t('flares.delete_episode_title'), t('flares.delete_episode_body'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('common.delete'), style: 'destructive', onPress: async () => {
         try { await onDelete(episode.id!); onClose(); }
         catch { Alert.alert(t('errors.save_failed')); }
       }},
@@ -485,12 +485,16 @@ function EditUveitisModal({ visible, episode, onClose, onSave, onDelete, isDark 
 
   const SEVERITIES: FlareSeverity[] = ['mild', 'moderate', 'severe'];
   const EYES: { value: UveitisEye; label: string }[] = [
-    { value: 'left', label: 'Left' }, { value: 'right', label: 'Right' }, { value: 'both', label: 'Both' },
+    { value: 'left', label: t('flares.uveitis_eye.left') },
+    { value: 'right', label: t('flares.uveitis_eye.right') },
+    { value: 'both', label: t('flares.uveitis_eye.both') },
   ];
   const SYMPTOMS_LIST: { value: UveitisSymptom; label: string }[] = [
-    { value: 'red_eye', label: 'Red eye' }, { value: 'photophobia', label: 'Light sensitivity' },
-    { value: 'blurred_vision', label: 'Blurred vision' }, { value: 'eye_pain', label: 'Eye pain' },
-    { value: 'floaters', label: 'Floaters' },
+    { value: 'red_eye', label: t('flares.uveitis_symptom.red_eye') },
+    { value: 'photophobia', label: t('flares.uveitis_symptom.photophobia') },
+    { value: 'blurred_vision', label: t('flares.uveitis_symptom.blurred_vision') },
+    { value: 'eye_pain', label: t('flares.uveitis_symptom.eye_pain') },
+    { value: 'floaters', label: t('flares.uveitis_symptom.floaters') },
   ];
 
   return (
@@ -625,17 +629,17 @@ function StartUveitisModal({ visible, onClose, onConfirm, isDark }: StartUveitis
   const [isSaving, setIsSaving] = useState(false);
 
   const SYMPTOMS: { value: UveitisSymptom; label: string }[] = [
-    { value: 'red_eye', label: 'Red eye' },
-    { value: 'photophobia', label: 'Light sensitivity' },
-    { value: 'blurred_vision', label: 'Blurred vision' },
-    { value: 'eye_pain', label: 'Eye pain' },
-    { value: 'floaters', label: 'Floaters' },
+    { value: 'red_eye', label: t('flares.uveitis_symptom.red_eye') },
+    { value: 'photophobia', label: t('flares.uveitis_symptom.photophobia') },
+    { value: 'blurred_vision', label: t('flares.uveitis_symptom.blurred_vision') },
+    { value: 'eye_pain', label: t('flares.uveitis_symptom.eye_pain') },
+    { value: 'floaters', label: t('flares.uveitis_symptom.floaters') },
   ];
 
   const EYES: { value: UveitisEye; label: string }[] = [
-    { value: 'left', label: 'Left eye' },
-    { value: 'right', label: 'Right eye' },
-    { value: 'both', label: 'Both eyes' },
+    { value: 'left', label: t('flares.uveitis_eye_full.left') },
+    { value: 'right', label: t('flares.uveitis_eye_full.right') },
+    { value: 'both', label: t('flares.uveitis_eye_full.both') },
   ];
 
   const toggleSymptom = (s: UveitisSymptom) => {

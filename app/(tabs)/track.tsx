@@ -140,32 +140,32 @@ const MOOD_OPTIONS: { value: Mood; emoji: string; labelKey: string; color: strin
 
 // ─── Diet constants ───────────────────────────────────────────────────────────
 
-const DIET_QUALITY_OPTIONS: { value: DietQuality; label: string; color: string }[] = [
-  { value: 'clean', label: 'Clean', color: '#16A34A' },
-  { value: 'mostly_clean', label: 'Mostly ok', color: '#65A30D' },
-  { value: 'mixed', label: 'Mixed', color: '#D97706' },
-  { value: 'poor', label: 'Poor', color: '#DC2626' },
+const DIET_QUALITY_OPTIONS: { value: DietQuality; labelKey: string; color: string }[] = [
+  { value: 'clean', labelKey: 'tracker.diet_quality.clean', color: '#16A34A' },
+  { value: 'mostly_clean', labelKey: 'tracker.diet_quality.mostly_clean', color: '#65A30D' },
+  { value: 'mixed', labelKey: 'tracker.diet_quality.mixed', color: '#D97706' },
+  { value: 'poor', labelKey: 'tracker.diet_quality.poor', color: '#DC2626' },
 ];
 
-const DIET_TRIGGER_OPTIONS: { value: DietTrigger; label: string }[] = [
-  { value: 'high_starch', label: 'Starch/wheat' },
-  { value: 'alcohol', label: 'Alcohol' },
-  { value: 'processed', label: 'Processed food' },
-  { value: 'high_sugar', label: 'High sugar' },
-  { value: 'dairy', label: 'Dairy' },
-  { value: 'red_meat', label: 'Red meat' },
-  { value: 'nightshades', label: 'Nightshades' },
+const DIET_TRIGGER_OPTIONS: { value: DietTrigger; labelKey: string }[] = [
+  { value: 'high_starch', labelKey: 'tracker.diet_trigger.high_starch' },
+  { value: 'alcohol', labelKey: 'tracker.diet_trigger.alcohol' },
+  { value: 'processed', labelKey: 'tracker.diet_trigger.processed' },
+  { value: 'high_sugar', labelKey: 'tracker.diet_trigger.high_sugar' },
+  { value: 'dairy', labelKey: 'tracker.diet_trigger.dairy' },
+  { value: 'red_meat', labelKey: 'tracker.diet_trigger.red_meat' },
+  { value: 'nightshades', labelKey: 'tracker.diet_trigger.nightshades' },
 ];
 
-const EXERCISE_TYPE_OPTIONS: { value: string; label: string }[] = [
-  { value: 'physio', label: 'Physio exercises' },
-  { value: 'swimming', label: 'Swimming' },
-  { value: 'walking', label: 'Walking' },
-  { value: 'running', label: 'Running' },
-  { value: 'yoga', label: 'Yoga / stretching' },
-  { value: 'cycling', label: 'Cycling' },
-  { value: 'gym', label: 'Gym' },
-  { value: 'other', label: 'Other' },
+const EXERCISE_TYPE_OPTIONS: { value: string; labelKey: string }[] = [
+  { value: 'physio', labelKey: 'tracker.exercise_type.physio' },
+  { value: 'swimming', labelKey: 'tracker.exercise_type.swimming' },
+  { value: 'walking', labelKey: 'tracker.exercise_type.walking' },
+  { value: 'running', labelKey: 'tracker.exercise_type.running' },
+  { value: 'yoga', labelKey: 'tracker.exercise_type.yoga' },
+  { value: 'cycling', labelKey: 'tracker.exercise_type.cycling' },
+  { value: 'gym', labelKey: 'tracker.exercise_type.gym' },
+  { value: 'other', labelKey: 'tracker.exercise_type.other' },
 ];
 
 // ─── Log Summary ──────────────────────────────────────────────────────────────
@@ -368,13 +368,13 @@ function DayLogForm({
         <View style={[styles.section, isDark && styles.sectionDark]}>
           <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>
             {prnMedNames.length === 1
-              ? `Did you take ${prnMedNames[0]} today?`
-              : `Did you take any as-needed medication today?`}
+              ? t('tracker.prn_question_named', { name: prnMedNames[0] })
+              : t('tracker.prn_question_generic')}
           </Text>
           <OptionRow
             options={[
-              { value: 'true', label: 'Yes' },
-              { value: 'false', label: 'No' },
+              { value: 'true', label: t('common.yes') },
+              { value: 'false', label: t('common.no') },
             ]}
             selected={prnTaken === null ? '' : String(prnTaken)}
             onSelect={(v) => setPrnTaken(v === 'true')}
@@ -422,7 +422,7 @@ function DayLogForm({
                   isDark && !selected && styles.chipTextDark,
                   selected && { color: opt.color, fontWeight: '700', fontFamily: FontFamily.bold },
                 ]}>
-                  {opt.label}
+                  {t(opt.labelKey)}
                 </Text>
               </TouchableOpacity>
             );
@@ -452,14 +452,14 @@ function DayLogForm({
                   isDark && !selected && styles.chipTextDark,
                   selected && { color: '#DC2626', fontWeight: '700', fontFamily: FontFamily.bold },
                 ]}>
-                  {opt.label}
+                  {t(opt.labelKey)}
                 </Text>
               </TouchableOpacity>
             );
           })}
         </View>
         <Text style={[styles.hint, isDark && styles.textSecDark]}>
-          Common inflammation triggers for AS, tracked for patterns
+          {t('tracker.diet_trigger_hint')}
         </Text>
       </View>
 
@@ -491,7 +491,7 @@ function DayLogForm({
                     style={[styles.chip, isDark && styles.chipDark, selected && styles.chipSelected]}
                   >
                     <Text style={[styles.chipText, isDark && !selected && styles.chipTextDark, selected && styles.chipTextSelected]}>
-                      {opt.label}
+                      {t(opt.labelKey)}
                     </Text>
                   </TouchableOpacity>
                 );

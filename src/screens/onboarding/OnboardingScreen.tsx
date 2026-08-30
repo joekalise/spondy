@@ -620,15 +620,15 @@ export function OnboardingScreen() {
 
   const PREVIEW_SLIDES = [
     {
-      title: 'See how you\'re really doing',
+      title: t('onboarding.preview.slide1_title'),
       subtitle: '',
       mockContent: (
         <View style={[styles.mockCard, isDark && styles.mockCardDark]}>
           {/* Score row */}
           <View style={styles.mockScoreRow}>
             <View>
-              <Text style={[styles.mockCardTitle, isDark && styles.mockCardTitleDark]}>Spondy Score</Text>
-              <Text style={[styles.mockScoreHint, isDark && styles.mockTextSec]}>This week · 6 days logged</Text>
+              <Text style={[styles.mockCardTitle, isDark && styles.mockCardTitleDark]}>{t('home.spondy_score')}</Text>
+              <Text style={[styles.mockScoreHint, isDark && styles.mockTextSec]}>{t('onboarding.preview.score_hint')}</Text>
             </View>
             <View style={[styles.mockScoreCircle, { borderColor: Colors.success }]}>
               <Text style={[styles.mockScoreNum, { color: Colors.success }]}>74</Text>
@@ -652,10 +652,10 @@ export function OnboardingScreen() {
 
           {/* Stats */}
           {[
-            { label: 'Avg pain', value: '4.2 / 10', color: Colors.warning },
-            { label: 'Avg fatigue', value: '3.1 / 10', color: Colors.success },
-            { label: 'Mood', value: '😊 Mostly good', color: Colors.success },
-            { label: 'Streak', value: '🔥 6 days', color: Colors.primary },
+            { label: t('onboarding.preview.stat_avg_pain'), value: '4.2 / 10', color: Colors.warning },
+            { label: t('onboarding.preview.stat_avg_fatigue'), value: '3.1 / 10', color: Colors.success },
+            { label: t('onboarding.preview.stat_mood'), value: t('onboarding.preview.stat_mood_value'), color: Colors.success },
+            { label: t('onboarding.preview.stat_streak'), value: t('onboarding.preview.stat_streak_value'), color: Colors.primary },
           ].map(s => (
             <View key={s.label} style={styles.mockFactorRow}>
               <Text style={[styles.mockFactor, isDark && styles.mockTextSec]}>{s.label}</Text>
@@ -666,19 +666,19 @@ export function OnboardingScreen() {
       ),
     },
     {
-      title: 'Know before a flare hits',
+      title: t('onboarding.preview.slide2_title'),
       subtitle: '',
       mockContent: (
         <View style={{ gap: Spacing.sm }}>
           <View style={[styles.mockWarningCard, isDark && styles.mockWarningCardDark]}>
             <View style={styles.mockScoreRow}>
-              <Text style={styles.mockWarningTitle}>⚠️ Heads up</Text>
+              <Text style={styles.mockWarningTitle}>⚠️ {t('onboarding.preview.heads_up')}</Text>
               <View style={[styles.mockChip, { borderColor: Colors.warning + '80' }]}>
-                <Text style={[styles.mockChipText, { color: Colors.warning }]}>Elevated risk</Text>
+                <Text style={[styles.mockChipText, { color: Colors.warning }]}>{t('onboarding.preview.elevated_risk')}</Text>
               </View>
             </View>
             <Text style={[styles.mockWarningBody, isDark && styles.mockTextSec]}>
-              Pain has been trending up for 3 days and your sleep is shorter. Based on your patterns, take it easy today.
+              {t('onboarding.preview.warning_body')}
             </Text>
 
             {/* Trend bars */}
@@ -694,7 +694,11 @@ export function OnboardingScreen() {
             </View>
 
             <View style={styles.mockChipsRow}>
-              {['😴 Shorter sleep', '🔄 HRV dropping', '⏱ Stiffness up'].map(chip => (
+              {[
+                t('onboarding.preview.chip_shorter_sleep'),
+                t('onboarding.preview.chip_hrv_dropping'),
+                t('onboarding.preview.chip_stiffness_up'),
+              ].map(chip => (
                 <View key={chip} style={[styles.mockChip, { borderColor: Colors.warning + '60' }]}>
                   <Text style={[styles.mockChipText, { color: Colors.warning }]}>{chip}</Text>
                 </View>
@@ -704,41 +708,41 @@ export function OnboardingScreen() {
 
           <View style={[styles.mockCard, isDark && styles.mockCardDark]}>
             <View style={styles.mockFactorRow}>
-              <Text style={[styles.mockFactor, isDark && styles.mockTextSec]}>Creator's note</Text>
+              <Text style={[styles.mockFactor, isDark && styles.mockTextSec]}>{t('onboarding.preview.creators_note')}</Text>
             </View>
             <Text style={[styles.mockInsightSummary, isDark && styles.mockTextSec]}>
-              These signals predicted a uveitis flare 3 days before it struck. Spondy watches for exactly this.
+              {t('onboarding.preview.uveitis_prediction')}
             </Text>
           </View>
         </View>
       ),
     },
     {
-      title: 'AI insights, just for you',
+      title: t('onboarding.preview.slide3_title'),
       subtitle: '',
       mockContent: (
         <View style={[styles.mockCard, isDark && styles.mockCardDark]}>
           <View style={styles.mockAIHeader}>
-            <Text style={[styles.mockCardTitle, isDark && styles.mockCardTitleDark]}>Weekly insight</Text>
-            <View style={styles.mockBadge}><Text style={styles.mockBadgeText}>Premium</Text></View>
+            <Text style={[styles.mockCardTitle, isDark && styles.mockCardTitleDark]}>{t('onboarding.preview.weekly_insight')}</Text>
+            <View style={styles.mockBadge}><Text style={styles.mockBadgeText}>{t('common.premium')}</Text></View>
           </View>
 
           {/* Chat exchange */}
           <View style={styles.mockChatBubbleUser}>
-            <Text style={styles.mockChatTextUser}>Why was my pain lower this week?</Text>
+            <Text style={styles.mockChatTextUser}>{t('onboarding.preview.chat_question')}</Text>
           </View>
           <View style={styles.mockChatBubbleAI}>
             <Text style={[styles.mockChatTextAI, isDark && styles.mockTextSec]}>
-              You slept 7.5h on average — on those nights, your pain scores dropped by ~35%. Your medication adherence was also perfect this week.
+              {t('onboarding.preview.chat_answer')}
             </Text>
           </View>
 
           <View style={[styles.mockDivider, isDark && { backgroundColor: Colors.borderDark }]} />
 
           {[
-            { icon: '😴', label: 'Sleep vs pain', value: 'Strong link' },
-            { icon: '💊', label: 'Medication', value: '7/7 days ✓' },
-            { icon: '🚶', label: 'Activity', value: 'Light week' },
+            { icon: '😴', label: t('onboarding.preview.row_sleep_pain'), value: t('onboarding.preview.row_sleep_pain_value') },
+            { icon: '💊', label: t('onboarding.preview.row_medication'), value: t('onboarding.preview.row_medication_value') },
+            { icon: '🚶', label: t('onboarding.preview.row_activity'), value: t('onboarding.preview.row_activity_value') },
           ].map(r => (
             <View key={r.label} style={styles.mockFactorRow}>
               <Text style={[styles.mockFactor, isDark && styles.mockTextSec]}>{r.icon} {r.label}</Text>
@@ -794,7 +798,7 @@ export function OnboardingScreen() {
 
             <TouchableOpacity onPress={() => Linking.openURL('https://gist.github.com/joekalise/fb689414dba7ade9f6d7383ccad9cf1f').catch(() => {})}>
               <Text style={[styles.consentPrivacyLink, { color: Colors.primary }]}>
-                View Privacy Policy
+                {t('onboarding.ai_consent.privacy_link')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -869,7 +873,7 @@ export function OnboardingScreen() {
           activeOpacity={0.7}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
-          <Text style={[styles.welcomeBackButtonText, isDark && styles.textDark]}>‹ Back</Text>
+          <Text style={[styles.welcomeBackButtonText, isDark && styles.textDark]}>‹ {t('common.back')}</Text>
         </TouchableOpacity>
         <ScrollView
           contentContainerStyle={[styles.scrollContent, styles.welcomeScroll]}
@@ -878,17 +882,17 @@ export function OnboardingScreen() {
           <View style={styles.welcomeContent}>
             <Text style={styles.welcomeEmoji}>🦴</Text>
             <Text style={[styles.welcomeTitle, isDark && styles.textDark]}>
-              Life with AS,{'\n'}finally understood
+              {t('onboarding.welcome_title')}
             </Text>
             <Text style={[styles.welcomeSubtitle, isDark && styles.timeLabelDark]}>
-              Spondy learns your patterns so you can stay ahead of flares and make the most of your good days.
+              {t('onboarding.welcome_subtitle')}
             </Text>
 
             <View style={styles.welcomeFeatures}>
               {[
-                { icon: '📊', text: 'Track pain, fatigue, sleep, and medication in under 60 seconds' },
-                { icon: '🔮', text: 'Spot early warning signs before a flare strikes' },
-                { icon: '🩺', text: 'Share clear reports with your rheumatologist' },
+                { icon: '📊', text: t('onboarding.welcome_feature_track') },
+                { icon: '🔮', text: t('onboarding.welcome_feature_predict') },
+                { icon: '🩺', text: t('onboarding.welcome_feature_share') },
               ].map(({ icon, text }) => (
                 <View key={text} style={[styles.welcomeFeatureRow, isDark && styles.welcomeFeatureRowDark]}>
                   <Text style={styles.welcomeFeatureIcon}>{icon}</Text>

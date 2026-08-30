@@ -42,7 +42,8 @@
     "new_password": "New password",
     "password_hint": "At least 8 characters.",
     "password": "Password",
-    "email": "Email"
+    "email": "Email",
+    "delete": "Delete"
   },
   "auth": {
     "welcome": "Welcome to Spondy",
@@ -208,7 +209,40 @@
       "how_used_title": "How it is used:",
       "how_used_body": "Your data is sent securely to generate insights. Anthropic does not use your data to train AI models. You can withdraw consent at any time from Settings.",
       "agree_cta": "I agree, personalise my experience",
-      "decline_cta": "No thanks, use basic mode"
+      "decline_cta": "No thanks, use basic mode",
+      "privacy_link": "View Privacy Policy"
+    },
+    "welcome_feature_track": "Track pain, fatigue, sleep, and medication in under 60 seconds",
+    "welcome_feature_predict": "Spot early warning signs before a flare strikes",
+    "welcome_feature_share": "Share clear reports with your rheumatologist",
+    "preview": {
+      "slide1_title": "See how you're really doing",
+      "score_hint": "This week · 6 days logged",
+      "stat_avg_pain": "Avg pain",
+      "stat_avg_fatigue": "Avg fatigue",
+      "stat_mood": "Mood",
+      "stat_mood_value": "😊 Mostly good",
+      "stat_streak": "Streak",
+      "stat_streak_value": "🔥 6 days",
+      "slide2_title": "Know before a flare hits",
+      "heads_up": "Heads up",
+      "elevated_risk": "Elevated risk",
+      "warning_body": "Pain has been trending up for 3 days and your sleep is shorter. Based on your patterns, take it easy today.",
+      "chip_shorter_sleep": "😴 Shorter sleep",
+      "chip_hrv_dropping": "🔄 HRV dropping",
+      "chip_stiffness_up": "⏱ Stiffness up",
+      "creators_note": "Creator's note",
+      "uveitis_prediction": "These signals predicted a uveitis flare 3 days before it struck. Spondy watches for exactly this.",
+      "slide3_title": "AI insights, just for you",
+      "weekly_insight": "Weekly insight",
+      "chat_question": "Why was my pain lower this week?",
+      "chat_answer": "You slept 7.5h on average, on those nights your pain scores dropped by ~35%. Your medication adherence was also perfect this week.",
+      "row_sleep_pain": "Sleep vs pain",
+      "row_sleep_pain_value": "Strong link",
+      "row_medication": "Medication",
+      "row_medication_value": "7/7 days ✓",
+      "row_activity": "Activity",
+      "row_activity_value": "Light week"
     }
   },
   "profile_ready": {
@@ -307,7 +341,35 @@
     "exercise_duration": "Duration (minutes)",
     "browse_entries": "Browse entries",
     "recent_checkins": "Recent check-ins",
-    "browse_older": "Browse older entries"
+    "browse_older": "Browse older entries",
+    "diet_quality": {
+      "clean": "Clean",
+      "mostly_clean": "Mostly ok",
+      "mixed": "Mixed",
+      "poor": "Poor"
+    },
+    "diet_trigger": {
+      "high_starch": "Starch/wheat",
+      "alcohol": "Alcohol",
+      "processed": "Processed food",
+      "high_sugar": "High sugar",
+      "dairy": "Dairy",
+      "red_meat": "Red meat",
+      "nightshades": "Nightshades"
+    },
+    "diet_trigger_hint": "Common inflammation triggers for AS, tracked for patterns",
+    "exercise_type": {
+      "physio": "Physio exercises",
+      "swimming": "Swimming",
+      "walking": "Walking",
+      "running": "Running",
+      "yoga": "Yoga / stretching",
+      "cycling": "Cycling",
+      "gym": "Gym",
+      "other": "Other"
+    },
+    "prn_question_named": "Did you take {{name}} today?",
+    "prn_question_generic": "Did you take any as-needed medication today?"
   },
   "flares": {
     "title": "Flare log",
@@ -371,7 +433,59 @@
     "no_current_enthesitis": "No current enthesitis flare",
     "no_past_enthesitis": "No past enthesitis flares recorded.",
     "no_current_episode": "No current episode",
-    "no_past_episodes": "No past episodes recorded."
+    "no_past_episodes": "No past episodes recorded.",
+    "as_location": {
+      "lower_back": "Lower back / SI",
+      "upper_back": "Upper back",
+      "hips": "Hips",
+      "neck": "Neck",
+      "chest": "Chest / ribs",
+      "shoulders": "Shoulders",
+      "knees": "Knees",
+      "jaw": "Jaw (TMJ)"
+    },
+    "enthesitis_location": {
+      "heel_achilles": "Heel / Achilles",
+      "plantar_fascia": "Plantar fascia",
+      "chest_sternum": "Chest / sternum",
+      "ribs": "Ribs",
+      "elbow": "Elbow",
+      "si_joint": "SI joint",
+      "knee_tendon": "Knee tendon",
+      "other": "Other"
+    },
+    "peripheral_location": {
+      "knee": "Knee",
+      "hip": "Hip",
+      "shoulder": "Shoulder",
+      "ankle": "Ankle",
+      "wrist": "Wrist",
+      "elbow": "Elbow",
+      "fingers_toes": "Fingers / toes",
+      "other": "Other"
+    },
+    "location_optional": "Location (optional)",
+    "uveitis_eye": {
+      "left": "Left",
+      "right": "Right",
+      "both": "Both"
+    },
+    "uveitis_eye_full": {
+      "left": "Left eye",
+      "right": "Right eye",
+      "both": "Both eyes"
+    },
+    "uveitis_symptom": {
+      "red_eye": "Red eye",
+      "photophobia": "Light sensitivity",
+      "blurred_vision": "Blurred vision",
+      "eye_pain": "Eye pain",
+      "floaters": "Floaters"
+    },
+    "delete_flare_title": "Delete flare",
+    "delete_flare_body": "This will permanently remove this entry.",
+    "delete_episode_title": "Delete episode",
+    "delete_episode_body": "This will permanently remove this episode."
   },
   "insights": {
     "title": "Your insights",
@@ -424,7 +538,28 @@
     "trial_ready_body": "You've logged enough to see some real patterns. Start your free trial to unlock your first AI analysis.",
     "trial_start_title": "Start your free trial",
     "trial_start_body": "Your first AI insight unlocks after {{days}} days of logging. Start your trial now so it's ready when you are.",
-    "ai_card_teaser": "Log 5 days and your first insight will appear here."
+    "ai_card_teaser": "Log 5 days and your first insight will appear here.",
+    "basdai_question_1": "How would you describe the overall level of fatigue/tiredness?",
+    "basdai_question_2": "How would you describe the overall level of AS neck, back or hip pain?",
+    "basdai_question_3": "How would you describe the overall level of pain/swelling in joints other than neck, back or hips?",
+    "basdai_question_4": "How would you describe the overall level of discomfort from tender areas (enthesitis)?",
+    "basdai_question_5": "How would you describe the overall level of morning stiffness severity from the time you wake up?",
+    "basdai_question_6": "How long does your morning stiffness last? (0=none, 10=2+ hours)",
+    "basdai_severity_low": "Low activity",
+    "basdai_severity_moderate": "Moderate",
+    "basdai_severity_high": "High (biologic threshold)",
+    "basdai_severity_very_high": "Very high",
+    "basdai_info": "BASDAI (Bath Ankylosing Spondylitis Disease Activity Index) is the standard clinical tool for measuring AS disease activity. You score six questions on a 0-10 scale: fatigue, spinal pain, joint pain, enthesitis, morning stiffness severity, and duration. A score of 4 or above is the threshold at which biologic therapy is typically considered.",
+    "cache_age_just_now": "just now",
+    "cache_age_mins_one": "{{count}} min ago",
+    "cache_age_mins_other": "{{count}} min ago",
+    "cache_age_hours_one": "{{count}}h ago",
+    "cache_age_hours_other": "{{count}}h ago",
+    "cache_age_yesterday": "yesterday",
+    "cache_age_days_one": "{{count}} day ago",
+    "cache_age_days_other": "{{count}} days ago",
+    "updated_label": "Updated {{age}}",
+    "chart_fills_out_hint": "This chart fills out as you log more days."
   },
   "profile": {
     "title": "Your profile",
@@ -548,7 +683,36 @@
     "feature_ai_context": "Extended personalisation",
     "already_subscribed": "You're on Spondy Premium",
     "manage": "Manage subscription",
-    "restore": "Restore purchases"
+    "restore": "Restore purchases",
+    "ai_badge": "AI",
+    "mock_insight_title": "Your weekly insight",
+    "mock_insight_body": "Your pain was lower on days you slept over 7 hours. Fatigue spiked mid-week, likely linked to Tuesday's longer walk.",
+    "mock_insight_chip_sleep": "😴 Sleep → pain",
+    "mock_insight_chip_activity": "🚶 Activity",
+    "mock_insight_chip_trending": "📈 Trending up",
+    "mock_chat_title": "Chat with your data",
+    "mock_chat_question": "Why do I tend to flare on weekends?",
+    "mock_chat_answer": "Your data shows sleep is shorter on Friday nights, and you're 3× more active on Saturdays. Both are correlated with flares in your history.",
+    "mock_chat_placeholder": "Ask anything about your health data…",
+    "mock_flare_title": "⚠️ Possible flare building",
+    "mock_flare_body": "Several signals suggest a flare could be building. Rest up and check your medications.",
+    "mock_flare_signal_stiffness": "⏱ Long morning stiffness",
+    "mock_flare_signal_pain": "↑ Pain trending up",
+    "mock_flare_signal_sleep": "😴 Poor sleep",
+    "feature_weekly_title": "Weekly AI insight report",
+    "feature_weekly_body": "Every week, Spondy analyses your logs and surfaces the patterns driving your symptoms.",
+    "feature_chat_title": "Chat with your data",
+    "feature_chat_body": "Ask anything, like \"why do I flare on weekends?\" or \"what helps my sleep?\", and get answers grounded in your own history.",
+    "feature_flare_title": "Flare prediction nudges",
+    "feature_flare_body": "When your patterns suggest a flare is building, Spondy lets you know early so you can act before it peaks.",
+    "feature_personalisation_title": "Extended personalisation",
+    "feature_personalisation_body": "Add more detail about your condition in your profile, and Premium insights use it to get more specific.",
+    "header_title": "Spondy Premium",
+    "header_subtitle": "Understand your AS like never before. Let your data tell the story.",
+    "see_it_in_action": "See it in action",
+    "whats_included": "What's included",
+    "price_per_month": "{{price}} / month",
+    "restore_purchases": "Restore purchases"
   },
   "premium_teaser": {
     "ai_title": "AI-powered insights",
@@ -751,7 +915,16 @@
     "privacy_policy": "Privacy Policy",
     "delete_data_button": "Delete all my data",
     "report_info_title": "What's in the report",
-    "report_info_message": "A PDF covering all your daily logs, flares, stiffness trends, medication adherence, and BASDAI scores. Set a date range to cover just since your last appointment, then share it with your rheumatologist."
+    "report_info_message": "A PDF covering all your daily logs, flares, stiffness trends, medication adherence, and BASDAI scores. Set a date range to cover just since your last appointment, then share it with your rheumatologist.",
+    "delete_all_title": "Delete all data",
+    "delete_all_body": "This permanently deletes all your logs, flares, medications, and profile data. It cannot be undone.",
+    "delete_everything": "Delete everything",
+    "delete_confirm_title": "Are you absolutely sure?",
+    "delete_confirm_body": "All your data will be deleted and cannot be recovered.",
+    "delete_confirm_cta": "Yes, delete everything",
+    "remove_medication_body": "Remove this medication reminder?",
+    "remove_injection_body": "Remove this injection record?",
+    "injection_interval_days": "{{days}}d interval"
   },
   "insights_info": {
     "how_it_works_title": "How it works",

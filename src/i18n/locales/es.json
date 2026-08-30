@@ -42,7 +42,8 @@
     "new_password": "Nueva contraseña",
     "password_hint": "Al menos 8 caracteres.",
     "password": "Contraseña",
-    "email": "Correo electrónico"
+    "email": "Correo electrónico",
+    "delete": "Eliminar"
   },
   "auth": {
     "welcome": "Bienvenido a Spondy",
@@ -184,7 +185,7 @@
     "why_we_ask": "¿Por qué preguntamos esto?",
     "welcome_back": "‹ Atrás",
     "welcome_title": "La vida con EA,\npor fin comprendida",
-    "welcome_subtitle": "Spondy aprende tus patrones para que puedas adelantarte a los brotes y aprovechar al máximo tus buenos días.",
+    "welcome_subtitle": "Spondy aprende tus patrones para que puedas anticiparte a los brotes y aprovechar al máximo tus buenos días.",
     "welcome_feature_1": "Registra dolor, fatiga, sueño y medicación en menos de 60 segundos",
     "welcome_feature_2": "Detecta señales de alerta temprana antes de que golpee un brote",
     "welcome_feature_3": "Comparte informes claros con tu reumatólogo",
@@ -208,7 +209,40 @@
       "how_used_title": "Cómo se usa:",
       "how_used_body": "Tus datos se envían de forma segura para generar análisis. Anthropic no usa tus datos para entrenar modelos de IA. Puedes retirar el consentimiento en cualquier momento desde Configuración.",
       "agree_cta": "Estoy de acuerdo, personalizar mi experiencia",
-      "decline_cta": "No gracias, usar modo básico"
+      "decline_cta": "No gracias, usar modo básico",
+      "privacy_link": "Ver Política de Privacidad"
+    },
+    "welcome_feature_track": "Registra dolor, fatiga, sueño y medicación en menos de 60 segundos",
+    "welcome_feature_predict": "Detecta señales de alerta temprana antes de que llegue un brote",
+    "welcome_feature_share": "Comparte informes claros con tu reumatólogo",
+    "preview": {
+      "slide1_title": "Mira cómo estás realmente",
+      "score_hint": "Esta semana · 6 días registrados",
+      "stat_avg_pain": "Dolor medio",
+      "stat_avg_fatigue": "Fatiga media",
+      "stat_mood": "Ánimo",
+      "stat_mood_value": "😊 Bastante bien",
+      "stat_streak": "Racha",
+      "stat_streak_value": "🔥 6 días",
+      "slide2_title": "Anticípate a los brotes",
+      "heads_up": "Aviso",
+      "elevated_risk": "Riesgo elevado",
+      "warning_body": "El dolor ha ido en aumento durante 3 días y duermes menos. Según tus patrones, tómatelo con calma hoy.",
+      "chip_shorter_sleep": "😴 Menos sueño",
+      "chip_hrv_dropping": "🔄 HRV bajando",
+      "chip_stiffness_up": "⏱ Más rigidez",
+      "creators_note": "Nota del creador",
+      "uveitis_prediction": "Estas señales predijeron un brote de uveítis 3 días antes de que ocurriera. Spondy vigila exactamente esto.",
+      "slide3_title": "Análisis de IA, solo para ti",
+      "weekly_insight": "Análisis semanal",
+      "chat_question": "¿Por qué tuve menos dolor esta semana?",
+      "chat_answer": "Dormiste 7,5h de media, esas noches tu dolor bajó un ~35%. Tu cumplimiento de medicación también fue perfecto esta semana.",
+      "row_sleep_pain": "Sueño y dolor",
+      "row_sleep_pain_value": "Relación fuerte",
+      "row_medication": "Medicación",
+      "row_medication_value": "7/7 días ✓",
+      "row_activity": "Actividad",
+      "row_activity_value": "Semana ligera"
     }
   },
   "profile_ready": {
@@ -307,7 +341,35 @@
     "exercise_duration": "Duración (minutos)",
     "browse_entries": "Explorar registros",
     "recent_checkins": "Registros recientes",
-    "browse_older": "Ver registros anteriores"
+    "browse_older": "Ver registros anteriores",
+    "diet_quality": {
+      "clean": "Limpia",
+      "mostly_clean": "Bastante bien",
+      "mixed": "Mixta",
+      "poor": "Mala"
+    },
+    "diet_trigger": {
+      "high_starch": "Almidón/trigo",
+      "alcohol": "Alcohol",
+      "processed": "Comida procesada",
+      "high_sugar": "Mucha azúcar",
+      "dairy": "Lácteos",
+      "red_meat": "Carne roja",
+      "nightshades": "Solanáceas"
+    },
+    "diet_trigger_hint": "Desencadenantes de inflamación comunes en la EA, registrados para detectar patrones",
+    "exercise_type": {
+      "physio": "Ejercicios de fisioterapia",
+      "swimming": "Natación",
+      "walking": "Caminar",
+      "running": "Correr",
+      "yoga": "Yoga / estiramientos",
+      "cycling": "Ciclismo",
+      "gym": "Gimnasio",
+      "other": "Otro"
+    },
+    "prn_question_named": "¿Tomaste {{name}} hoy?",
+    "prn_question_generic": "¿Tomaste alguna medicación según sea necesario hoy?"
   },
   "flares": {
     "title": "Registro de brotes",
@@ -371,7 +433,59 @@
     "no_current_enthesitis": "Sin brote de entesitis actual",
     "no_past_enthesitis": "Sin brotes de entesitis pasados registrados.",
     "no_current_episode": "Sin episodio actual",
-    "no_past_episodes": "Sin episodios pasados registrados."
+    "no_past_episodes": "Sin episodios pasados registrados.",
+    "as_location": {
+      "lower_back": "Espalda baja / SI",
+      "upper_back": "Espalda alta",
+      "hips": "Caderas",
+      "neck": "Cuello",
+      "chest": "Pecho / costillas",
+      "shoulders": "Hombros",
+      "knees": "Rodillas",
+      "jaw": "Mandíbula (ATM)"
+    },
+    "enthesitis_location": {
+      "heel_achilles": "Talón / Aquiles",
+      "plantar_fascia": "Fascia plantar",
+      "chest_sternum": "Pecho / esternón",
+      "ribs": "Costillas",
+      "elbow": "Codo",
+      "si_joint": "Articulación SI",
+      "knee_tendon": "Tendón de la rodilla",
+      "other": "Otro"
+    },
+    "peripheral_location": {
+      "knee": "Rodilla",
+      "hip": "Cadera",
+      "shoulder": "Hombro",
+      "ankle": "Tobillo",
+      "wrist": "Muñeca",
+      "elbow": "Codo",
+      "fingers_toes": "Dedos de manos / pies",
+      "other": "Otro"
+    },
+    "location_optional": "Ubicación (opcional)",
+    "uveitis_eye": {
+      "left": "Izquierdo",
+      "right": "Derecho",
+      "both": "Ambos"
+    },
+    "uveitis_eye_full": {
+      "left": "Ojo izquierdo",
+      "right": "Ojo derecho",
+      "both": "Ambos ojos"
+    },
+    "uveitis_symptom": {
+      "red_eye": "Ojo rojo",
+      "photophobia": "Sensibilidad a la luz",
+      "blurred_vision": "Visión borrosa",
+      "eye_pain": "Dolor ocular",
+      "floaters": "Miodesopsias"
+    },
+    "delete_flare_title": "Eliminar brote",
+    "delete_flare_body": "Esto eliminará permanentemente esta entrada.",
+    "delete_episode_title": "Eliminar episodio",
+    "delete_episode_body": "Esto eliminará permanentemente este episodio."
   },
   "insights": {
     "title": "Tus análisis",
@@ -424,7 +538,28 @@
     "trial_ready_body": "Has registrado suficiente para ver patrones reales. Comienza tu prueba gratuita para desbloquear tu primer análisis con IA.",
     "trial_start_title": "Comienza tu prueba gratuita",
     "trial_start_body": "Tu primer análisis con IA se desbloquea después de {{days}} días de registro. Comienza tu prueba ahora para que esté listo cuando lo necesites.",
-    "ai_card_teaser": "Registra 5 días y tu primer análisis aparecerá aquí."
+    "ai_card_teaser": "Registra 5 días y tu primer análisis aparecerá aquí.",
+    "basdai_question_1": "¿Cómo describirías el nivel general de fatiga/cansancio?",
+    "basdai_question_2": "¿Cómo describirías el nivel general de dolor de cuello, espalda o cadera por la EA?",
+    "basdai_question_3": "¿Cómo describirías el nivel general de dolor/hinchazón en articulaciones distintas del cuello, la espalda o las caderas?",
+    "basdai_question_4": "¿Cómo describirías el nivel general de molestia en zonas sensibles (entesitis)?",
+    "basdai_question_5": "¿Cómo describirías el nivel general de rigidez matutina desde que te despiertas?",
+    "basdai_question_6": "¿Cuánto dura tu rigidez matutina? (0=nada, 10=2+ horas)",
+    "basdai_severity_low": "Actividad baja",
+    "basdai_severity_moderate": "Moderada",
+    "basdai_severity_high": "Alta (umbral de biológicos)",
+    "basdai_severity_very_high": "Muy alta",
+    "basdai_info": "El BASDAI (Índice de Actividad de la Enfermedad de Bath para la Espondilitis Anquilosante) es la herramienta clínica estándar para medir la actividad de la EA. Puntúas seis preguntas en una escala de 0 a 10: fatiga, dolor espinal, dolor articular, entesitis, gravedad de la rigidez matutina y duración. Una puntuación de 4 o más es el umbral a partir del cual normalmente se considera la terapia biológica.",
+    "cache_age_just_now": "justo ahora",
+    "cache_age_mins_one": "hace {{count}} min",
+    "cache_age_mins_other": "hace {{count}} min",
+    "cache_age_hours_one": "hace {{count}}h",
+    "cache_age_hours_other": "hace {{count}}h",
+    "cache_age_yesterday": "ayer",
+    "cache_age_days_one": "hace {{count}} día",
+    "cache_age_days_other": "hace {{count}} días",
+    "updated_label": "Actualizado {{age}}",
+    "chart_fills_out_hint": "Este gráfico se completa a medida que registras más días."
   },
   "profile": {
     "title": "Tu perfil",
@@ -548,7 +683,36 @@
     "feature_ai_context": "Personalización extendida",
     "already_subscribed": "Estás en Spondy Premium",
     "manage": "Administrar suscripción",
-    "restore": "Restaurar compras"
+    "restore": "Restaurar compras",
+    "ai_badge": "IA",
+    "mock_insight_title": "Tu análisis semanal",
+    "mock_insight_body": "Tu dolor fue menor los días que dormiste más de 7 horas. La fatiga aumentó a mitad de semana, probablemente por la caminata larga del martes.",
+    "mock_insight_chip_sleep": "😴 Sueño → dolor",
+    "mock_insight_chip_activity": "🚶 Actividad",
+    "mock_insight_chip_trending": "📈 Mejorando",
+    "mock_chat_title": "Chatea con tus datos",
+    "mock_chat_question": "¿Por qué tiendo a tener brotes los fines de semana?",
+    "mock_chat_answer": "Tus datos muestran que duermes menos los viernes por la noche y estás 3 veces más activo los sábados. Ambos se correlacionan con brotes en tu historial.",
+    "mock_chat_placeholder": "Pregunta lo que quieras sobre tus datos de salud…",
+    "mock_flare_title": "⚠️ Posible brote en desarrollo",
+    "mock_flare_body": "Varias señales sugieren que podría estar formándose un brote. Descansa y revisa tu medicación.",
+    "mock_flare_signal_stiffness": "⏱ Rigidez matutina prolongada",
+    "mock_flare_signal_pain": "↑ Dolor en aumento",
+    "mock_flare_signal_sleep": "😴 Mal sueño",
+    "feature_weekly_title": "Informe semanal de IA",
+    "feature_weekly_body": "Cada semana, Spondy analiza tus registros y muestra los patrones que impulsan tus síntomas.",
+    "feature_chat_title": "Chatea con tus datos",
+    "feature_chat_body": "Pregunta lo que quieras, como \"¿por qué tengo brotes los fines de semana?\" o \"¿qué ayuda a mi sueño?\", y obtén respuestas basadas en tu propio historial.",
+    "feature_flare_title": "Avisos de predicción de brotes",
+    "feature_flare_body": "Cuando tus patrones sugieren que se está formando un brote, Spondy te avisa pronto para que puedas actuar antes de que empeore.",
+    "feature_personalisation_title": "Personalización ampliada",
+    "feature_personalisation_body": "Añade más detalles sobre tu condición en tu perfil, y los análisis Premium los usarán para ser más específicos.",
+    "header_title": "Spondy Premium",
+    "header_subtitle": "Comprende tu EA como nunca antes. Deja que tus datos cuenten la historia.",
+    "see_it_in_action": "Míralo en acción",
+    "whats_included": "Qué incluye",
+    "price_per_month": "{{price}} / mes",
+    "restore_purchases": "Restaurar compras"
   },
   "premium_teaser": {
     "ai_title": "Análisis con IA",
@@ -751,7 +915,16 @@
     "privacy_policy": "Política de privacidad",
     "delete_data_button": "Eliminar todos mis datos",
     "report_info_title": "Qué hay en el informe",
-    "report_info_message": "Un PDF que cubre todos tus registros diarios, brotes, tendencias de rigidez, adherencia a medicamentos y puntuaciones BASDAI. Establece un rango de fechas para cubrir solo desde tu última cita, luego compártelo con tu reumatólogo."
+    "report_info_message": "Un PDF que cubre todos tus registros diarios, brotes, tendencias de rigidez, adherencia a medicamentos y puntuaciones BASDAI. Establece un rango de fechas para cubrir solo desde tu última cita, luego compártelo con tu reumatólogo.",
+    "delete_all_title": "Eliminar todos los datos",
+    "delete_all_body": "Esto elimina permanentemente todos tus registros, brotes, medicamentos y datos de perfil. No se puede deshacer.",
+    "delete_everything": "Eliminar todo",
+    "delete_confirm_title": "¿Estás completamente seguro?",
+    "delete_confirm_body": "Todos tus datos se eliminarán y no podrán recuperarse.",
+    "delete_confirm_cta": "Sí, eliminar todo",
+    "remove_medication_body": "¿Eliminar este recordatorio de medicación?",
+    "remove_injection_body": "¿Eliminar este registro de inyección?",
+    "injection_interval_days": "intervalo de {{days}}d"
   },
   "insights_info": {
     "how_it_works_title": "Cómo funciona",

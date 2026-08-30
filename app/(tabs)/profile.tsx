@@ -1101,21 +1101,21 @@ export default function ProfileScreen() {
 
   const handleDeleteAccount = useCallback(() => {
     Alert.alert(
-      'Delete all data',
-      'This permanently deletes all your logs, flares, medications, and profile data. It cannot be undone.',
+      t('profile_alerts.delete_all_title'),
+      t('profile_alerts.delete_all_body'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Delete everything',
+          text: t('profile_alerts.delete_everything'),
           style: 'destructive',
           onPress: () => {
             Alert.alert(
-              'Are you absolutely sure?',
-              'All your data will be deleted and cannot be recovered.',
+              t('profile_alerts.delete_confirm_title'),
+              t('profile_alerts.delete_confirm_body'),
               [
-                { text: 'Cancel', style: 'cancel' },
+                { text: t('common.cancel'), style: 'cancel' },
                 {
-                  text: 'Yes, delete everything',
+                  text: t('profile_alerts.delete_confirm_cta'),
                   style: 'destructive',
                   onPress: async () => {
                     if (!user) return;
@@ -1208,11 +1208,11 @@ export default function ProfileScreen() {
     (id: string, name: string) => {
       Alert.alert(
         name,
-        'Remove this medication reminder?',
+        t('profile_alerts.remove_medication_body'),
         [
           { text: t('common.cancel'), style: 'cancel' },
           {
-            text: 'Remove',
+            text: t('common.remove'),
             style: 'destructive',
             onPress: async () => {
               try {
@@ -1797,12 +1797,12 @@ export default function ProfileScreen() {
                     <View style={styles.medListRow}>
                       <View style={styles.medInfo}>
                         <Text style={[styles.medName, { color: textPrimary }]}>{inj.medication_name}</Text>
-                        <Text style={[styles.medDose, { color: textSecondary }]}>{inj.injected_at} · {inj.interval_days}d interval</Text>
+                        <Text style={[styles.medDose, { color: textSecondary }]}>{inj.injected_at} · {t('profile_alerts.injection_interval_days', { days: inj.interval_days })}</Text>
                       </View>
                       <TouchableOpacity
-                        onPress={() => Alert.alert(inj.medication_name, 'Remove this injection record?', [
-                          { text: 'Cancel', style: 'cancel' },
-                          { text: 'Remove', style: 'destructive', onPress: () => deleteBiologicInj(inj.id!) },
+                        onPress={() => Alert.alert(inj.medication_name, t('profile_alerts.remove_injection_body'), [
+                          { text: t('common.cancel'), style: 'cancel' },
+                          { text: t('common.remove'), style: 'destructive', onPress: () => deleteBiologicInj(inj.id!) },
                         ])}
                         activeOpacity={0.7}
                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}

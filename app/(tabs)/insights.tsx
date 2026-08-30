@@ -65,16 +65,16 @@ async function saveInsightCache(userId: string, insight: WeeklyInsight): Promise
   await AsyncStorage.setItem(insightCacheKey(userId), JSON.stringify(cache));
 }
 
-function cacheAgeLabel(generatedAt: string): string {
+function cacheAgeLabel(t: (key: string, opts?: Record<string, unknown>) => string, generatedAt: string): string {
   const ms = Date.now() - new Date(generatedAt).getTime();
   const mins = Math.floor(ms / 60000);
   const hours = Math.floor(ms / 3600000);
   const days = Math.floor(ms / 86400000);
-  if (mins < 2) return 'just now';
-  if (hours < 1) return `${mins} min ago`;
-  if (days < 1) return `${hours}h ago`;
-  if (days === 1) return 'yesterday';
-  return `${days} days ago`;
+  if (mins < 2) return t('insights.cache_age_just_now');
+  if (hours < 1) return t('insights.cache_age_mins', { count: mins });
+  if (days < 1) return t('insights.cache_age_hours', { count: hours });
+  if (days === 1) return t('insights.cache_age_yesterday');
+  return t('insights.cache_age_days', { count: days });
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -321,7 +321,7 @@ function AIInsightCard({ logs, flares, profile, healthHistory, isDark }: AIInsig
       </View>
       {generatedAt && !isGenerating && (
         <Text style={[styles.insightTimestamp, { color: textSecondary }]}>
-          Updated {cacheAgeLabel(generatedAt)}
+          {t('insights.updated_label', { age: cacheAgeLabel(t, generatedAt) })}
         </Text>
       )}
 
@@ -522,11 +522,11 @@ function ChatDataCard({ isDark, onPress }: { isDark: boolean; onPress: () => voi
 
 // ─── BASDAI helpers ────────────────────────────────────────────────────────────
 
-function basdaiInterpretation(score: number): { label: string; color: string } {
-  if (score < 2) return { label: 'Low activity', color: Colors.success };
-  if (score < 4) return { label: 'Moderate', color: Colors.warning };
-  if (score < 6) return { label: 'High (biologic threshold)', color: Colors.error };
-  return { label: 'Very high', color: Colors.error };
+function basdaiInterpretation(t: (key: string) => string, score: number): { label: string; color: string } {
+  if (score < 2) return { label: t('insights.basdai_severity_low'), color: Colors.success };
+  if (score < 4) return { label: t('insights.basdai_severity_moderate'), color: Colors.warning };
+  if (score < 6) return { label: t('insights.basdai_severity_high'), color: Colors.error };
+  return { label: t('insights.basdai_severity_very_high'), color: Colors.error };
 }
 
 function daysAgoLabel(t: (key: string, opts?: Record<string, unknown>) => string, days: number): string {
@@ -538,12 +538,12 @@ function daysAgoLabel(t: (key: string, opts?: Record<string, unknown>) => string
 // ─── BasdaiModal ──────────────────────────────────────────────────────────────
 
 const BASDAI_QUESTIONS = [
-  { key: 'q1', text: 'How would you describe the overall level of fatigue/tiredness?' },
-  { key: 'q2', text: 'How would you describe the overall level of AS neck, back or hip pain?' },
-  { key: 'q3', text: 'How would you describe the overall level of pain/swelling in joints other than neck, back or hips?' },
-  { key: 'q4', text: 'How would you describe the overall level of discomfort from tender areas (enthesitis)?' },
-  { key: 'q5', text: 'How would you describe the overall level of morning stiffness severity from the time you wake up?' },
-  { key: 'q6', text: 'How long does your morning stiffness last? (0=none, 10=2+ hours)' },
+  { key: 'q1', textKey: 'insights.basdai_question_1' },
+  { key: 'q2', textKey: 'insights.basdai_question_2' },
+  { key: 'q3', textKey: 'insights.basdai_question_3' },
+  { key: 'q4', textKey: 'insights.basdai_question_4' },
+  { key: 'q5', textKey: 'insights.basdai_question_5' },
+  { key: 'q6', textKey: 'insights.basdai_question_6' },
 ] as const;
 
 interface BasdaiModalProps {
@@ -571,7 +571,7 @@ function BasdaiModal({ visible, onClose, onSave, isDark }: BasdaiModalProps) {
 
   const values = { q1, q2, q3, q4, q5, q6 };
   const computedScore = parseFloat(((q1 + q2 + q3 + q4 + (q5 + q6) / 2) / 5).toFixed(2));
-  const interp = basdaiInterpretation(computedScore);
+  const interp = basdaiInterpretation(t, computedScore);
 
   const setters: Record<string, (v: number) => void> = { q1: setQ1, q2: setQ2, q3: setQ3, q4: setQ4, q5: setQ5, q6: setQ6 };
 
@@ -611,7 +611,7 @@ function BasdaiModal({ visible, onClose, onSave, isDark }: BasdaiModalProps) {
           {BASDAI_QUESTIONS.map((q, idx) => (
             <View key={q.key} style={[styles.basdaiQuestion, { backgroundColor: cardBg, borderColor: border }]}>
               <Text style={[styles.basdaiQuestionNum, { color: textSecondary }]}>Q{idx + 1}</Text>
-              <Text style={[styles.basdaiQuestionText, { color: textPrimary }]}>{q.text}</Text>
+              <Text style={[styles.basdaiQuestionText, { color: textPrimary }]}>{t(q.textKey)}</Text>
               <QuestionSlider value={values[q.key as keyof typeof values]} setValue={setters[q.key]} />
             </View>
           ))}
@@ -649,7 +649,6 @@ function BasdaiModal({ visible, onClose, onSave, isDark }: BasdaiModalProps) {
 
 // ─── BasdaiPromptCard ─────────────────────────────────────────────────────────
 
-const BASDAI_INFO = 'BASDAI (Bath Ankylosing Spondylitis Disease Activity Index) is the standard clinical tool for measuring AS disease activity. You score six questions on a 0-10 scale: fatigue, spinal pain, joint pain, enthesitis, morning stiffness severity, and duration. A score of 4 or above is the threshold at which biologic therapy is typically considered.';
 
 function BasdaiPromptCard({
   latestScore,
@@ -679,7 +678,7 @@ function BasdaiPromptCard({
           </TouchableOpacity>
         </View>
         {showInfo && (
-          <Text style={[styles.basdaiInfoText, { color: textSecondary }]}>{BASDAI_INFO}</Text>
+          <Text style={[styles.basdaiInfoText, { color: textSecondary }]}>{t('insights.basdai_info')}</Text>
         )}
         <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.basdaiTakeBtn}>
           <Text style={styles.basdaiTakeBtnText}>{t('insights.basdai_take')}</Text>
@@ -688,7 +687,7 @@ function BasdaiPromptCard({
     );
   }
 
-  const interp = basdaiInterpretation(latestScore.score);
+  const interp = basdaiInterpretation(t, latestScore.score);
   const isDue = daysSince !== null && daysSince >= 30;
 
   if (!isDue) {
@@ -706,7 +705,7 @@ function BasdaiPromptCard({
             <Text style={[styles.basdaiCompactInterp, { color: interp.color }]}>{interp.label}</Text>
           </View>
           {showInfo && (
-            <Text style={[styles.basdaiInfoText, { color: textSecondary, marginTop: Spacing.xs }]}>{BASDAI_INFO}</Text>
+            <Text style={[styles.basdaiInfoText, { color: textSecondary, marginTop: Spacing.xs }]}>{t('insights.basdai_info')}</Text>
           )}
           <Text style={[styles.basdaiCompactDate, { color: textSecondary }]}>{daysAgoLabel(t, daysSince ?? 0)}</Text>
         </View>
@@ -726,7 +725,7 @@ function BasdaiPromptCard({
         </TouchableOpacity>
       </View>
       {showInfo && (
-        <Text style={[styles.basdaiInfoText, { color: textSecondary }]}>{BASDAI_INFO}</Text>
+        <Text style={[styles.basdaiInfoText, { color: textSecondary }]}>{t('insights.basdai_info')}</Text>
       )}
       <Text style={[styles.basdaiPromptBody, { color: textSecondary }]}>
         {t('insights.basdai_last_score', { score: latestScore.score.toFixed(1), label: interp.label, days: daysSince })}
@@ -1025,7 +1024,7 @@ export default function InsightsScreen() {
               </Text>
               {allLogs.length < 7 && (
                 <Text style={[styles.chartHint, { color: textSecondary }]}>
-                  This chart fills out as you log more days.
+                  {t('insights.chart_fills_out_hint')}
                 </Text>
               )}
               <TrendChart
@@ -1065,7 +1064,7 @@ export default function InsightsScreen() {
                 </Text>
                 {allLogs.length < 7 && (
                   <Text style={[styles.chartHint, { color: textSecondary }]}>
-                    This chart fills out as you log more days.
+                    {t('insights.chart_fills_out_hint')}
                   </Text>
                 )}
                 <TrendChart
@@ -1092,7 +1091,7 @@ export default function InsightsScreen() {
                 </Text>
                 {humidityChartData.length < 7 && (
                   <Text style={[styles.chartHint, { color: textSecondary }]}>
-                    This chart fills out as more days are tracked.
+                    {t('insights.chart_fills_out_hint')}
                   </Text>
                 )}
                 <TrendChart
