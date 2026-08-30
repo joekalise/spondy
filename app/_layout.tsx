@@ -84,7 +84,16 @@ function RootNavigator() {
         if (!isAvailable) return;
         return Updates.fetchUpdateAsync().then(() => Updates.reloadAsync());
       })
-      .catch(() => {});
+      .catch((err) => {
+        // TEMPORARY diagnostic: this catch was silently swallowing failures,
+        // which is exactly what made a stuck "update available" loop on
+        // Android impossible to diagnose from user reports alone.
+        try {
+          Sentry.captureException(err instanceof Error ? err : new Error(String(err)), {
+            tags: { ota_stage: 'auto-check-fetch-reload' },
+          });
+        } catch {}
+      });
   }, []);
 
   // Register background health sync once on mount

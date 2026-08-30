@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Updates from 'expo-updates';
+import * as Sentry from '@sentry/react-native';
 import { Colors } from '@/constants/colors';
 import { FontSize, FontFamily, Spacing, BorderRadius } from '@/constants/theme';
 import { logEvent, Events } from '@/services/analytics';
@@ -23,7 +24,15 @@ export function UpdateBanner() {
       }
       await logEvent(Events.OTA_UPDATE_APPLIED);
       await Updates.reloadAsync();
-    } catch {
+    } catch (err) {
+      // TEMPORARY diagnostic: same silent-catch problem as the auto-updater
+      // in app/_layout.tsx — report so a stuck "update available" loop on
+      // Android has real evidence behind it instead of a guess.
+      try {
+        Sentry.captureException(err instanceof Error ? err : new Error(String(err)), {
+          tags: { ota_stage: 'banner-manual-update' },
+        });
+      } catch {}
       setIsApplying(false);
     }
   }
