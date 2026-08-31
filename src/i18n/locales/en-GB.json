@@ -1034,6 +1034,25 @@
     "med_title": "Time for {{name}}",
     "med_body": "Don't forget your {{dose}} dose of {{name}}.",
     "basdai_reminder_title": "Monthly BASDAI check-in",
-    "basdai_reminder_body": "It's been a month since your last assessment. Take a minute to retake it and track your progress."
+    "basdai_reminder_body": "It's been a month since your last assessment. Take a minute to retake it and track your progress.",
+    "flare_warning_title": "⚠️ Possible flare building",
+    "flare_watch_title": "👀 Symptoms to watch",
+    "flare_warning_body": "Several patterns suggest a flare may be building. Consider resting and reviewing your medications.",
+    "flare_watch_body": "A couple of signals suggest your body might be under stress. Keep a close eye on your symptoms.",
+    "nudge_sleep_title": "Sleep check",
+    "nudge_sleep_body": "Your sleep has been disrupted recently. An early night tonight might help.",
+    "nudge_pain_title": "Pain check",
+    "nudge_pain_body": "Pain has been creeping up. How's your sleep and stress been?",
+    "nudge_energy_title": "Energy check",
+    "nudge_energy_body": "Your energy has been low for a few days. Take it easy and get some rest.",
+    "nudge_mood_title": "Mood check",
+    "nudge_mood_body": "Things have been tough lately. Be kind to yourself. Even a short gentle walk can help.",
+    "nudge_diet_title": "Diet check",
+    "nudge_diet_body": "Your diet has been more inflammatory this week. Starchy, processed, or sugary foods can drive AS symptoms. Even small changes help.",
+    "nudge_diet_alcohol_body": "You've logged alcohol several days running. It's a known inflammation driver for AS. Your body might appreciate a break.",
+    "nudge_spo2_title": "Sleep oxygen check",
+    "nudge_spo2_body": "Your overnight SpO₂ was {{value}}%, below the normal range. Poor sleep oxygenation is linked to sleep apnea, a known AS comorbidity, and can worsen pain and fatigue. It may be worth mentioning to your rheumatologist.",
+    "nudge_resp_title": "Recovery check",
+    "nudge_resp_body": "Your respiratory rate during sleep was {{value}} breaths/min, higher than normal. This can be a sign your body is under strain, which is worth watching alongside your AS symptoms."
   }
 }

@@ -304,11 +304,11 @@ export async function sendFlareWarningIfNeeded(
   if (lastSent === 'warning') return;
   if (lastSent === 'watch' && level === 'watch') return;
 
-  const title = level === 'warning' ? '⚠️ Possible flare building' : '👀 Symptoms to watch';
+  const title = level === 'warning' ? i18n.t('notifications.flare_warning_title') as string : i18n.t('notifications.flare_watch_title') as string;
   const body =
     level === 'warning'
-      ? 'Several patterns suggest a flare may be building. Consider resting and reviewing your medications.'
-      : 'A couple of signals suggest your body might be under stress. Keep a close eye on your symptoms.';
+      ? i18n.t('notifications.flare_warning_body') as string
+      : i18n.t('notifications.flare_watch_body') as string;
 
   await sendNudge(title, body, NOTIFICATION_SCREEN.flare);
   await AsyncStorage.setItem(key, level);
@@ -359,9 +359,8 @@ async function evaluateAndSendNudgesInternal(
     (l) => l.stiffness_duration === 'over_2_hours'
   ).length;
   if (poorSleepDays >= 3) {
-    const message =
-      "Your sleep has been disrupted recently. An early night tonight might help.";
-    await sendNudge('Sleep check', message);
+    const message = i18n.t('notifications.nudge_sleep_body') as string;
+    await sendNudge(i18n.t('notifications.nudge_sleep_title') as string, message);
     await saveNudgeToDb(userId, 'sleep', message);
     return;
   }
@@ -373,9 +372,8 @@ async function evaluateAndSendNudgesInternal(
     last3Pain[1] > last3Pain[0] &&
     last3Pain[2] > last3Pain[1];
   if (painRising) {
-    const message =
-      "Pain has been creeping up. How's your sleep and stress been?";
-    await sendNudge('Pain check', message);
+    const message = i18n.t('notifications.nudge_pain_body') as string;
+    await sendNudge(i18n.t('notifications.nudge_pain_title') as string, message);
     await saveNudgeToDb(userId, 'pain_rising', message);
     return;
   }
@@ -383,9 +381,8 @@ async function evaluateAndSendNudgesInternal(
   // Rule 3: Fatigue >= 7 for 3+ days
   const highFatigueDays = recent.filter((l) => l.fatigue_score >= 7).length;
   if (highFatigueDays >= 3) {
-    const message =
-      "Your energy has been low for a few days. Take it easy and get some rest.";
-    await sendNudge('Energy check', message);
+    const message = i18n.t('notifications.nudge_energy_body') as string;
+    await sendNudge(i18n.t('notifications.nudge_energy_title') as string, message);
     await saveNudgeToDb(userId, 'fatigue', message);
     return;
   }
@@ -395,9 +392,8 @@ async function evaluateAndSendNudgesInternal(
     (l) => l.mood === 'low' || l.mood === 'very_low'
   ).length;
   if (lowMoodDays >= 3) {
-    const message =
-      "Things have been tough lately. Be kind to yourself. Even a short gentle walk can help.";
-    await sendNudge('Mood check', message);
+    const message = i18n.t('notifications.nudge_mood_body') as string;
+    await sendNudge(i18n.t('notifications.nudge_mood_title') as string, message);
     await saveNudgeToDb(userId, 'mood', message);
     return;
   }
@@ -407,9 +403,8 @@ async function evaluateAndSendNudgesInternal(
     (l) => l.diet_quality === 'poor' || l.diet_quality === 'mixed'
   ).length;
   if (poorDietDays >= 3) {
-    const message =
-      "Your diet has been more inflammatory this week. Starchy, processed, or sugary foods can drive AS symptoms. Even small changes help.";
-    await sendNudge('Diet check', message);
+    const message = i18n.t('notifications.nudge_diet_body') as string;
+    await sendNudge(i18n.t('notifications.nudge_diet_title') as string, message);
     await saveNudgeToDb(userId, 'diet', message);
     return;
   }
@@ -419,9 +414,8 @@ async function evaluateAndSendNudgesInternal(
     (l) => (l.diet_triggers ?? []).includes('alcohol')
   ).length;
   if (alcoholDays >= 3) {
-    const message =
-      "You've logged alcohol several days running. It's a known inflammation driver for AS. Your body might appreciate a break.";
-    await sendNudge('Diet check', message);
+    const message = i18n.t('notifications.nudge_diet_alcohol_body') as string;
+    await sendNudge(i18n.t('notifications.nudge_diet_title') as string, message);
     await saveNudgeToDb(userId, 'diet_alcohol', message);
     return;
   }
@@ -429,8 +423,8 @@ async function evaluateAndSendNudgesInternal(
   // Rule 7: low overnight SpO₂ (from HealthKit)
   if (recovery?.oxygen_saturation !== null && recovery?.oxygen_saturation !== undefined) {
     if (recovery.oxygen_saturation < 94) {
-      const message = `Your overnight SpO₂ was ${recovery.oxygen_saturation}%, below the normal range. Poor sleep oxygenation is linked to sleep apnea, a known AS comorbidity, and can worsen pain and fatigue. It may be worth mentioning to your rheumatologist.`;
-      await sendNudge('Sleep oxygen check', message);
+      const message = i18n.t('notifications.nudge_spo2_body', { value: recovery.oxygen_saturation }) as string;
+      await sendNudge(i18n.t('notifications.nudge_spo2_title') as string, message);
       await saveNudgeToDb(userId, 'low_spo2', message);
       return;
     }
@@ -439,8 +433,8 @@ async function evaluateAndSendNudgesInternal(
   // Rule 8: elevated sleep respiratory rate (from HealthKit)
   if (recovery?.respiratory_rate !== null && recovery?.respiratory_rate !== undefined) {
     if (recovery.respiratory_rate > 20) {
-      const message = `Your respiratory rate during sleep was ${recovery.respiratory_rate} breaths/min, higher than normal. This can be a sign your body is under strain, which is worth watching alongside your AS symptoms.`;
-      await sendNudge('Recovery check', message);
+      const message = i18n.t('notifications.nudge_resp_body', { value: recovery.respiratory_rate }) as string;
+      await sendNudge(i18n.t('notifications.nudge_resp_title') as string, message);
       await saveNudgeToDb(userId, 'elevated_resp_rate', message);
       return;
     }

@@ -1034,6 +1034,25 @@
     "med_title": "Hora de {{name}}",
     "med_body": "No olvides tu dosis de {{dose}} de {{name}}.",
     "basdai_reminder_title": "Control mensual de BASDAI",
-    "basdai_reminder_body": "Ha pasado un mes desde tu última evaluación. Tómate un minuto para repetirla y hacer seguimiento de tu progreso."
+    "basdai_reminder_body": "Ha pasado un mes desde tu última evaluación. Tómate un minuto para repetirla y hacer seguimiento de tu progreso.",
+    "flare_warning_title": "⚠️ Posible brote en desarrollo",
+    "flare_watch_title": "👀 Síntomas a vigilar",
+    "flare_warning_body": "Varios patrones sugieren que podría estar formándose un brote. Considera descansar y revisar tu medicación.",
+    "flare_watch_body": "Un par de señales sugieren que tu cuerpo podría estar bajo estrés. Vigila de cerca tus síntomas.",
+    "nudge_sleep_title": "Control de sueño",
+    "nudge_sleep_body": "Tu sueño se ha visto interrumpido últimamente. Acostarte temprano esta noche podría ayudar.",
+    "nudge_pain_title": "Control de dolor",
+    "nudge_pain_body": "El dolor ha ido en aumento. ¿Cómo ha estado tu sueño y tu estrés?",
+    "nudge_energy_title": "Control de energía",
+    "nudge_energy_body": "Tu energía ha estado baja durante unos días. Tómatelo con calma y descansa un poco.",
+    "nudge_mood_title": "Control de ánimo",
+    "nudge_mood_body": "Las cosas han estado difíciles últimamente. Sé amable contigo mismo. Incluso un paseo corto y suave puede ayudar.",
+    "nudge_diet_title": "Control de dieta",
+    "nudge_diet_body": "Tu dieta ha sido más inflamatoria esta semana. Los alimentos con almidón, procesados o azucarados pueden agravar los síntomas de la EA. Incluso pequeños cambios ayudan.",
+    "nudge_diet_alcohol_body": "Has registrado alcohol varios días seguidos. Es un desencadenante de inflamación conocido en la EA. A tu cuerpo podría venirle bien un descanso.",
+    "nudge_spo2_title": "Control de oxígeno en el sueño",
+    "nudge_spo2_body": "Tu SpO₂ nocturna fue del {{value}}%, por debajo del rango normal. Una mala oxigenación durante el sueño está relacionada con la apnea del sueño, una comorbilidad conocida de la EA, y puede empeorar el dolor y la fatiga. Podría valer la pena mencionárselo a tu reumatólogo.",
+    "nudge_resp_title": "Control de recuperación",
+    "nudge_resp_body": "Tu frecuencia respiratoria durante el sueño fue de {{value}} respiraciones/min, más alta de lo normal. Esto puede ser una señal de que tu cuerpo está bajo tensión, algo que vale la pena vigilar junto con tus síntomas de EA."
   }
 }
